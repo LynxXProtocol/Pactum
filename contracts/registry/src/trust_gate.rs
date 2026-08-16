@@ -36,7 +36,7 @@ pub trait TrustGateReader {
 #[contractclient(name = "TrustGateWriterClient")]
 pub trait TrustGateWriter {
     fn attest(env: Env, caller: Address, id: u64, outcome: CommitmentStatus);
-    fn resolve_dispute(env: Env, arbitrator: Address, id: u64, final_outcome: CommitmentStatus);
+    fn resolve_dispute(env: Env, caller: Address, id: u64, final_outcome: CommitmentStatus);
 }
 
 impl TrustGateReader for RegistryContract {
@@ -50,7 +50,7 @@ impl TrustGateWriter for RegistryContract {
         RegistryContract::attest(env, caller, id, outcome)
     }
 
-    fn resolve_dispute(env: Env, arbitrator: Address, id: u64, final_outcome: CommitmentStatus) {
-        RegistryContract::resolve_dispute(env, arbitrator, id, final_outcome)
+    fn resolve_dispute(env: Env, caller: Address, id: u64, final_outcome: CommitmentStatus) {
+        RegistryContract::resolve_dispute(env, caller, id, final_outcome)
     }
 }

@@ -1,6 +1,7 @@
 [workspace]
 members = [
     "registry",
+    "mock_resolver",
 ]
 resolver = "2"
 

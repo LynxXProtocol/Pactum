@@ -49,43 +49,32 @@ pub fn dispute_resolved(
     );
 }
 
-/// Publishes an event when an attestor casts a vote on an M-of-N commitment.
-pub fn attestor_vote_cast(
+/// Publishes an event when funds are locked in escrow for a refund guarantee commitment.
+pub fn escrow_locked(
     env: &Env,
-    id: u64,
-    attestor: &Address,
-    outcome: CommitmentStatus,
-    tally: u32,
-    threshold: u32,
+    commitment_id: u64,
+    token: &Address,
+    issuer: &Address,
+    amount: i128,
 ) {
     env.events().publish(
-        (symbol_short!("voted"), id, attestor.clone()),
-        (outcome, tally, threshold),
+        (symbol_short!("escr_lock"), commitment_id, token.clone(), issuer.clone()),
+        amount,
     );
 }
 
-/// Publishes an event when an M-of-N commitment reaches its threshold and resolves.
-pub fn commitment_resolved(
+/// Publishes an event when escrow funds are released upon commitment completion.
+pub fn escrow_released(
     env: &Env,
-    id: u64,
-    outcome: CommitmentStatus,
+    commitment_id: u64,
+    recipient: &Address,
+    amount: i128,
+    final_status: CommitmentStatus,
 ) {
     env.events().publish(
-        (symbol_short!("vresolved"), id),
-        outcome,
+        (symbol_short!("escr_rel"), commitment_id, recipient.clone()),
+        (amount, final_status),
     );
 }
 
-/// Publishes an event when an M-of-N commitment falls back to a predefined
-/// fallback state because the vote threshold was not reached in time.
-pub fn commitment_fallback(
-    env: &Env,
-    id: u64,
-    fallback_status: CommitmentStatus,
-) {
-    env.events().publish(
-        (symbol_short!("fallback"), id),
-        fallback_status,
-    );
-}
 

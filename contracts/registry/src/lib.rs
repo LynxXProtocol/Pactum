@@ -7,7 +7,7 @@ pub mod errors;
 pub mod events;
 mod reentrancy;
 pub mod reputation;
-pub mod voting;
+pub mod templates;
 pub mod trust_gate;
 pub mod trust_score;
 
@@ -23,10 +23,10 @@ mod attacker_gate;
 #[cfg(test)]
 mod demo;
 
-pub use commitments::DISPUTE_WINDOW_SECONDS;
-use commitments::{Commitment, CommitmentStatus, DataKey, VoteTally};
+pub use commitments::{Commitment, CommitmentStatus, DataKey, DISPUTE_WINDOW_SECONDS};
+pub use templates::refund::RefundEscrow;
 use errors::Error;
-use soroban_sdk::{contract, contractimpl, panic_with_error, Address, BytesN, Env, Vec};
+use soroban_sdk::{contract, contractimpl, panic_with_error, Address, BytesN, Env};
 
 /// The Pactum Registry contract for recording and tracking recurring commitments.
 #[contract]
@@ -99,27 +99,20 @@ impl RegistryContract {
     /// * `counterparty` - The address to whom the commitment is owed.
     /// * `terms_hash` - A 32-byte hash representing the off-chain terms of the commitment.
     /// * `due_at` - Unix timestamp (seconds) when the commitment is due. Must be in the future.
-    /// * `attestors` - The dynamically sized list of attestors assigned to adjudicate the
-    ///   outcome via M-of-N voting. Pass an empty list for regular single-party commitments.
-    /// * `threshold` - The number of attestor votes required to resolve the commitment (M in M-of-N).
-    ///   Must be `0` when `attestors` is empty, and between `1` and `attestors.len()` otherwise.
+    /// * `resolver_address` - The address of the custom resolver delegated to resolve disputes for this commitment.
     ///
     /// # Returns
     /// * `u64` - The unique identifier assigned to the created commitment.
     ///
     /// # Panics
     /// * Panics with `Error::DueAtInPast` if `due_at` is less than or equal to the current ledger timestamp.
-    /// * Panics with `Error::ThresholdInvalid` if `threshold` is `0` while attestors are assigned,
-    ///   or greater than the number of attestors.
-    /// * Panics with `Error::DuplicateAttestor` if the attestor list contains duplicate addresses.
     pub fn create_commitment(
         env: Env,
         issuer: Address,
         counterparty: Address,
         terms_hash: BytesN<32>,
         due_at: u64,
-        attestors: Vec<Address>,
-        threshold: u32,
+        resolver_address: Address,
     ) -> u64 {
         // 0. Enter the reentrancy guard before any external interaction (including
         //    the require_auth call below, which may invoke a custom account contract).
@@ -134,26 +127,7 @@ impl RegistryContract {
             panic_with_error!(&env, Error::DueAtInPast);
         }
 
-        // 3. Validate the M-of-N configuration.
-        if attestors.is_empty() {
-            if threshold != 0 {
-                panic_with_error!(&env, Error::ThresholdInvalid);
-            }
-        } else {
-            if threshold == 0 || threshold > attestors.len() {
-                panic_with_error!(&env, Error::ThresholdInvalid);
-            }
-            for i in 0..attestors.len() {
-                let candidate = attestors.get_unchecked(i);
-                for j in (i + 1)..attestors.len() {
-                    if candidate == attestors.get_unchecked(j) {
-                        panic_with_error!(&env, Error::DuplicateAttestor);
-                    }
-                }
-            }
-        }
-
-        // 4. Assign the next available ID.
+        // 3. Assign the next available ID.
         let id: u64 = env.storage().instance().get(&DataKey::NextId).unwrap_or(1);
         let next_id = id
             .checked_add(1)
@@ -164,7 +138,7 @@ impl RegistryContract {
             commitments::TTL_EXTEND_LEDGERS,
         );
 
-        // 5. Create the Commitment object with Pending status.
+        // 4. Create the Commitment object with Pending status.
         let commitment = Commitment {
             id,
             issuer: issuer.clone(),
@@ -174,11 +148,10 @@ impl RegistryContract {
             status: CommitmentStatus::Pending,
             created_at: now,
             attested_at: None,
-            attestors,
-            threshold,
+            resolver_address,
         };
 
-        // 6. Store in persistent storage keyed by id and extend TTL.
+        // 5. Store in persistent storage keyed by id and extend TTL.
         env.storage()
             .persistent()
             .set(&DataKey::Commitment(id), &commitment);
@@ -188,7 +161,7 @@ impl RegistryContract {
             commitments::TTL_EXTEND_LEDGERS,
         );
 
-        // 7. Emit Created event.
+        // 6. Emit Created event.
         events::commitment_created(&env, id, &issuer, &counterparty);
 
         // 7. Release the reentrancy guard.
@@ -209,10 +182,7 @@ impl RegistryContract {
     /// # Panics
     /// * Panics with `Error::CommitmentNotFound` if the ID does not exist in storage.
     pub fn get_commitment(env: Env, id: u64) -> Commitment {
-        let commitment = env
-            .storage()
-            .persistent()
-            .get(&DataKey::Commitment(id))
+        let commitment = commitments::get_commitment_record(&env, id)
             .unwrap_or_else(|| panic_with_error!(&env, Error::CommitmentNotFound));
 
         env.storage().persistent().extend_ttl(
@@ -223,6 +193,76 @@ impl RegistryContract {
 
         commitment
     }
+
+    /// Explicitly migrates a legacy commitment record to include resolver_address.
+    ///
+    /// # Arguments
+    /// * `env` - The Soroban execution environment.
+    /// * `id` - The unique identifier of the commitment to migrate.
+    ///
+    /// # Returns
+    /// * `Commitment` - The migrated commitment.
+    pub fn migrate_commitment(env: Env, id: u64) -> Commitment {
+        Self::get_commitment(env, id)
+    }
+
+    /// Creates and registers a specialized Refund Guarantee commitment with locked token escrow.
+    ///
+    /// # Arguments
+    /// * `env` - The Soroban execution environment.
+    /// * `issuer` - The address making the commitment and locking funds in escrow. Must authorize.
+    /// * `counterparty` - The beneficiary entitled to refund if breached.
+    /// * `terms_hash` - 32-byte hash of the terms agreement.
+    /// * `due_at` - Unix timestamp (seconds) when the commitment is due. Must be in future.
+    /// * `resolver_address` - The designated custom resolver for dispute adjudication.
+    /// * `token` - Token contract address to lock in escrow.
+    /// * `amount` - Amount of tokens to lock in escrow (must be > 0).
+    ///
+    /// # Returns
+    /// * `u64` - The unique identifier assigned to the created commitment.
+    pub fn create_refund_commitment(
+        env: Env,
+        issuer: Address,
+        counterparty: Address,
+        terms_hash: BytesN<32>,
+        due_at: u64,
+        resolver_address: Address,
+        token: Address,
+        amount: i128,
+    ) -> u64 {
+        templates::refund::create_refund_commitment(
+            &env,
+            issuer,
+            counterparty,
+            terms_hash,
+            due_at,
+            resolver_address,
+            token,
+            amount,
+        )
+    }
+
+    /// Retrieves the refund escrow configuration for a commitment, if one exists.
+    ///
+    /// # Arguments
+    /// * `env` - The Soroban execution environment.
+    /// * `commitment_id` - The commitment identifier.
+    ///
+    /// # Returns
+    /// * `Option<RefundEscrow>` - The escrow details if present.
+    pub fn get_refund_escrow(env: Env, commitment_id: u64) -> Option<RefundEscrow> {
+        templates::refund::get_refund_escrow(&env, commitment_id)
+    }
+
+    /// Explicitly releases escrow funds for a resolved commitment if not already released.
+    ///
+    /// # Arguments
+    /// * `env` - The Soroban execution environment.
+    /// * `commitment_id` - The commitment identifier.
+    pub fn release_refund(env: Env, commitment_id: u64) {
+        templates::refund::release_refund(&env, commitment_id);
+    }
+
 
     /// Attests to the lifecycle status of a commitment.
     ///
@@ -262,79 +302,6 @@ impl RegistryContract {
         attestation::is_overdue(&env, id)
     }
 
-    /// Casts an attestor vote on an M-of-N commitment, tallying it securely.
-    ///
-    /// # Authorization
-    /// * Authorized caller: `caller` (via `require_auth`), which must be one of the
-    ///   commitment's assigned `attestors`.
-    /// * Why: Only assigned attestors are permitted to vote on the commitment's outcome.
-    ///
-    /// # Arguments
-    /// * `env` - The Soroban execution environment.
-    /// * `caller` - The attestor casting the vote. Must authorize the call.
-    /// * `id` - The unique identifier of the commitment.
-    /// * `outcome` - The attested outcome (`Fulfilled`, `Late`, or `Breached`).
-    ///
-    /// # Panics
-    /// * Panics with `Error::NotAttestor` if `caller` is not an assigned attestor.
-    /// * Panics with `Error::AlreadyVoted` if the attestor has already voted.
-    /// * Panics with `Error::VotingClosed` if the vote is cast after `due_at + timeout`.
-    /// * Panics with `Error::InvalidOutcome` if `outcome` is `Pending` or `Disputed`.
-    /// * Panics with `Error::AlreadyResolved` if the commitment is no longer `Pending`.
-    pub fn cast_attestor_vote(
-        env: Env,
-        caller: Address,
-        id: u64,
-        outcome: CommitmentStatus,
-    ) {
-        voting::cast_attestor_vote(&env, caller, id, outcome);
-    }
-
-    /// Resolves an M-of-N commitment to the predefined fallback state if the vote
-    /// threshold was not reached by `due_at + ATTESTOR_VOTE_TIMEOUT_SECONDS`.
-    ///
-    /// Callable by anyone so a stalled commitment can always be unblocked,
-    /// preventing locked funds/state.
-    ///
-    /// # Arguments
-    /// * `env` - The Soroban execution environment.
-    /// * `id` - The unique identifier of the commitment.
-    ///
-    /// # Panics
-    /// * Panics with `Error::VotesNotMet` if called before the deadline has elapsed.
-    /// * Panics with `Error::AlreadyResolved` if the commitment is no longer `Pending`.
-    pub fn finalize_commitment(env: Env, id: u64) {
-        voting::finalize_commitment(&env, id);
-    }
-
-    /// Returns the running vote tally for an M-of-N commitment.
-    ///
-    /// # Arguments
-    /// * `env` - The Soroban execution environment.
-    /// * `id` - The unique identifier of the commitment.
-    ///
-    /// # Returns
-    /// * `VoteTally` - The per-outcome vote counts (`fulfilled`, `late`, `breached`).
-    ///
-    /// # Panics
-    /// * Panics with `Error::CommitmentNotFound` if the commitment does not exist.
-    pub fn get_vote_tally(env: Env, id: u64) -> VoteTally {
-        voting::get_vote_tally(&env, id)
-    }
-
-    /// Checks whether an M-of-N commitment can be finalized to its fallback state
-    /// (the timeout has elapsed and the threshold was not met).
-    ///
-    /// # Arguments
-    /// * `env` - The Soroban execution environment.
-    /// * `id` - The unique identifier of the commitment.
-    ///
-    /// # Returns
-    /// * `bool` - True if the fallback timeout has elapsed with the threshold unmet.
-    pub fn can_finalize_commitment(env: Env, id: u64) -> bool {
-        voting::can_finalize_commitment(&env, id)
-    }
-
     /// Raises a dispute on an attested commitment within the dispute window.
     ///
     /// # Authorization
@@ -354,23 +321,23 @@ impl RegistryContract {
     /// Resolves a disputed commitment to a final outcome.
     ///
     /// # Authorization
-    /// * Authorized caller: `arbitrator` (via `require_auth`), which must exactly match
-    ///   the designated arbitrator address stored at contract initialization.
-    /// * Why: Only the mutually trusted, designated arbitrator is authorized to adjudicate
-    ///   and resolve contested commitments.
+    /// * Authorized caller: `caller` (via `require_auth`), which must exactly match
+    ///   the commitment's designated `resolver_address`.
+    /// * Why: Dispute resolution authority is delegated strictly to the custom resolver
+    ///   address chosen for this commitment at creation time.
     ///
     /// # Arguments
     /// * `env` - The Soroban execution environment.
-    /// * `arbitrator` - The designated arbitrator address resolving the dispute. Must authorize the call.
+    /// * `caller` - The designated resolver address resolving the dispute. Must authorize the call.
     /// * `id` - The unique identifier of the disputed commitment.
     /// * `final_outcome` - The resolution status (`Fulfilled`, `Late`, or `Breached`).
     pub fn resolve_dispute(
         env: Env,
-        arbitrator: Address,
+        caller: Address,
         id: u64,
         final_outcome: CommitmentStatus,
     ) {
-        disputes::resolve_dispute(&env, arbitrator, id, final_outcome);
+        disputes::resolve_dispute(&env, caller, id, final_outcome);
     }
 
     /// Retrieves the aggregate reputation for a given address.

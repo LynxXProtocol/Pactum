@@ -32,16 +32,15 @@ pub enum Error {
     /// A state-mutating registry function was re-entered while a call to
     /// another state-mutating registry function was already in progress.
     ReentrantCall = 13,
-    /// The caller is not one of the assigned attestors for the commitment.
-    NotAttestor = 14,
-    /// The attestor has already cast a vote on this commitment.
-    AlreadyVoted = 15,
-    /// The M-of-N threshold is invalid (zero, or greater than the number of attestors).
-    ThresholdInvalid = 16,
-    /// The attestor list contains duplicate addresses.
-    DuplicateAttestor = 17,
-    /// The attestor voting window has closed (`now > due_at + timeout`).
-    VotingClosed = 18,
-    /// The fallback timeout has not elapsed yet or the threshold was already met.
-    VotesNotMet = 19,
+    /// The escrow token amount is invalid (must be greater than zero).
+    InvalidAmount = 14,
+    /// No escrow was found for the specified commitment ID.
+    EscrowNotFound = 15,
+    /// The escrow funds have already been released.
+    EscrowAlreadyReleased = 16,
+    /// The commitment has not reached a resolved state (Fulfilled, Late, or Breached).
+    CommitmentNotResolved = 17,
+    /// The dispute window is still active; escrow settlement cannot proceed until it expires.
+    DisputeWindowActive = 18,
 }
+

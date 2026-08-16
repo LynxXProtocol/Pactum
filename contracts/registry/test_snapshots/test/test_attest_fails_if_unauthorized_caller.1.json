@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 4,
+    "address": 5,
     "nonce": 0
   },
   "auth": [
@@ -27,10 +27,7 @@
                   "u64": 2000
                 },
                 {
-                  "vec": []
-                },
-                {
-                  "u32": 0
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 }
               ]
             }
@@ -96,14 +93,6 @@
                     },
                     {
                       "key": {
-                        "symbol": "attestors"
-                      },
-                      "val": {
-                        "vec": []
-                      }
-                    },
-                    {
-                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": {
@@ -144,6 +133,14 @@
                     },
                     {
                       "key": {
+                        "symbol": "resolver_address"
+                      },
+                      "val": {
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "status"
                       },
                       "val": {
@@ -160,14 +157,6 @@
                       },
                       "val": {
                         "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "threshold"
-                      },
-                      "val": {
-                        "u32": 0
                       }
                     }
                   ]

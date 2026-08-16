@@ -1,6 +1,6 @@
 {
   "generators": {
-    "address": 3,
+    "address": 4,
     "nonce": 0
   },
   "auth": [
@@ -27,10 +27,7 @@
                   "u64": 2000
                 },
                 {
-                  "vec": []
-                },
-                {
-                  "u32": 0
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
                 }
               ]
             }
@@ -127,14 +124,6 @@
                     },
                     {
                       "key": {
-                        "symbol": "attestors"
-                      },
-                      "val": {
-                        "vec": []
-                      }
-                    },
-                    {
-                      "key": {
                         "symbol": "counterparty"
                       },
                       "val": {
@@ -175,6 +164,14 @@
                     },
                     {
                       "key": {
+                        "symbol": "resolver_address"
+                      },
+                      "val": {
+                        "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
+                      }
+                    },
+                    {
+                      "key": {
                         "symbol": "status"
                       },
                       "val": {
@@ -191,14 +188,6 @@
                       },
                       "val": {
                         "bytes": "0101010101010101010101010101010101010101010101010101010101010101"
-                      }
-                    },
-                    {
-                      "key": {
-                        "symbol": "threshold"
-                      },
-                      "val": {
-                        "u32": 0
                       }
                     }
                   ]
@@ -269,6 +258,126 @@
                       },
                       "val": {
                         "u32": 1
+                      }
+                    }
+                  ]
+                }
+              }
+            },
+            "ext": "v0"
+          },
+          518400
+        ]
+      ],
+      [
+        {
+          "contract_data": {
+            "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+            "key": {
+              "vec": [
+                {
+                  "symbol": "TrustHistory"
+                },
+                {
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                }
+              ]
+            },
+            "durability": "persistent"
+          }
+        },
+        [
+          {
+            "last_modified_ledger_seq": 0,
+            "data": {
+              "contract_data": {
+                "ext": "v0",
+                "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
+                "key": {
+                  "vec": [
+                    {
+                      "symbol": "TrustHistory"
+                    },
+                    {
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                    }
+                  ]
+                },
+                "durability": "persistent",
+                "val": {
+                  "map": [
+                    {
+                      "key": {
+                        "symbol": "aged"
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "breached"
+                            },
+                            "val": {
+                              "u64": 0
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "fulfilled"
+                            },
+                            "val": {
+                              "u64": 0
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "late"
+                            },
+                            "val": {
+                              "u64": 0
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "current"
+                      },
+                      "val": {
+                        "map": [
+                          {
+                            "key": {
+                              "symbol": "breached"
+                            },
+                            "val": {
+                              "u64": 0
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "fulfilled"
+                            },
+                            "val": {
+                              "u64": 0
+                            }
+                          },
+                          {
+                            "key": {
+                              "symbol": "late"
+                            },
+                            "val": {
+                              "u64": 1
+                            }
+                          }
+                        ]
+                      }
+                    },
+                    {
+                      "key": {
+                        "symbol": "epoch"
+                      },
+                      "val": {
+                        "u32": 0
                       }
                     }
                   ]

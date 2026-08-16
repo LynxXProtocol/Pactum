@@ -1,0 +1,14 @@
+[package]
+name = "mock_resolver"
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+crate-type = ["lib", "cdylib"]
+
+[dependencies]
+soroban-sdk = { workspace = true }
+registry = { path = "../registry" }
+
+[dev-dependencies]
+soroban-sdk = { workspace = true, features = ["testutils"] }
