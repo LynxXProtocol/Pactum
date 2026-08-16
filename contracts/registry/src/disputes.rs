@@ -82,12 +82,7 @@ pub fn dispute(env: &Env, caller: Address, id: u64) {
 ///   the commitment's designated `resolver_address`.
 /// * Why: Dispute resolution authority is delegated strictly to the custom resolver
 ///   address chosen for this commitment at creation time.
-pub fn resolve_dispute(
-    env: &Env,
-    caller: Address,
-    id: u64,
-    final_outcome: CommitmentStatus,
-) {
+pub fn resolve_dispute(env: &Env, caller: Address, id: u64, final_outcome: CommitmentStatus) {
     // 0. Enter the reentrancy guard before any external interaction (including
     //    the require_auth call below, which may invoke a custom account contract).
     crate::reentrancy::enter(env);

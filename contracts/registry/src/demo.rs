@@ -93,7 +93,10 @@ fn demo_time_decay_table() {
 
     println!("[1] Baseline - an address with no history scores 50:");
     let stranger = Address::generate(&env);
-    println!("    get_trust_score(no history)           = {}", client.get_trust_score(&stranger));
+    println!(
+        "    get_trust_score(no history)           = {}",
+        client.get_trust_score(&stranger)
+    );
 
     println!();
     println!("[2] A breach just happened:");
@@ -105,8 +108,14 @@ fn demo_time_decay_table() {
         1,
         CommitmentStatus::Breached,
     );
-    println!("    get_trust_score(issuer)               = {}   (50 - 50, clamped)", client.get_trust_score(&issuer));
-    println!("    get_reputation(issuer)                = {:?}", client.get_reputation(&issuer));
+    println!(
+        "    get_trust_score(issuer)               = {}   (50 - 50, clamped)",
+        client.get_trust_score(&issuer)
+    );
+    println!(
+        "    get_reputation(issuer)                = {:?}",
+        client.get_reputation(&issuer)
+    );
 
     println!();
     println!("[3] Ledger advances decay the breach's impact (bucket = 10,000 ledgers):");
@@ -135,7 +144,10 @@ fn demo_time_decay_table() {
 
     println!();
     println!("[4] The breach is never erased - reputation persists forever:");
-    println!("    get_reputation(issuer)                = {:?}", client.get_reputation(&issuer));
+    println!(
+        "    get_reputation(issuer)                = {:?}",
+        client.get_reputation(&issuer)
+    );
 
     println!();
     println!("[5] A fresh breach still tanks the score immediately:");
@@ -147,7 +159,10 @@ fn demo_time_decay_table() {
         2,
         CommitmentStatus::Breached,
     );
-    println!("    get_trust_score(issuer)               = {}", client.get_trust_score(&issuer));
+    println!(
+        "    get_trust_score(issuer)               = {}",
+        client.get_trust_score(&issuer)
+    );
 
     println!();
     println!("[6] Mixed history (1 fulfilled + 1 breach) also recovers:");
@@ -170,10 +185,19 @@ fn demo_time_decay_table() {
         2,
         CommitmentStatus::Breached,
     );
-    println!("    same bucket                          -> {}", client2.get_trust_score(&issuer2));
+    println!(
+        "    same bucket                          -> {}",
+        client2.get_trust_score(&issuer2)
+    );
     advance_ledgers(&env2, &client2, &issuer2, buckets_ledgers(64));
-    println!("    +64 buckets (640,000 ledgers)        -> {}", client2.get_trust_score(&issuer2));
+    println!(
+        "    +64 buckets (640,000 ledgers)        -> {}",
+        client2.get_trust_score(&issuer2)
+    );
     advance_ledgers(&env2, &client2, &issuer2, buckets_ledgers(128));
-    println!("    +128 buckets (1,280,000 ledgers)     -> {}", client2.get_trust_score(&issuer2));
+    println!(
+        "    +128 buckets (1,280,000 ledgers)     -> {}",
+        client2.get_trust_score(&issuer2)
+    );
     println!();
 }

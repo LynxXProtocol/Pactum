@@ -45,4 +45,3 @@ pub enum Error {
     /// The requested migration batch exceeds the maximum batch size.
     BatchTooLarge = 19,
 }
-

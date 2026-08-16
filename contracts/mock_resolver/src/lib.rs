@@ -18,7 +18,11 @@ pub struct MockResolver;
 impl MockResolver {
     /// Initializes the MockResolver with a designated controller address.
     pub fn init(env: Env, controller: Address) {
-        if env.storage().instance().has(&MockResolverDataKey::Controller) {
+        if env
+            .storage()
+            .instance()
+            .has(&MockResolverDataKey::Controller)
+        {
             panic_with_error!(&env, Error::AlreadyInitialized);
         }
         controller.require_auth();
@@ -61,4 +65,3 @@ impl MockResolver {
 
 #[cfg(test)]
 mod test;
-

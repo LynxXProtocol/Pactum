@@ -93,12 +93,7 @@ fn test_mock_resolver_cross_contract_dispute_resolution() {
 
     // 6. Authorized controller resolving via MockResolver succeeds
     env.ledger().with_mut(|l| l.timestamp = 1700);
-    resolver_client.resolve_dispute(
-        &controller,
-        &registry_id,
-        &id,
-        &CommitmentStatus::Breached,
-    );
+    resolver_client.resolve_dispute(&controller, &registry_id, &id, &CommitmentStatus::Breached);
 
     let resolved_comm = registry_client.get_commitment(&id);
     assert_eq!(resolved_comm.status, CommitmentStatus::Breached);

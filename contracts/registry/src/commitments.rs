@@ -95,10 +95,7 @@ pub enum DataKey {
 /// that were stored before `resolver_address` was added. Legacy records inherit the
 /// contract's designated arbitrator address as their fallback `resolver_address`.
 pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitment> {
-    let val: Val = env
-        .storage()
-        .persistent()
-        .get(&DataKey::Commitment(id))?;
+    let val: Val = env.storage().persistent().get(&DataKey::Commitment(id))?;
 
     let map = Map::<Symbol, Val>::try_from_val(env, &val).ok()?;
     let resolver_sym = Symbol::new(env, "resolver_address");
@@ -112,12 +109,30 @@ pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitme
     if stored_id != id {
         return None;
     }
-    let issuer: Address = map.get(Symbol::new(env, "issuer"))?.try_into_val(env).ok()?;
-    let counterparty: Address = map.get(Symbol::new(env, "counterparty"))?.try_into_val(env).ok()?;
-    let terms_hash: BytesN<32> = map.get(Symbol::new(env, "terms_hash"))?.try_into_val(env).ok()?;
-    let due_at: u64 = map.get(Symbol::new(env, "due_at"))?.try_into_val(env).ok()?;
-    let status: CommitmentStatus = map.get(Symbol::new(env, "status"))?.try_into_val(env).ok()?;
-    let created_at: u64 = map.get(Symbol::new(env, "created_at"))?.try_into_val(env).ok()?;
+    let issuer: Address = map
+        .get(Symbol::new(env, "issuer"))?
+        .try_into_val(env)
+        .ok()?;
+    let counterparty: Address = map
+        .get(Symbol::new(env, "counterparty"))?
+        .try_into_val(env)
+        .ok()?;
+    let terms_hash: BytesN<32> = map
+        .get(Symbol::new(env, "terms_hash"))?
+        .try_into_val(env)
+        .ok()?;
+    let due_at: u64 = map
+        .get(Symbol::new(env, "due_at"))?
+        .try_into_val(env)
+        .ok()?;
+    let status: CommitmentStatus = map
+        .get(Symbol::new(env, "status"))?
+        .try_into_val(env)
+        .ok()?;
+    let created_at: u64 = map
+        .get(Symbol::new(env, "created_at"))?
+        .try_into_val(env)
+        .ok()?;
     let attested_at: Option<u64> = match map.get(Symbol::new(env, "attested_at")) {
         Some(v) => v.try_into_val(env).ok()?,
         None => None,
@@ -127,7 +142,9 @@ pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitme
         .storage()
         .instance()
         .get::<DataKey, Address>(&DataKey::Arbitrator)
-        .unwrap_or_else(|| soroban_sdk::panic_with_error!(env, crate::errors::Error::NotInitialized));
+        .unwrap_or_else(|| {
+            soroban_sdk::panic_with_error!(env, crate::errors::Error::NotInitialized)
+        });
 
     let migrated = Commitment {
         id,
@@ -147,6 +164,3 @@ pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitme
 
     Some(migrated)
 }
-
-
-

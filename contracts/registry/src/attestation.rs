@@ -12,12 +12,7 @@ use soroban_sdk::{panic_with_error, Address, Env};
 ///   `issuer` or `counterparty`.
 /// * Why: Only the participating parties involved in the commitment are authorized to attest
 ///   to its outcome.
-pub fn attest(
-    env: &Env,
-    caller: Address,
-    id: u64,
-    outcome: CommitmentStatus,
-) {
+pub fn attest(env: &Env, caller: Address, id: u64, outcome: CommitmentStatus) {
     // 0. Enter the reentrancy guard before any external interaction (including
     //    the require_auth call below, which may invoke a custom account contract).
     crate::reentrancy::enter(env);

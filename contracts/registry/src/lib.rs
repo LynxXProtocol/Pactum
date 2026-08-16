@@ -26,9 +26,9 @@ mod attacker_gate;
 mod demo;
 
 pub use commitments::{Commitment, CommitmentStatus, DataKey, DISPUTE_WINDOW_SECONDS};
-pub use upgrade::{SCHEMA_VERSION_V1, SCHEMA_VERSION_V2};
 use errors::Error;
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, BytesN, Env, Vec};
+pub use upgrade::{SCHEMA_VERSION_V1, SCHEMA_VERSION_V2};
 
 /// The Pactum Registry contract for recording and tracking recurring commitments.
 #[contract]
@@ -275,12 +275,7 @@ impl RegistryContract {
     /// * `caller` - The designated resolver address resolving the dispute. Must authorize the call.
     /// * `id` - The unique identifier of the disputed commitment.
     /// * `final_outcome` - The resolution status (`Fulfilled`, `Late`, or `Breached`).
-    pub fn resolve_dispute(
-        env: Env,
-        caller: Address,
-        id: u64,
-        final_outcome: CommitmentStatus,
-    ) {
+    pub fn resolve_dispute(env: Env, caller: Address, id: u64, final_outcome: CommitmentStatus) {
         disputes::resolve_dispute(&env, caller, id, final_outcome);
     }
 
