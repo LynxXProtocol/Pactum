@@ -1,0 +1,131 @@
+name: Contract CI
+
+on:
+  pull_request:
+    branches: [ main ]
+    paths:
+      - 'contracts/**'
+      - '.github/workflows/contract-ci.yml'
+
+concurrency:
+  group: contract-ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  lint:
+    name: Format & Clippy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo registry and build target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: ${{ runner.os }}-cargo-lint-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-lint-
+
+      - name: Check formatting
+        working-directory: contracts
+        run: cargo fmt --all -- --check
+
+      - name: Run Clippy
+        working-directory: contracts
+        run: cargo clippy --workspace --all-targets -- -D warnings
+
+  test:
+    name: Contract Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo registry and build target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: ${{ runner.os }}-cargo-test-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-test-
+
+      - name: Run Soroban contract test suite
+        working-directory: contracts
+        run: cargo test --workspace
+
+  build:
+    name: Optimized Wasm Build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo registry and build target
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: ${{ runner.os }}-cargo-build-${{ hashFiles('contracts/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-build-
+
+      # The workspace release profile is the Soroban-optimized one already:
+      # opt-level = "z", lto, codegen-units = 1, panic = "abort", stripped.
+      - name: Build optimized Soroban Wasm contract
+        working-directory: contracts
+        run: cargo build --target wasm32-unknown-unknown --release
+
+      - name: Report Wasm size
+        id: size
+        working-directory: contracts
+        run: |
+          {
+            echo "| Contract | Bytes | Size |"
+            echo "|---|--:|--:|"
+            for wasm in target/wasm32-unknown-unknown/release/*.wasm; do
+              bytes=$(stat -c%s "$wasm")
+              echo "| \`$(basename "$wasm")\` | ${bytes} | $(numfmt --to=iec-i --suffix=B "${bytes}") |"
+            done
+          } > wasm-size.md
+          cat wasm-size.md >> "$GITHUB_STEP_SUMMARY"
+          cat wasm-size.md
+
+      - name: Upload Wasm contract and size report
+        uses: actions/upload-artifact@v4
+        with:
+          name: soroban-contract-wasm
+          path: |
+            contracts/target/wasm32-unknown-unknown/release/*.wasm
+            contracts/wasm-size.md
+          if-no-files-found: error
