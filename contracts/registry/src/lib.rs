@@ -22,15 +22,10 @@ mod attacker_gate;
 #[cfg(test)]
 mod demo;
 
-<<<<<<< HEAD
-pub use commitments::{Commitment, CommitmentStatus, DataKey, DISPUTE_WINDOW_SECONDS};
-=======
 #[cfg(test)]
 mod test_sybil_resistance;
 
-pub use commitments::DISPUTE_WINDOW_SECONDS;
-use commitments::{Commitment, CommitmentStatus, DataKey, VoteTally};
->>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+pub use commitments::{Commitment, CommitmentStatus, DataKey, DISPUTE_WINDOW_SECONDS};
 use errors::Error;
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, BytesN, Env};
 

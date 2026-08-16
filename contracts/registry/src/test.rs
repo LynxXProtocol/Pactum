@@ -26,7 +26,7 @@ fn test_create_and_get_commitment_success() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let commitment_id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let commitment_id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     assert_eq!(commitment_id, 1);
 
     let commitment = client.get_commitment(&commitment_id);
@@ -54,7 +54,7 @@ fn test_create_commitment_requires_auth() {
     env.ledger().with_mut(|l| l.timestamp = 1000);
     let due_at = 2000;
 
-client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 }
 
 #[test]
@@ -66,7 +66,7 @@ fn test_create_commitment_fails_if_due_at_in_past() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 999;
 
-let res = client.try_create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let res = client.try_create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     assert_eq!(res, Err(Ok(Error::DueAtInPast.into())));
 }
 
@@ -86,9 +86,8 @@ fn test_sequential_unique_ids() {
     let terms_hash1 = BytesN::from_array(&env, &[1u8; 32]);
     let terms_hash2 = BytesN::from_array(&env, &[2u8; 32]);
 
-let id1 = client.create_commitment(&issuer, &counterparty, &terms_hash1, &2000, &resolver);
-        &100_000_000,
-    let id2 = client.create_commitment(&issuer, &counterparty, &terms_hash2, &3000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+    let id1 = client.create_commitment(&issuer, &counterparty, &terms_hash1, &2000, &100_000_000, &resolver);
+    let id2 = client.create_commitment(&issuer, &counterparty, &terms_hash2, &3000, &100_000_000, &resolver);
 
     assert_eq!(id1, 1);
     assert_eq!(id2, 2);
@@ -111,7 +110,7 @@ fn test_attest_outcome_fulfilled() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
@@ -129,7 +128,7 @@ fn test_attest_outcome_late_by_counterparty() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     env.ledger().with_mut(|l| l.timestamp = 2500);
     client.attest(&counterparty, &id, &CommitmentStatus::Late);
@@ -147,7 +146,7 @@ fn test_attest_outcome_breached() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     env.ledger().with_mut(|l| l.timestamp = 2100);
     client.attest(&issuer, &id, &CommitmentStatus::Breached);
@@ -165,7 +164,7 @@ fn test_attest_fails_if_not_pending() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
 
@@ -194,7 +193,7 @@ fn test_attest_requires_auth() {
     let due_at = 2000;
 
     env.mock_all_auths();
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     env.mock_auths(&[]);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
@@ -208,7 +207,7 @@ fn test_attest_fails_if_unauthorized_caller() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     let stranger = Address::generate(&env);
     let res = client.try_attest(&stranger, &id, &CommitmentStatus::Fulfilled);
@@ -223,7 +222,7 @@ fn test_attest_fails_for_pending_outcome() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     let res = client.try_attest(&issuer, &id, &CommitmentStatus::Pending);
     assert_eq!(res, Err(Ok(Error::InvalidOutcome.into())));
@@ -237,7 +236,7 @@ fn test_is_overdue_before_and_after_due_date() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     assert!(!client.is_overdue(&id));
 
@@ -269,7 +268,7 @@ fn test_events_emitted() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     let create_events = env.events().all();
     assert_eq!(create_events.len(), 1);
@@ -329,7 +328,7 @@ fn test_dispute_and_resolution_end_to_end() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
@@ -360,7 +359,7 @@ fn test_dispute_fails_outside_dispute_window() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
@@ -379,7 +378,7 @@ fn test_dispute_succeeds_at_window_boundary() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
@@ -399,7 +398,7 @@ fn test_dispute_fails_if_caller_not_issuer_or_counterparty() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
 
     let stranger = Address::generate(&env);
@@ -414,7 +413,7 @@ fn test_resolve_dispute_fails_if_caller_not_arbitrator() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
     client.dispute(&counterparty, &id);
 
@@ -439,7 +438,7 @@ fn test_resolve_dispute_fails_if_commitment_not_disputed() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     // Pending -> resolve_dispute should fail
     let res = client.try_resolve_dispute(&resolver, &id, &CommitmentStatus::Fulfilled);
@@ -459,7 +458,7 @@ fn test_resolve_dispute_rejects_invalid_final_outcome() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
     client.dispute(&counterparty, &id);
 
@@ -480,7 +479,7 @@ fn test_dispute_fails_if_pending() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     let res = client.try_dispute(&issuer, &id);
     assert_eq!(res, Err(Ok(Error::InvalidTransition.into())));
@@ -494,7 +493,7 @@ fn test_dispute_fails_if_already_disputed() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
     client.dispute(&counterparty, &id);
 
@@ -511,7 +510,7 @@ fn test_attest_fails_for_disputed_outcome() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
 
     let res = client.try_attest(&issuer, &id, &CommitmentStatus::Disputed);
     assert_eq!(res, Err(Ok(Error::InvalidOutcome.into())));
@@ -528,7 +527,7 @@ fn test_dispute_events_emitted() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
 
     client.dispute(&counterparty, &id);
@@ -568,7 +567,7 @@ fn test_dispute_requires_auth() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
 
     env.mock_all_auths();
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
 
     env.mock_auths(&[]);
@@ -589,7 +588,7 @@ fn test_resolve_dispute_requires_auth() {
 
     env.mock_all_auths();
     client.initialize(&arbitrator);
-let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
     client.dispute(&counterparty, &id);
 
@@ -631,7 +630,7 @@ fn test_reputation_increments_direct_attestation() {
     let due_at = 2000;
     
     // Create and fulfill first commitment
-let id1 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id1 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id1, &CommitmentStatus::Fulfilled);
     
     let rep1 = client.get_reputation(&issuer);
@@ -640,7 +639,7 @@ let id1 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&
     assert_eq!(rep1.breached_count, 0);
     
     // Create and late second commitment
-let id2 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[2u8; 32]), &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id2 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[2u8; 32]), &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id2, &CommitmentStatus::Late);
     
     let rep2 = client.get_reputation(&issuer);
@@ -649,7 +648,7 @@ let id2 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&
     assert_eq!(rep2.breached_count, 0);
     
     // Create and breach third commitment
-let id3 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[3u8; 32]), &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id3 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[3u8; 32]), &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id3, &CommitmentStatus::Breached);
     
     let rep3 = client.get_reputation(&issuer);
@@ -663,7 +662,7 @@ fn test_reputation_not_incremented_when_disputed() {
     let (env, client, issuer, counterparty, resolver) = setup_test_with_arbitrator();
 
     env.ledger().with_mut(|l| l.timestamp = 1000);
-let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
     
     // Initial attestation increments it
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
@@ -683,7 +682,7 @@ fn test_reputation_reflects_final_outcome_after_dispute() {
     let (env, client, issuer, counterparty, resolver) = setup_test_with_arbitrator();
 
     env.ledger().with_mut(|l| l.timestamp = 1000);
-let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
     
     // 1. Attest as Breached
     client.attest(&issuer, &id, &CommitmentStatus::Breached);
@@ -712,23 +711,21 @@ fn test_reputation_aggregates_multiple_commitments() {
     env.ledger().with_mut(|l| l.timestamp = 1000);
     
     // Comm 1: Fulfilled (direct)
-let id1 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &resolver);
+let id1 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id1, &CommitmentStatus::Fulfilled);
     
     // Comm 2: Late (disputed, resolved as Late)
-        &100_000_000,
-    let id2 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[2u8; 32]), &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+    let id2 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[2u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id2, &CommitmentStatus::Fulfilled); // Attested as Fulfilled initially
     client.dispute(&counterparty, &id2);
     client.resolve_dispute(&resolver, &id2, &CommitmentStatus::Late); // Overturned to Late
     
     // Comm 3: Breached (direct)
-let id3 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[3u8; 32]), &2000, &resolver);
+let id3 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[3u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id3, &CommitmentStatus::Breached);
     
     // Comm 4: Fulfilled (direct)
-        &100_000_000,
-    let id4 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[4u8; 32]), &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+    let id4 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[4u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id4, &CommitmentStatus::Fulfilled);
     
     let rep = client.get_reputation(&issuer);
@@ -749,7 +746,7 @@ fn test_create_commitment_fails_if_due_at_is_current_timestamp() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 1000; // Exactly current timestamp
 
-let res = client.try_create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let res = client.try_create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     assert_eq!(res, Err(Ok(Error::DueAtInPast.into())));
 }
 
@@ -758,7 +755,7 @@ fn test_dispute_fails_if_already_resolved() {
     let (env, client, issuer, counterparty, resolver) = setup_test_with_arbitrator();
 
     env.ledger().with_mut(|l| l.timestamp = 1000);
-let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
     
     // Attest, dispute, resolve
     client.attest(&issuer, &id, &CommitmentStatus::Late);
@@ -776,7 +773,7 @@ fn test_realistic_sequence() {
     let (env, client, issuer, counterparty, resolver) = setup_test_with_arbitrator();
 
     env.ledger().with_mut(|l| l.timestamp = 1000);
-let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
     
     env.ledger().with_mut(|l| l.timestamp = 2500); // Late
     client.attest(&issuer, &id, &CommitmentStatus::Late);
@@ -820,13 +817,7 @@ fn test_reentrancy_attack_during_resolve_dispute_is_blocked() {
     client.initialize(&attacker_id);
 
     env.ledger().with_mut(|l| l.timestamp = 1000);
-    let id = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[7u8; 32]),
-        &2000,
-&attacker_id,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[7u8; 32]), &2000, &100_000_000, &attacker_id);
     client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
     client.dispute(&counterparty, &id);
 
@@ -876,13 +867,7 @@ fn test_reentrant_attest_call_is_rejected() {
     let (env, client, issuer, counterparty, resolver) = setup_test();
 
     env.ledger().with_mut(|l| l.timestamp = 1000);
-    let id = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[1u8; 32]),
-        &2000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
 
     // Simulate a stuck guard (as if a nested call were already in progress)
     // and verify a top-level mutating call is rejected while it is locked.
@@ -911,33 +896,15 @@ fn test_get_trust_score_reflects_outcomes() {
 
     assert_eq!(client.get_trust_score(&issuer), 50);
 
-    let id1 = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[1u8; 32]),
-        &2000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id1 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id1, &CommitmentStatus::Fulfilled);
     assert!(client.get_trust_score(&issuer) > 50);
 
-    let id2 = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[2u8; 32]),
-        &2000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id2 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[2u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id2, &CommitmentStatus::Late);
     assert_eq!(client.get_trust_score(&issuer), 50);
 
-    let id3 = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[3u8; 32]),
-        &2000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id3 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[3u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id3, &CommitmentStatus::Breached);
     assert_eq!(client.get_trust_score(&issuer), 0);
 }
@@ -1002,7 +969,7 @@ fn test_upgrade_authorization_logic() {
     let terms_hash = BytesN::from_array(&env, &[1u8; 32]);
     let due_at = 2000;
 
-let id1 = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &resolver);: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+let id1 = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &resolver);
     client.attest(&issuer, &id1, &CommitmentStatus::Fulfilled);
 
     // Verify that non-arbitrator cannot upgrade
@@ -1027,7 +994,7 @@ fn test_custom_resolver_delegation() {
 
     // Designate a custom resolver address
     let custom_resolver = Address::generate(&env);
-    let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &custom_resolver);
+    let id = client.create_commitment(&issuer, &counterparty, &terms_hash, &due_at, &100_000_000, &custom_resolver);
 
     let comm = client.get_commitment(&id);
     assert_eq!(comm.resolver_address, custom_resolver);

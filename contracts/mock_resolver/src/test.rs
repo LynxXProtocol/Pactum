@@ -59,6 +59,7 @@ fn test_mock_resolver_cross_contract_dispute_resolution() {
         &counterparty,
         &terms_hash,
         &due_at,
+        &100_000_000,
         &resolver_client.address,
     );
 
@@ -124,6 +125,7 @@ fn test_mock_resolver_rejected_if_not_designated_resolver() {
         &counterparty,
         &terms_hash,
         &due_at,
+        &100_000_000,
         &other_resolver,
     );
 

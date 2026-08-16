@@ -103,13 +103,7 @@ fn create_and_attest(
         l.sequence_number = 1000;
     });
     let resolver = Address::generate(env);
-    let id = client.create_commitment(
-        issuer,
-        counterparty,
-        &BytesN::from_array(env, &[terms; 32]),
-        &2000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id = client.create_commitment(issuer, counterparty, &BytesN::from_array(env, &[terms; 32]), &2000, &100_000_000, &resolver);
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(issuer, &id, &outcome);
     id
@@ -452,22 +446,10 @@ fn test_bucket_boundary_semantics() {
         l.sequence_number = 9_999;
     });
     let resolver = Address::generate(&env);
-    let id = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[1u8; 32]),
-        &2000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &resolver);
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(&issuer, &id, &CommitmentStatus::Breached);
-    let id2 = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[2u8; 32]),
-        &2000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-    );
+    let id2 = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[2u8; 32]), &2000, &100_000_000, &resolver);
     client.attest(&issuer, &id2, &CommitmentStatus::Fulfilled);
 
     // Just before the boundary, exactly on it, and just after: same bucket,
@@ -589,13 +571,7 @@ fn test_query_correct_after_thousands_of_folded_buckets() {
             l.timestamp = 1000 + i as u64;
             l.sequence_number = 1000 + i * crate::trust_score::BUCKET_SIZE_LEDGERS;
         });
-        let id = client.create_commitment(
-            &issuer,
-            &counterparty,
-            &BytesN::from_array(&env, &[(i % 250) as u8; 32]),
-            &2_000_000,
-&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
-        );
+        let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[(i % 250) as u8; 32]), &2_000_000, &100_000_000, &resolver);
         client.attest(&issuer, &id, &CommitmentStatus::Breached);
     }
 
@@ -675,13 +651,7 @@ fn test_resolve_dispute_applies_final_outcome_to_score() {
         l.timestamp = 1000;
         l.sequence_number = 1000;
     });
-    let id = client.create_commitment(
-        &issuer,
-        &counterparty,
-        &BytesN::from_array(&env, &[1u8; 32]),
-        &2000,
-        &arbitrator,
-    );
+    let id = client.create_commitment(&issuer, &counterparty, &BytesN::from_array(&env, &[1u8; 32]), &2000, &100_000_000, &arbitrator);
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(&issuer, &id, &CommitmentStatus::Breached);
     assert_eq!(client.get_trust_score(&issuer), 0);

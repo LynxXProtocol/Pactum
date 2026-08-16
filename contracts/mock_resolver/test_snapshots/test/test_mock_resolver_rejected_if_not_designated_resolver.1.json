@@ -8,88 +8,6 @@
     [],
     [
       [
-<<<<<<< HEAD:contracts/mock_resolver/test_snapshots/test/test_mock_resolver_rejected_if_not_designated_resolver.1.json
-=======
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "initialize",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAITA4"
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ],
-    [
-      [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "create_commitment",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                },
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
-                },
-                {
-                  "bytes": "0707070707070707070707070707070707070707070707070707070707070707"
-                },
-                {
-                  "u64": 2000
-                },
-                {
-                  "u64": 100000000
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ],
-    [
-      [
-        "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4",
-        {
-          "function": {
-            "contract_fn": {
-              "contract_address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-              "function_name": "attest",
-              "args": [
-                {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
-                },
-                {
-                  "u64": 1
-                },
-                {
-                  "vec": [
-                    {
-                      "symbol": "Fulfilled"
-                    }
-                  ]
-                }
-              ]
-            }
-          },
-          "sub_invocations": []
-        }
-      ]
-    ],
-    [
-      [
->>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57)):contracts/registry/test_snapshots/test/test_reentrancy_attack_during_resolve_dispute_is_blocked.1.json
         "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M",
         {
           "function": {
@@ -146,6 +64,9 @@
                 },
                 {
                   "u64": 2000
+                },
+                {
+                  "u64": 100000000
                 },
                 {
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAOLZM"
@@ -360,10 +281,10 @@
                   "symbol": "PairCount"
                 },
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
                 },
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
                 }
               ]
             },
@@ -383,16 +304,16 @@
                       "symbol": "PairCount"
                     },
                     {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
                     },
                     {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAHK3M"
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMDR4"
                     }
                   ]
                 },
                 "durability": "persistent",
                 "val": {
-                  "u32": 2
+                  "u32": 1
                 }
               }
             },
@@ -481,11 +402,7 @@
                   "symbol": "TrustHistory"
                 },
                 {
-<<<<<<< HEAD:contracts/mock_resolver/test_snapshots/test/test_mock_resolver_rejected_if_not_designated_resolver.1.json
                   "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
-=======
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
->>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57)):contracts/registry/test_snapshots/test/test_reentrancy_attack_during_resolve_dispute_is_blocked.1.json
                 }
               ]
             },
@@ -505,11 +422,7 @@
                       "symbol": "TrustHistory"
                     },
                     {
-<<<<<<< HEAD:contracts/mock_resolver/test_snapshots/test/test_mock_resolver_rejected_if_not_designated_resolver.1.json
                       "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
-=======
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
->>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57)):contracts/registry/test_snapshots/test/test_reentrancy_attack_during_resolve_dispute_is_blocked.1.json
                     }
                   ]
                 },
@@ -568,11 +481,7 @@
                               "symbol": "fulfilled"
                             },
                             "val": {
-<<<<<<< HEAD:contracts/mock_resolver/test_snapshots/test/test_mock_resolver_rejected_if_not_designated_resolver.1.json
                               "u64": 0
-=======
-                              "u64": 1073741824
->>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57)):contracts/registry/test_snapshots/test/test_reentrancy_attack_during_resolve_dispute_is_blocked.1.json
                             }
                           },
                           {
@@ -607,15 +516,13 @@
         {
           "contract_data": {
             "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
-<<<<<<< HEAD:contracts/mock_resolver/test_snapshots/test/test_mock_resolver_rejected_if_not_designated_resolver.1.json
-=======
             "key": {
               "vec": [
                 {
                   "symbol": "UniqueCounterparties"
                 },
                 {
-                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                  "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
                 }
               ]
             },
@@ -635,7 +542,7 @@
                       "symbol": "UniqueCounterparties"
                     },
                     {
-                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAFCT4"
+                      "address": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAK3IM"
                     }
                   ]
                 },
@@ -654,7 +561,6 @@
         {
           "contract_data": {
             "contract": "CAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAD2KM",
->>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57)):contracts/registry/test_snapshots/test/test_reentrancy_attack_during_resolve_dispute_is_blocked.1.json
             "key": "ledger_key_contract_instance",
             "durability": "persistent"
           }

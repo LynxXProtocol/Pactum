@@ -79,7 +79,7 @@ pub struct LegacyCommitment {
     pub created_at: u64,
     /// Unix timestamp (seconds) when the commitment was attested, if it has been attested.
     pub attested_at: Option<u64>,
-=======
+}
 pub struct VoteTally {
     /// Number of votes cast for `Fulfilled`.
     pub fulfilled: u32,
@@ -115,11 +115,6 @@ impl VoteTally {
             _ => {}
         }
     }
-=======
-    /// Financial value (staked or committed in stroops, 1 XLM = 10,000,000 stroops).
-    pub amount: u64,
->>>>>>> 77bbefd (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
->>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
 }
 
 /// Storage keys used for persisting commitments and contract state.
@@ -181,6 +176,7 @@ pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitme
         status,
         created_at,
         attested_at,
+        amount: 0,
         resolver_address: fallback_resolver,
     };
 
