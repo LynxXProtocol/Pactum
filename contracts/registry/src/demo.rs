@@ -49,6 +49,7 @@ fn create_and_attest(
         counterparty,
         &BytesN::from_array(env, &[terms; 32]),
         &2000,
+        &100_000_000,
         &resolver,
     );
     env.ledger().with_mut(|l| l.timestamp = 1500);

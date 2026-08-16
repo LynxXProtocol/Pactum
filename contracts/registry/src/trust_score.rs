@@ -123,6 +123,41 @@ pub struct TrustHistory {
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub enum TrustKey {
     TrustHistory(Address),
+    PairCount(Address, Address),
+    UniqueCounterparties(Address),
+}
+
+/// Calculates sub-linear stake/value weight based on commitment amount (in stroops, 1 XLM = 10,000,000 stroops).
+pub fn value_weight(amount: u64) -> u64 {
+    let xlm = amount / 10_000_000;
+    if xlm < 100 {
+        1
+    } else if xlm < 1000 {
+        2
+    } else if xlm < 10000 {
+        3
+    } else {
+        4
+    }
+}
+
+/// Calculates the pair interaction discount scale (scale 2^32) for the k-th transaction between a pair.
+pub fn pair_discount_scale(k: u32) -> u64 {
+    if k <= 1 {
+        SCALE
+    } else {
+        let k64 = k as u64;
+        SCALE / (k64 * k64)
+    }
+}
+
+/// Calculates the global counterparty diversity factor (scale 2^32) based on number of unique counterparties.
+pub fn diversity_factor(unique_count: u32) -> u64 {
+    if unique_count >= 1 {
+        SCALE
+    } else {
+        SCALE
+    }
 }
 
 /// Number of decay steps for a bucket delta (half-life every 64 buckets).
@@ -139,7 +174,7 @@ fn decay_steps(delta_buckets: u32) -> u32 {
 /// `steps` of decay to both. All math is u128 with a saturating cast back.
 fn fold_value(aged: u64, current: u64, steps: u32) -> u64 {
     let a = ((aged as u128) * (decay_weight(steps) as u128)) >> 32;
-    let c = (current as u128) * (decay_weight(steps) as u128);
+    let c = ((current as u128) * (decay_weight(steps) as u128)) >> 32;
     let sum = a + c;
     if sum > u64::MAX as u128 {
         u64::MAX
@@ -151,8 +186,9 @@ fn fold_value(aged: u64, current: u64, steps: u32) -> u64 {
 /// Effective decayed value of an outcome type at scale 2^32, computed in
 /// memory (no storage writes).
 fn effective_value(aged: u64, current: u64, steps: u32) -> i128 {
-    let a = ((aged as i128) * (decay_weight(steps) as i128)) >> 32;
-    let c = (current as i128) * (decay_weight(steps) as i128);
+    let w = decay_weight(steps) as i128;
+    let a = ((aged as i128) * w) >> 32;
+    let c = ((current as i128) * w) >> 32;
     a + c
 }
 
@@ -172,15 +208,11 @@ fn decay_weight(steps: u32) -> u64 {
 }
 
 /// Records an outcome for `issuer` in the trust history.
-///
-/// `increment` is true when an outcome is added (attest / dispute resolution)
-/// and false when a disputed outcome is retracted. Retraction subtracts from
-/// the raw `current` bucket when possible (the dispute window is ~12 buckets,
-/// so this is nearly always the case); otherwise it subtracts one scaled unit
-/// from the `aged` aggregate, floored at zero.
 pub fn update_trust_history(
     env: &Env,
     issuer: Address,
+    counterparty: Address,
+    amount: u64,
     outcome: CommitmentStatus,
     increment: bool,
 ) {
@@ -207,23 +239,51 @@ pub fn update_trust_history(
         history.epoch = now_bucket;
     }
 
+    let v_w = value_weight(amount);
+
     match outcome {
         CommitmentStatus::Fulfilled => {
-            adjust_count(
-                &mut history.current.fulfilled,
-                &mut history.aged.fulfilled,
-                increment,
-            );
+            if increment {
+                let pair_key = TrustKey::PairCount(issuer.clone(), counterparty.clone());
+                let pair_count: u32 = env.storage().persistent().get(&pair_key).unwrap_or(0);
+                let new_pair_count = pair_count.saturating_add(1);
+                env.storage().persistent().set(&pair_key, &new_pair_count);
+                env.storage()
+                    .persistent()
+                    .extend_ttl(&pair_key, TTL_THRESHOLD_LEDGERS, TTL_EXTEND_LEDGERS);
+
+                if pair_count == 0 {
+                    let unique_key = TrustKey::UniqueCounterparties(issuer.clone());
+                    let unique_count: u32 = env.storage().persistent().get(&unique_key).unwrap_or(0);
+                    let new_unique_count = unique_count.saturating_add(1);
+                    env.storage().persistent().set(&unique_key, &new_unique_count);
+                    env.storage()
+                        .persistent()
+                        .extend_ttl(&unique_key, TTL_THRESHOLD_LEDGERS, TTL_EXTEND_LEDGERS);
+                }
+
+                let disc_w = pair_discount_scale(new_pair_count);
+                let add_val = v_w.saturating_mul(disc_w);
+                history.current.fulfilled = history.current.fulfilled.saturating_add(add_val);
+            } else {
+                adjust_count(&mut history.current.fulfilled, &mut history.aged.fulfilled, false);
+            }
         }
         CommitmentStatus::Late => {
-            adjust_count(&mut history.current.late, &mut history.aged.late, increment);
+            let add_val = v_w.saturating_mul(SCALE);
+            if increment {
+                history.current.late = history.current.late.saturating_add(add_val);
+            } else {
+                adjust_count(&mut history.current.late, &mut history.aged.late, false);
+            }
         }
         CommitmentStatus::Breached => {
-            adjust_count(
-                &mut history.current.breached,
-                &mut history.aged.breached,
-                increment,
-            );
+            let add_val = v_w.saturating_mul(SCALE);
+            if increment {
+                history.current.breached = history.current.breached.saturating_add(add_val);
+            } else {
+                adjust_count(&mut history.current.breached, &mut history.aged.breached, false);
+            }
         }
         _ => {}
     }
@@ -238,27 +298,32 @@ pub fn update_trust_history(
 /// `current` bucket and falling back to one scaled unit of `aged`.
 fn adjust_count(current: &mut u64, aged: &mut u64, increment: bool) {
     if increment {
-        *current = current.saturating_add(1);
+        *current = current.saturating_add(SCALE);
+    } else if *current >= SCALE {
+        *current -= SCALE;
     } else if *current > 0 {
-        *current -= 1;
+        *current = 0;
     } else {
         *aged = aged.saturating_sub(SCALE);
     }
 }
 
 /// Computes the 0..=100 trust score for `address` as an issuer.
-///
-/// Read-only: a single storage read plus constant integer math. The only
-/// write performed is the TTL extension on an existing entry, mirroring the
-/// `get_reputation` bump-on-access pattern so active histories never archive.
 pub fn get_trust_score(env: &Env, address: Address) -> u32 {
-    let key = TrustKey::TrustHistory(address);
+    let key = TrustKey::TrustHistory(address.clone());
     let Some(history): Option<TrustHistory> = env.storage().persistent().get(&key) else {
         return BASE_SCORE;
     };
     env.storage()
         .persistent()
         .extend_ttl(&key, TTL_THRESHOLD_LEDGERS, TTL_EXTEND_LEDGERS);
+
+    let unique_key = TrustKey::UniqueCounterparties(address.clone());
+    if env.storage().persistent().has(&unique_key) {
+        env.storage()
+            .persistent()
+            .extend_ttl(&unique_key, TTL_THRESHOLD_LEDGERS, TTL_EXTEND_LEDGERS);
+    }
 
     let now_bucket = env.ledger().sequence() / BUCKET_SIZE_LEDGERS;
     let steps = decay_steps(now_bucket.wrapping_sub(history.epoch));
@@ -270,7 +335,16 @@ pub fn get_trust_score(env: &Env, address: Address) -> u32 {
     let numerator = ((BASE_SCORE as i128) << 32) + FULFILLED_WEIGHT * fulfilled
         - LATE_WEIGHT * late
         - BREACH_WEIGHT * breached;
-    let raw = numerator >> 32;
+    let mut raw = numerator >> 32;
+
+    let unique_count: u32 = env.storage().persistent().get(&unique_key).unwrap_or(0);
+    let div_factor = diversity_factor(unique_count);
+
+    if raw > BASE_SCORE as i128 {
+        let bonus = raw - (BASE_SCORE as i128);
+        let adj_bonus = (bonus * (div_factor as i128)) >> 32;
+        raw = (BASE_SCORE as i128) + adj_bonus;
+    }
 
     if raw <= 0 {
         0

@@ -22,7 +22,15 @@ mod attacker_gate;
 #[cfg(test)]
 mod demo;
 
+<<<<<<< HEAD
 pub use commitments::{Commitment, CommitmentStatus, DataKey, DISPUTE_WINDOW_SECONDS};
+=======
+#[cfg(test)]
+mod test_sybil_resistance;
+
+pub use commitments::DISPUTE_WINDOW_SECONDS;
+use commitments::{Commitment, CommitmentStatus, DataKey, VoteTally};
+>>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
 use errors::Error;
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, BytesN, Env};
 
@@ -110,6 +118,7 @@ impl RegistryContract {
         counterparty: Address,
         terms_hash: BytesN<32>,
         due_at: u64,
+        amount: u64,
         resolver_address: Address,
     ) -> u64 {
         // 0. Enter the reentrancy guard before any external interaction (including
@@ -146,6 +155,7 @@ impl RegistryContract {
             status: CommitmentStatus::Pending,
             created_at: now,
             attested_at: None,
+            amount,
             resolver_address,
         };
 

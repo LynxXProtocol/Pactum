@@ -53,6 +53,8 @@ pub struct Commitment {
     pub created_at: u64,
     /// Unix timestamp (seconds) when the commitment was attested, if it has been attested.
     pub attested_at: Option<u64>,
+    /// Financial value (staked or committed in stroops, 1 XLM = 10,000,000 stroops).
+    pub amount: u64,
     /// The address of the custom resolver delegated to resolve disputes for this commitment.
     pub resolver_address: Address,
 }
@@ -77,6 +79,47 @@ pub struct LegacyCommitment {
     pub created_at: u64,
     /// Unix timestamp (seconds) when the commitment was attested, if it has been attested.
     pub attested_at: Option<u64>,
+=======
+pub struct VoteTally {
+    /// Number of votes cast for `Fulfilled`.
+    pub fulfilled: u32,
+    /// Number of votes cast for `Late`.
+    pub late: u32,
+    /// Number of votes cast for `Breached`.
+    pub breached: u32,
+}
+
+impl VoteTally {
+    /// Returns the tally counter for the given outcome.
+    pub fn counter(&self, status: CommitmentStatus) -> u32 {
+        match status {
+            CommitmentStatus::Fulfilled => self.fulfilled,
+            CommitmentStatus::Late => self.late,
+            CommitmentStatus::Breached => self.breached,
+            _ => 0,
+        }
+    }
+
+    /// Increments the tally counter for the given outcome.
+    pub fn increment(&mut self, status: CommitmentStatus) {
+        match status {
+            CommitmentStatus::Fulfilled => {
+                self.fulfilled = self.fulfilled.saturating_add(1);
+            }
+            CommitmentStatus::Late => {
+                self.late = self.late.saturating_add(1);
+            }
+            CommitmentStatus::Breached => {
+                self.breached = self.breached.saturating_add(1);
+            }
+            _ => {}
+        }
+    }
+=======
+    /// Financial value (staked or committed in stroops, 1 XLM = 10,000,000 stroops).
+    pub amount: u64,
+>>>>>>> 77bbefd (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
+>>>>>>> b1496f5 (feat(trust-score): engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
 }
 
 /// Storage keys used for persisting commitments and contract state.

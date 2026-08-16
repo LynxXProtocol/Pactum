@@ -108,7 +108,7 @@ fn create_and_attest(
         counterparty,
         &BytesN::from_array(env, &[terms; 32]),
         &2000,
-        &resolver,
+&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
     );
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(issuer, &id, &outcome);
@@ -314,13 +314,13 @@ fn test_score_is_monotone_non_decreasing_over_ledger_advances() {
 
 #[test]
 fn test_fulfills_raise_score_to_cap() {
-    let (env, client, issuer, counterparty) = setup();
+    let (env, client, issuer, _counterparty) = setup();
     for i in 0..5u8 {
         create_and_attest(
             &env,
             &client,
             &issuer,
-            &counterparty,
+            &Address::generate(&env),
             i,
             CommitmentStatus::Fulfilled,
         );
@@ -364,13 +364,13 @@ fn test_late_outcome_penalty_and_decay() {
 
 #[test]
 fn test_fulfilled_and_late_credits_cancel_symmetrically() {
-    let (env, client, issuer, counterparty) = setup();
+    let (env, client, issuer, _counterparty) = setup();
     for i in 0..10u8 {
         create_and_attest(
             &env,
             &client,
             &issuer,
-            &counterparty,
+            &Address::generate(&env),
             i,
             CommitmentStatus::Fulfilled,
         );
@@ -380,7 +380,7 @@ fn test_fulfilled_and_late_credits_cancel_symmetrically() {
             &env,
             &client,
             &issuer,
-            &counterparty,
+            &Address::generate(&env),
             i,
             CommitmentStatus::Late,
         );
@@ -457,7 +457,7 @@ fn test_bucket_boundary_semantics() {
         &counterparty,
         &BytesN::from_array(&env, &[1u8; 32]),
         &2000,
-        &resolver,
+&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
     );
     env.ledger().with_mut(|l| l.timestamp = 1500);
     client.attest(&issuer, &id, &CommitmentStatus::Breached);
@@ -466,7 +466,7 @@ fn test_bucket_boundary_semantics() {
         &counterparty,
         &BytesN::from_array(&env, &[2u8; 32]),
         &2000,
-        &resolver,
+&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
     );
     client.attest(&issuer, &id2, &CommitmentStatus::Fulfilled);
 
@@ -594,7 +594,7 @@ fn test_query_correct_after_thousands_of_folded_buckets() {
             &counterparty,
             &BytesN::from_array(&env, &[(i % 250) as u8; 32]),
             &2_000_000,
-            &resolver,
+&resolver,: engineer Sybil resistance, value-weighting, and counterparty diversity (closes #57))
         );
         client.attest(&issuer, &id, &CommitmentStatus::Breached);
     }
@@ -663,7 +663,8 @@ fn test_dispute_retracts_aged_breach_from_score() {
     );
     env.ledger().with_mut(|l| l.timestamp = 1600);
     client.dispute(&counterparty, &1);
-    assert_eq!(client.get_trust_score(&issuer), 50);
+    let s = client.get_trust_score(&issuer);
+    assert_eq!(s, 50);
 }
 
 #[test]
@@ -708,27 +709,27 @@ fn test_resolve_dispute_applies_final_outcome_to_score() {
 
 #[test]
 fn test_score_saturates_at_upper_and_lower_bounds() {
-    let (env, client, issuer, counterparty) = setup();
+    let (env, client, issuer, _counterparty) = setup();
 
     for i in 0..100u8 {
         create_and_attest(
             &env,
             &client,
             &issuer,
-            &counterparty,
+            &Address::generate(&env),
             i,
             CommitmentStatus::Fulfilled,
         );
     }
     assert_eq!(client.get_trust_score(&issuer), 100);
 
-    let (env2, client2, issuer2, counterparty2) = setup();
+    let (env2, client2, issuer2, _counterparty2) = setup();
     for i in 0..10u8 {
         create_and_attest(
             &env2,
             &client2,
             &issuer2,
-            &counterparty2,
+            &Address::generate(&env2),
             i,
             CommitmentStatus::Breached,
         );

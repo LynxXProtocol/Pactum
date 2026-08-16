@@ -66,7 +66,14 @@ pub fn dispute(env: &Env, caller: Address, id: u64) {
     crate::reputation::update_reputation(env, commitment.issuer.clone(), old_status, false);
 
     // 10. Update trust history (decrement previous outcome).
-    crate::trust_score::update_trust_history(env, commitment.issuer.clone(), old_status, false);
+    crate::trust_score::update_trust_history(
+        env,
+        commitment.issuer.clone(),
+        commitment.counterparty.clone(),
+        commitment.amount,
+        old_status,
+        false,
+    );
 
     // 11. Emit commitment_disputed event.
     events::commitment_disputed(env, id);
@@ -133,7 +140,14 @@ pub fn resolve_dispute(
     crate::reputation::update_reputation(env, commitment.issuer.clone(), final_outcome, true);
 
     // 9. Update trust history (increment with final outcome).
-    crate::trust_score::update_trust_history(env, commitment.issuer.clone(), final_outcome, true);
+    crate::trust_score::update_trust_history(
+        env,
+        commitment.issuer.clone(),
+        commitment.counterparty.clone(),
+        commitment.amount,
+        final_outcome,
+        true,
+    );
 
     // 10. Emit dispute_resolved event.
     events::dispute_resolved(env, id, final_outcome);
