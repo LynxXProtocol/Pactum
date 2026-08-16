@@ -149,7 +149,7 @@ impl RegistryContract {
     /// # Panics
     /// * Panics with `Error::CommitmentNotFound` if the ID does not exist in storage.
     pub fn get_commitment(env: Env, id: u64) -> Commitment {
-        let commitment = commitments::get_commitment_record(&env, id)
+        let commitment = commitments::read_commitment_record(&env, id)
             .unwrap_or_else(|| panic_with_error!(&env, Error::CommitmentNotFound));
 
         env.storage().persistent().extend_ttl(
@@ -170,7 +170,16 @@ impl RegistryContract {
     /// # Returns
     /// * `Commitment` - The migrated commitment.
     pub fn migrate_commitment(env: Env, id: u64) -> Commitment {
-        Self::get_commitment(env, id)
+        let commitment = commitments::get_commitment_record(&env, id)
+            .unwrap_or_else(|| panic_with_error!(&env, Error::CommitmentNotFound));
+
+        env.storage().persistent().extend_ttl(
+            &DataKey::Commitment(id),
+            commitments::TTL_THRESHOLD_LEDGERS,
+            commitments::TTL_EXTEND_LEDGERS,
+        );
+
+        commitment
     }
 
     /// Creates and registers a specialized Refund Guarantee commitment with locked token escrow.

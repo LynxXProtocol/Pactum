@@ -1139,6 +1139,39 @@ fn test_legacy_commitment_migration_fails_if_payload_id_mismatch() {
     assert_eq!(res, Err(Ok(Error::CommitmentNotFound.into())));
 }
 
+#[test]
+fn test_get_commitment_is_read_only_and_migrate_commitment_persists() {
+    let (env, client, issuer, counterparty, _resolver) = setup_test_with_arbitrator();
+
+    let legacy_id = 150u64;
+    let legacy_comm = commitments::LegacyCommitment {
+        id: legacy_id,
+        issuer: issuer.clone(),
+        counterparty: counterparty.clone(),
+        terms_hash: BytesN::from_array(&env, &[9u8; 32]),
+        due_at: 2000,
+        status: CommitmentStatus::Pending,
+        created_at: 1000,
+        attested_at: None,
+    };
+
+    env.as_contract(&client.address, || {
+        env.storage()
+            .persistent()
+            .set(&commitments::DataKey::Commitment(legacy_id), &legacy_comm);
+    });
+
+    // 1. get_commitment returns the commitment in memory without writing the migrated struct
+    let read_comm = client.get_commitment(&legacy_id);
+    assert_eq!(read_comm.id, legacy_id);
+    assert_eq!(read_comm.resolver_address, client.get_arbitrator());
+
+    // 2. migrate_commitment explicitly persists the migrated struct
+    let migrated_comm = client.migrate_commitment(&legacy_id);
+    assert_eq!(migrated_comm.id, legacy_id);
+    assert_eq!(migrated_comm.resolver_address, client.get_arbitrator());
+}
+
 // -----------------------------------------------------------------------------
 // Phase 5 - Refund Guarantee Commitment Template Tests
 // -----------------------------------------------------------------------------
