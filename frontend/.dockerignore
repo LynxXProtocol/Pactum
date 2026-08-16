@@ -1,0 +1,10 @@
+node_modules
+dist
+dist-ssr
+playwright-report
+test-results
+.env
+.env.*
+*.log
+Dockerfile
+.dockerignore

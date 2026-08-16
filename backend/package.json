@@ -6,11 +6,12 @@
   "scripts": {
     "start": "node dist/index.js",
     "dev": "nodemon src/index.ts",
-    "build": "tsc",
+    "build": "tsc && npm run copy:migrations",
+    "copy:migrations": "node -e \"require('fs').cpSync('src/db/migrations','dist/db/migrations',{recursive:true})\"",
     "test": "npm run test:indexer",
     "test:indexer": "tsc -p tsconfig.indexer-test.json && find dist-indexer-test/src/indexer -type f -name '*.test.js' -exec node --test {} +",
     "analytics:worker": "node dist/workers/analyticsWorker.js",
-    "migrate:timescale": "node -e \"require('./dist/db/timescale').runMigrations()\""
+    "migrate:timescale": "node dist/db/migrate.js"
   },
   "keywords": [],
   "author": "",
@@ -33,6 +34,9 @@
     "@types/pg": "^8.21.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
-    "typescript": "^7.0.2"
+    "typescript": "^5.9.2"
+  },
+  "engines": {
+    "node": ">=22.0.0"
   }
 }

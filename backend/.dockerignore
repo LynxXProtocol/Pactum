@@ -1,0 +1,9 @@
+node_modules
+dist
+dist-indexer-test
+tests
+.env
+.env.*
+*.log
+Dockerfile
+.dockerignore

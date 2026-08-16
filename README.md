@@ -157,6 +157,24 @@ npm run dev
 npm run analytics:worker
 ```
 
+### Running the whole stack with Docker
+
+**Prerequisites:** Docker with Compose v2.
+
+```bash
+docker compose up --build
+```
+
+That boots TimescaleDB, the backend (which applies `backend/src/db/migrations/*.sql` on startup) and an nginx-served frontend build.
+
+| Service | URL | Override |
+|---|---|---|
+| Frontend | http://localhost | `FRONTEND_PORT` |
+| Backend | http://localhost:3000 | `BACKEND_PORT` |
+| TimescaleDB | `localhost:5432` | `TIMESCALEDB_PORT` |
+
+The frontend is built to call the API on its own origin, and nginx proxies `/api`, `/reputation`, `/commitments` and `/health` to the backend container. Database credentials and Soroban settings come from the same `TIMESCALEDB_*` / `SOROBAN_*` variables as `backend/.env.example`; set them in a root `.env` to override the defaults.
+
 ---
 
 ## Roadmap

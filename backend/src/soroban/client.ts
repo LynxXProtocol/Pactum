@@ -1,12 +1,12 @@
 import {
+  Account,
   Contract,
-  SorobanRpc,
   TransactionBuilder,
-  Networks,
   BASE_FEE,
-  xdr,
-  Address as StellarAddress,
-  Keypair
+  Keypair,
+  nativeToScVal,
+  rpc,
+  scValToNative
 } from '@stellar/stellar-sdk';
 
 export enum CommitmentStatus {
@@ -25,13 +25,13 @@ export interface SorobanClientConfig {
 }
 
 export class SorobanClient {
-  private rpc: SorobanRpc.Server;
+  private rpc: rpc.Server;
   private contract: Contract;
   private networkPassphrase: string;
   private keypair: Keypair;
 
   constructor(config: SorobanClientConfig) {
-    this.rpc = new SorobanRpc.Server(config.rpcUrl, { allowHttp: true });
+    this.rpc = new rpc.Server(config.rpcUrl, { allowHttp: true });
     this.contract = new Contract(config.contractId);
     this.networkPassphrase = config.networkPassphrase;
     this.keypair = Keypair.fromSecret(config.privateKey);
@@ -48,12 +48,9 @@ export class SorobanClient {
     outcome: CommitmentStatus
   ): Promise<string> {
     try {
-      // Get the latest ledger info for transaction building
-      const { latestLedger } = await this.rpc.getLatestLedger();
-      
       // Build the transaction
       const account = await this.rpc.getAccount(this.keypair.publicKey());
-      
+
       const transaction = new TransactionBuilder(account, {
         fee: BASE_FEE,
         networkPassphrase: this.networkPassphrase,
@@ -61,8 +58,8 @@ export class SorobanClient {
         .addOperation(
           this.contract.call(
             'attest',
-            xdr.ScVal.scvU64(commitmentId),
-            xdr.ScVal.scvU32(outcome)
+            nativeToScVal(commitmentId, { type: 'u64' }),
+            nativeToScVal(outcome, { type: 'u32' })
           )
         )
         .setTimeout(30)
@@ -70,39 +67,28 @@ export class SorobanClient {
 
       // Simulate the transaction to get auth requirements
       const simResult = await this.rpc.simulateTransaction(transaction);
-      
-      if (SorobanRpc.Api.isSimulationError(simResult)) {
+
+      if (rpc.Api.isSimulationError(simResult)) {
         throw new Error(`Simulation error: ${simResult.error}`);
       }
 
-      // Clone the transaction and prepare it
-      const preparedTransaction = TransactionBuilder.fromXDR(
-        transaction.toXDR(),
-        this.networkPassphrase
-      );
-
-      if (simResult.result && simResult.result.auth) {
-        // Add auth entries if required
-        const authEntries = simResult.result.auth.map(entry => 
-          xdr.SorobanAuthorizationEntry.fromXDR(entry, 'base64')
-        );
-        preparedTransaction.operations[0].auth = authEntries;
-      }
+      // Fold the simulated auth entries and resource footprint into the transaction
+      const preparedTransaction = rpc.assembleTransaction(transaction, simResult).build();
 
       // Sign the transaction with the server's private key
       preparedTransaction.sign(this.keypair);
 
       // Send the transaction
       const sendResult = await this.rpc.sendTransaction(preparedTransaction);
-      
+
       if (sendResult.errorResult) {
         throw new Error(`Send error: ${sendResult.errorResult}`);
       }
 
       // Wait for transaction completion
-      const result = await this.rpc.getTransaction(sendResult.hash);
-      
-      if (result.status === SorobanRpc.Api.GetTransactionStatus.SUCCESS) {
+      const result = await this.rpc.pollTransaction(sendResult.hash);
+
+      if (result.status === rpc.Api.GetTransactionStatus.SUCCESS) {
         return sendResult.hash;
       } else {
         throw new Error(`Transaction failed with status: ${result.status}`);
@@ -119,33 +105,27 @@ export class SorobanClient {
    */
   async getCommitment(commitmentId: number): Promise<any> {
     try {
-      const { latestLedger } = await this.rpc.getLatestLedger();
-      
-      const transaction = new TransactionBuilder(new TransactionBuilder.Account({
-        publicKey: this.keypair.publicKey(),
-        sequence: '0',
-        increment: '0'
-      }), {
+      const transaction = new TransactionBuilder(this.readOnlyAccount(), {
         fee: BASE_FEE,
         networkPassphrase: this.networkPassphrase,
       })
         .addOperation(
           this.contract.call(
             'get_commitment',
-            xdr.ScVal.scvU64(commitmentId)
+            nativeToScVal(commitmentId, { type: 'u64' })
           )
         )
         .setTimeout(30)
         .build();
 
       const simResult = await this.rpc.simulateTransaction(transaction);
-      
-      if (SorobanRpc.Api.isSimulationError(simResult)) {
+
+      if (rpc.Api.isSimulationError(simResult)) {
         throw new Error(`Simulation error: ${simResult.error}`);
       }
 
-      if (simResult.result && simResult.result.retval) {
-        return xdr.ScVal.fromXDR(simResult.result.retval, 'base64');
+      if (simResult.result) {
+        return scValToNative(simResult.result.retval);
       }
 
       throw new Error('No result returned from simulation');
@@ -161,39 +141,40 @@ export class SorobanClient {
    */
   async isOverdue(commitmentId: number): Promise<boolean> {
     try {
-      const { latestLedger } = await this.rpc.getLatestLedger();
-      
-      const transaction = new TransactionBuilder(new TransactionBuilder.Account({
-        publicKey: this.keypair.publicKey(),
-        sequence: '0',
-        increment: '0'
-      }), {
+      const transaction = new TransactionBuilder(this.readOnlyAccount(), {
         fee: BASE_FEE,
         networkPassphrase: this.networkPassphrase,
       })
         .addOperation(
           this.contract.call(
             'is_overdue',
-            xdr.ScVal.scvU64(commitmentId)
+            nativeToScVal(commitmentId, { type: 'u64' })
           )
         )
         .setTimeout(30)
         .build();
 
       const simResult = await this.rpc.simulateTransaction(transaction);
-      
-      if (SorobanRpc.Api.isSimulationError(simResult)) {
+
+      if (rpc.Api.isSimulationError(simResult)) {
         throw new Error(`Simulation error: ${simResult.error}`);
       }
 
-      if (simResult.result && simResult.result.retval) {
-        const result = xdr.ScVal.fromXDR(simResult.result.retval, 'base64');
-        return result.b();
+      if (simResult.result) {
+        return Boolean(scValToNative(simResult.result.retval));
       }
 
       throw new Error('No result returned from simulation');
     } catch (error) {
       throw new Error(`Failed to check if commitment is overdue: ${error instanceof Error ? error.message : String(error)}`);
     }
+  }
+
+  /**
+   * Read-only calls are simulated, never submitted, so a zero-sequence stub
+   * account is enough to build the envelope.
+   */
+  private readOnlyAccount(): Account {
+    return new Account(this.keypair.publicKey(), '0');
   }
 }
