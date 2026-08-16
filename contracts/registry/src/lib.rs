@@ -121,50 +121,17 @@ impl RegistryContract {
         // 1. Require authorization from the issuer.
         issuer.require_auth();
 
-        // 2. Validate due_at is in the future relative to the current ledger timestamp.
-        let now = env.ledger().timestamp();
-        if due_at <= now {
-            panic_with_error!(&env, Error::DueAtInPast);
-        }
-
-        // 3. Assign the next available ID.
-        let id: u64 = env.storage().instance().get(&DataKey::NextId).unwrap_or(1);
-        let next_id = id
-            .checked_add(1)
-            .unwrap_or_else(|| panic_with_error!(&env, Error::Overflow));
-        env.storage().instance().set(&DataKey::NextId, &next_id);
-        env.storage().instance().extend_ttl(
-            commitments::TTL_THRESHOLD_LEDGERS,
-            commitments::TTL_EXTEND_LEDGERS,
-        );
-
-        // 4. Create the Commitment object with Pending status.
-        let commitment = Commitment {
-            id,
-            issuer: issuer.clone(),
-            counterparty: counterparty.clone(),
+        // 2. Create commitment record via shared helper.
+        let id = commitments::create_commitment_record(
+            &env,
+            issuer,
+            counterparty,
             terms_hash,
             due_at,
-            status: CommitmentStatus::Pending,
-            created_at: now,
-            attested_at: None,
             resolver_address,
-        };
-
-        // 5. Store in persistent storage keyed by id and extend TTL.
-        env.storage()
-            .persistent()
-            .set(&DataKey::Commitment(id), &commitment);
-        env.storage().persistent().extend_ttl(
-            &DataKey::Commitment(id),
-            commitments::TTL_THRESHOLD_LEDGERS,
-            commitments::TTL_EXTEND_LEDGERS,
         );
 
-        // 6. Emit Created event.
-        events::commitment_created(&env, id, &issuer, &counterparty);
-
-        // 7. Release the reentrancy guard.
+        // 3. Release the reentrancy guard.
         reentrancy::exit(&env);
 
         id
@@ -220,6 +187,7 @@ impl RegistryContract {
     ///
     /// # Returns
     /// * `u64` - The unique identifier assigned to the created commitment.
+    #[allow(clippy::too_many_arguments)]
     pub fn create_refund_commitment(
         env: Env,
         issuer: Address,

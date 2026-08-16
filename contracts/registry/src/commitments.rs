@@ -93,10 +93,59 @@ pub enum DataKey {
     RefundEscrow(u64),
 }
 
-/// Loads a commitment from persistent storage, transparently migrating legacy records
-/// that were stored before `resolver_address` was added. Legacy records inherit the
-/// contract's designated arbitrator address as their fallback `resolver_address`.
-pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitment> {
+/// Internal helper to assign the next ID, build and persist a Commitment, extend TTL, and emit event.
+pub fn create_commitment_record(
+    env: &soroban_sdk::Env,
+    issuer: Address,
+    counterparty: Address,
+    terms_hash: BytesN<32>,
+    due_at: u64,
+    resolver_address: Address,
+) -> u64 {
+    let now = env.ledger().timestamp();
+    if due_at <= now {
+        soroban_sdk::panic_with_error!(env, crate::errors::Error::DueAtInPast);
+    }
+
+    let id: u64 = env.storage().instance().get(&DataKey::NextId).unwrap_or(1);
+    let next_id = id
+        .checked_add(1)
+        .unwrap_or_else(|| soroban_sdk::panic_with_error!(env, crate::errors::Error::Overflow));
+    env.storage().instance().set(&DataKey::NextId, &next_id);
+    env.storage().instance().extend_ttl(
+        TTL_THRESHOLD_LEDGERS,
+        TTL_EXTEND_LEDGERS,
+    );
+
+    let commitment = Commitment {
+        id,
+        issuer: issuer.clone(),
+        counterparty: counterparty.clone(),
+        terms_hash,
+        due_at,
+        status: CommitmentStatus::Pending,
+        created_at: now,
+        attested_at: None,
+        resolver_address,
+    };
+
+    env.storage()
+        .persistent()
+        .set(&DataKey::Commitment(id), &commitment);
+    env.storage().persistent().extend_ttl(
+        &DataKey::Commitment(id),
+        TTL_THRESHOLD_LEDGERS,
+        TTL_EXTEND_LEDGERS,
+    );
+
+    crate::events::commitment_created(env, id, &issuer, &counterparty);
+
+    id
+}
+
+/// Reads a commitment from persistent storage without mutating storage, transparently
+/// interpreting legacy records in-memory with the arbitrator as fallback resolver.
+pub fn read_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitment> {
     let val: Val = env
         .storage()
         .persistent()
@@ -109,7 +158,7 @@ pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitme
         return Commitment::try_from_val(env, &val).ok();
     }
 
-    // Legacy record without resolver_address: parse fields individually and migrate
+    // Legacy record without resolver_address: parse fields individually in-memory
     let stored_id: u64 = map.get(Symbol::new(env, "id"))?.try_into_val(env).ok()?;
     if stored_id != id {
         return None;
@@ -131,7 +180,7 @@ pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitme
         .get::<DataKey, Address>(&DataKey::Arbitrator)
         .unwrap_or_else(|| soroban_sdk::panic_with_error!(env, crate::errors::Error::NotInitialized));
 
-    let migrated = Commitment {
+    Some(Commitment {
         id,
         issuer,
         counterparty,
@@ -141,13 +190,28 @@ pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitme
         created_at,
         attested_at,
         resolver_address: fallback_resolver,
-    };
+    })
+}
 
-    env.storage()
-        .persistent()
-        .set(&DataKey::Commitment(id), &migrated);
+/// Loads a commitment from persistent storage, transparently migrating legacy records
+/// that were stored before `resolver_address` was added. Legacy records inherit the
+/// contract's designated arbitrator address as their fallback `resolver_address`.
+pub fn get_commitment_record(env: &soroban_sdk::Env, id: u64) -> Option<Commitment> {
+    let commitment = read_commitment_record(env, id)?;
 
-    Some(migrated)
+    // Persist migrated format if needed
+    let val: Option<Val> = env.storage().persistent().get(&DataKey::Commitment(id));
+    if let Some(v) = val {
+        if let Ok(map) = Map::<Symbol, Val>::try_from_val(env, &v) {
+            if !map.contains_key(Symbol::new(env, "resolver_address")) {
+                env.storage()
+                    .persistent()
+                    .set(&DataKey::Commitment(id), &commitment);
+            }
+        }
+    }
+
+    Some(commitment)
 }
 
 

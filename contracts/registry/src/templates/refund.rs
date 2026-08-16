@@ -42,6 +42,7 @@ pub struct RefundEscrow {
 ///
 /// # Returns
 /// * `u64` - The unique identifier of the created commitment.
+#[allow(clippy::too_many_arguments)]
 pub fn create_refund_commitment(
     env: &Env,
     issuer: Address,
@@ -58,13 +59,9 @@ pub fn create_refund_commitment(
     // 1. Require authorization from the issuer on the root invocation
     issuer.require_auth();
 
-    // 2. Validate amount and due date
+    // 2. Validate escrow amount
     if amount <= 0 {
         panic_with_error!(env, Error::InvalidAmount);
-    }
-    let now = env.ledger().timestamp();
-    if due_at <= now {
-        panic_with_error!(env, Error::DueAtInPast);
     }
 
     // 3. Lock funds from the issuer into the registry contract escrow
@@ -72,42 +69,17 @@ pub fn create_refund_commitment(
     let token_client = token::Client::new(env, &token);
     token_client.transfer(&issuer, &contract_address, &amount);
 
-    // 4. Assign next commitment ID
-    let id: u64 = env.storage().instance().get(&DataKey::NextId).unwrap_or(1);
-    let next_id = id
-        .checked_add(1)
-        .unwrap_or_else(|| panic_with_error!(env, Error::Overflow));
-    env.storage().instance().set(&DataKey::NextId, &next_id);
-    env.storage().instance().extend_ttl(
-        TTL_THRESHOLD_LEDGERS,
-        TTL_EXTEND_LEDGERS,
-    );
-
-    // 5. Create and store base commitment record
-    let commitment = Commitment {
-        id,
-        issuer: issuer.clone(),
-        counterparty: counterparty.clone(),
+    // 4. Create base commitment record using shared internal helper
+    let id = crate::commitments::create_commitment_record(
+        env,
+        issuer.clone(),
+        counterparty,
         terms_hash,
         due_at,
-        status: CommitmentStatus::Pending,
-        created_at: now,
-        attested_at: None,
         resolver_address,
-    };
-
-    env.storage()
-        .persistent()
-        .set(&DataKey::Commitment(id), &commitment);
-    env.storage().persistent().extend_ttl(
-        &DataKey::Commitment(id),
-        TTL_THRESHOLD_LEDGERS,
-        TTL_EXTEND_LEDGERS,
     );
 
-    events::commitment_created(env, id, &issuer, &counterparty);
-
-    // 6. Persist escrow state
+    // 5. Persist escrow state
     let escrow = RefundEscrow {
         commitment_id: id,
         token: token.clone(),
@@ -126,7 +98,7 @@ pub fn create_refund_commitment(
 
     events::escrow_locked(env, id, &token, &issuer, amount);
 
-    // 7. Release reentrancy guard
+    // 6. Release reentrancy guard
     crate::reentrancy::exit(env);
 
     id
@@ -150,23 +122,12 @@ pub fn get_refund_escrow(env: &Env, commitment_id: u64) -> Option<RefundEscrow> 
     escrow
 }
 
-/// Processes automatic release of escrow funds when a commitment is resolved.
-///
-/// Returns `true` if an escrow existed and was successfully settled, `false` otherwise.
-pub fn process_refund_release(env: &Env, commitment: &Commitment) -> bool {
-    let mut escrow = match get_refund_escrow(env, commitment.id) {
-        Some(e) => e,
-        None => return false,
-    };
-
-    if escrow.is_released {
-        return false;
-    }
-
+/// Private helper to settle escrow tokens to the appropriate recipient and emit the release event.
+fn settle_escrow(env: &Env, commitment: &Commitment, mut escrow: RefundEscrow) {
     let recipient = match commitment.status {
         CommitmentStatus::Fulfilled | CommitmentStatus::Late => commitment.issuer.clone(),
         CommitmentStatus::Breached => commitment.counterparty.clone(),
-        _ => return false,
+        _ => panic_with_error!(env, Error::CommitmentNotResolved),
     };
 
     escrow.is_released = true;
@@ -185,7 +146,27 @@ pub fn process_refund_release(env: &Env, commitment: &Commitment) -> bool {
         escrow.amount,
         commitment.status,
     );
+}
 
+/// Processes automatic release of escrow funds when a commitment is resolved by a custom resolver.
+///
+/// Returns `true` if an escrow existed and was successfully settled, `false` otherwise.
+pub fn process_refund_release(env: &Env, commitment: &Commitment) -> bool {
+    let escrow = match get_refund_escrow(env, commitment.id) {
+        Some(e) => e,
+        None => return false,
+    };
+
+    if escrow.is_released {
+        return false;
+    }
+
+    match commitment.status {
+        CommitmentStatus::Fulfilled | CommitmentStatus::Late | CommitmentStatus::Breached => {}
+        _ => return false,
+    }
+
+    settle_escrow(env, commitment, escrow);
     true
 }
 
@@ -211,35 +192,14 @@ pub fn release_refund(env: &Env, commitment_id: u64) {
         panic_with_error!(env, Error::DisputeWindowActive);
     }
 
-    let mut escrow = get_refund_escrow(env, commitment_id)
+    let escrow = get_refund_escrow(env, commitment_id)
         .unwrap_or_else(|| panic_with_error!(env, Error::EscrowNotFound));
 
     if escrow.is_released {
         panic_with_error!(env, Error::EscrowAlreadyReleased);
     }
 
-    let recipient = match commitment.status {
-        CommitmentStatus::Fulfilled | CommitmentStatus::Late => commitment.issuer.clone(),
-        CommitmentStatus::Breached => commitment.counterparty.clone(),
-        _ => panic_with_error!(env, Error::CommitmentNotResolved),
-    };
-
-    escrow.is_released = true;
-    env.storage()
-        .persistent()
-        .set(&DataKey::RefundEscrow(commitment_id), &escrow);
-
-    let contract_address = env.current_contract_address();
-    let token_client = token::Client::new(env, &escrow.token);
-    token_client.transfer(&contract_address, &recipient, &escrow.amount);
-
-    events::escrow_released(
-        env,
-        commitment_id,
-        &recipient,
-        escrow.amount,
-        commitment.status,
-    );
+    settle_escrow(env, &commitment, escrow);
 
     crate::reentrancy::exit(env);
 }

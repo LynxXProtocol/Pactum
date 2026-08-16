@@ -74,7 +74,7 @@ pub fn attest(
 
 /// Returns true if the commitment is still Pending and current timestamp is past due_at.
 pub fn is_overdue(env: &Env, id: u64) -> bool {
-    let commitment: Commitment = crate::commitments::get_commitment_record(env, id)
+    let commitment: Commitment = crate::commitments::read_commitment_record(env, id)
         .unwrap_or_else(|| panic_with_error!(env, Error::CommitmentNotFound));
 
     commitment.status == CommitmentStatus::Pending && env.ledger().timestamp() > commitment.due_at
