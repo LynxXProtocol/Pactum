@@ -203,6 +203,12 @@ export interface HorizonStreamClient {
 /**
  * Options accepted by `HorizonSSEIndexer`.
  */
+export interface BroadcastEvent {
+  address: string | string[];
+  event: string;
+  data: any;
+}
+
 export interface HorizonSSEIndexerOptions {
   /** Horizon SSE client that provides the streaming connection. */
   streamClient: HorizonStreamClient;
@@ -211,8 +217,15 @@ export interface HorizonSSEIndexerOptions {
   /**
    * Handler invoked for each event record received from the stream.
    * The indexer guarantees the cursor is saved only after this resolves.
+   *
+   * @returns An optional BroadcastEvent to trigger a WebSocket broadcast.
    */
-  onEvent: (record: HorizonOperationRecord) => Promise<void>;
+  onEvent: (record: HorizonOperationRecord) => Promise<BroadcastEvent | void>;
+  /**
+   * Optional callback for broadcasting events to external subscribers.
+   * Invoked after onEvent successfully resolves.
+   */
+  onBroadcast?: (address: string, event: string, data: any) => void;
   /**
    * Base delay (ms) before the first reconnect attempt.
    * Subsequent attempts use exponential back-off capped at `maxReconnectDelayMs`.
@@ -369,11 +382,18 @@ export class HorizonSSEIndexer {
     if (this.stopped) return;
 
     try {
-      await this.options.onEvent(record);
+      const broadcast = await this.options.onEvent(record);
       await this.options.cursorCache.saveCursor(record.paging_token);
       // Successful message resets the reconnect counter so the back-off
       // window resets to the initial delay for future disconnects.
       this.reconnectAttempts = 0;
+
+      if (broadcast && this.options.onBroadcast) {
+        const addresses = Array.isArray(broadcast.address) ? broadcast.address : [broadcast.address];
+        for (const address of addresses) {
+          this.options.onBroadcast(address, broadcast.event, broadcast.data);
+        }
+      }
     } catch {
       // Event handler errors are non-fatal by design.  The cursor is not
       // advanced so the event will be redelivered after the next reconnect.

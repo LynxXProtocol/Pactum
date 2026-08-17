@@ -198,6 +198,31 @@ test('does not advance cursor when onEvent throws', async () => {
   indexer.stop();
 });
 
+test('calls onBroadcast once per address when a BroadcastEvent resolves multiple addresses', async () => {
+  const client = new FakeStreamClient();
+  const cache = new InMemoryCursorCache();
+  const broadcasts: Array<{ address: string; event: string }> = [];
+
+  const indexer = new HorizonSSEIndexer({
+    streamClient: client,
+    cursorCache: cache,
+    onEvent: async () => ({ address: ['addrA', 'addrB'], event: 'Attested', data: {} }),
+    onBroadcast: (address, event) => { broadcasts.push({ address, event }); },
+  });
+  indexer.start();
+  await waitFor(() => client.openCount === 1);
+
+  client.emit(makeRecord('multi-address'));
+  await waitFor(() => broadcasts.length === 2);
+
+  assert.deepEqual(broadcasts, [
+    { address: 'addrA', event: 'Attested' },
+    { address: 'addrB', event: 'Attested' },
+  ]);
+
+  indexer.stop();
+});
+
 // ─── HorizonSSEIndexer – reconnect / auto-reconnect ──────────────────────────
 
 test('reconnects after a stream error and resumes from persisted cursor', async () => {

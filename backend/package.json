@@ -25,6 +25,7 @@
     "node-cron": "^4.6.0",
     "pg": "^8.23.0",
     "redis": "^5.12.1",
+    "socket.io": "^4.8.1",
     "zod": "^3.22.4"
   },
   "devDependencies": {

@@ -1,12 +1,86 @@
 import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import http from 'http';
+import { Horizon } from '@stellar/stellar-sdk';
 import commitmentsRouter from './routes/commitments';
 import reputationRouter from './routes/reputation';
 import analyticsRoutes from './routes/analytics';
 import { startSnapshotCron } from './indexer/cron';
 import { closeCache, initCache, isCacheAvailable } from './indexer/cache';
 import { standardLimiter, strictLimiter } from './middleware/rateLimiter';
+import pool from './db/timescale';
+import { HorizonSSEIndexer, HorizonStreamClient, HorizonOperationRecord, BroadcastEvent } from './indexer/listener';
+import { PostgresCursorCache } from './indexer/cache';
+import { socketService } from './socket';
+import { SorobanClient } from './soroban/client';
+
+let registryClient: SorobanClient | null | undefined;
+
+/** Lazily builds the read-only Soroban client used to resolve attest parties. `undefined` means "not yet attempted", `null` means "env vars missing". */
+function getRegistryClient(): SorobanClient | null {
+  if (registryClient !== undefined) return registryClient;
+
+  const { SOROBAN_RPC_URL, SOROBAN_CONTRACT_ID, SOROBAN_NETWORK_PASSPHRASE, ORACLE_PRIVATE_KEY } = process.env;
+  if (!SOROBAN_RPC_URL || !SOROBAN_CONTRACT_ID || !SOROBAN_NETWORK_PASSPHRASE || !ORACLE_PRIVATE_KEY) {
+    console.error('[indexer] Soroban RPC env vars missing; attest events will not resolve broadcast addresses.');
+    registryClient = null;
+    return registryClient;
+  }
+
+  registryClient = new SorobanClient({
+    rpcUrl: SOROBAN_RPC_URL,
+    contractId: SOROBAN_CONTRACT_ID,
+    networkPassphrase: SOROBAN_NETWORK_PASSPHRASE,
+    privateKey: ORACLE_PRIVATE_KEY,
+  });
+  return registryClient;
+}
+
+const CREATE_FUNCTIONS = new Set(['create_commitment', 'create_milestone_commitment']);
+const ATTEST_FUNCTIONS = new Set(['attest', 'attest_milestone']);
+
+/**
+ * Parses a Horizon `invoke_host_function` operation against the registry
+ * contract into a BroadcastEvent. Returns undefined for anything else
+ * (other operation types, other contracts, unrecognized functions).
+ */
+async function parseCommitmentEvent(record: HorizonOperationRecord): Promise<BroadcastEvent | void> {
+  if (record.type !== 'invoke_host_function') return undefined;
+
+  const parameters = record.parameters as Array<{ value: string }> | undefined;
+  if (!Array.isArray(parameters) || parameters.length < 2) return undefined;
+
+  const { scValToNative, xdr } = await import('@stellar/stellar-sdk');
+  const decoded = parameters.map((p) => scValToNative(xdr.ScVal.fromXDR(p.value, 'base64')));
+  const [contractAddress, functionName, ...args] = decoded;
+
+  if (contractAddress !== process.env.SOROBAN_CONTRACT_ID) return undefined;
+
+  if (CREATE_FUNCTIONS.has(functionName)) {
+    const [issuer, counterparty, termsHash, dueAt] = args;
+    return {
+      address: [issuer, counterparty],
+      event: 'CommitmentCreated',
+      data: { issuer, counterparty, termsHash, dueAt },
+    };
+  }
+
+  if (ATTEST_FUNCTIONS.has(functionName)) {
+    const [, id, ...rest] = args; // args[0] is `caller`
+    const client = getRegistryClient();
+    if (!client) return undefined;
+
+    const commitment = await client.getCommitment(Number(id));
+    return {
+      address: [commitment.issuer, commitment.counterparty],
+      event: functionName === 'attest_milestone' ? 'MilestoneAttested' : 'Attested',
+      data: { id: Number(id), outcome: rest[rest.length - 1] },
+    };
+  }
+
+  return undefined;
+}
 
 dotenv.config();
 const app = express();
@@ -83,11 +157,49 @@ if (process.env.REPUTATION_SNAPSHOT_CRON !== 'off') {
 }
 
 initCache().finally(() => {
-  const server = app.listen(port, () => {
+  const server = http.createServer(app);
+
+  // Initialize Socket.io
+  socketService.init(server);
+
+  // Initialize Horizon SSE Indexer
+  const horizonServer = new Horizon.Server('https://horizon-testnet.stellar.org');
+  const streamClient: HorizonStreamClient = {
+    stream({ cursor, onMessage, onError }) {
+      const builder = horizonServer.operations().limit(200);
+      if (cursor) builder.cursor(cursor);
+      return builder.stream({
+        onmessage: (record) => onMessage(record as unknown as HorizonOperationRecord),
+        onerror: onError,
+      });
+    },
+  };
+
+  const indexer = new HorizonSSEIndexer({
+    streamClient,
+    cursorCache: new PostgresCursorCache(pool),
+    onEvent: async (record) => {
+      try {
+        return await parseCommitmentEvent(record);
+      } catch (error) {
+        console.error('[indexer] Failed to parse operation record:', error);
+        return undefined;
+      }
+    },
+    onBroadcast: (address, event, data) => {
+      socketService.emitEvent(address, event, data);
+    },
+  });
+
+  indexer.start();
+
+  server.listen(port, () => {
     console.log(`[server]: Pactum Backend running at http://localhost:${port}`);
   });
 
   const shutdown = () => {
+    indexer.stop();
+    socketService.close();
     server.close(() => {
       closeCache().finally(() => process.exit(0));
     });
