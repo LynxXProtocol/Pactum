@@ -35,6 +35,7 @@ pub fn get_reputation(env: &Env, address: Address) -> Reputation {
             fulfilled_count: 0,
             late_count: 0,
             breached_count: 0,
+            counterparty_disputes_raised: 0,
         });
 
     if env.storage().persistent().has(&ReputationKey::Reputation(address.clone())) {
@@ -90,6 +91,25 @@ pub fn update_reputation(
     
     env.storage().persistent().extend_ttl(
         &ReputationKey::Reputation(issuer),
+        crate::commitments::TTL_THRESHOLD_LEDGERS,
+        crate::commitments::TTL_EXTEND_LEDGERS,
+    );
+}
+
+/// Increments the count of frivolous disputes raised by `address` as a
+/// counterparty. Called from `resolve_dispute` when a counterparty-raised
+/// dispute is ruled against the counterparty (the final outcome matches the
+/// original attested status).
+pub fn increment_counterparty_disputes_raised(env: &Env, address: Address) {
+    let mut rep = get_reputation(env, address.clone());
+    rep.counterparty_disputes_raised = rep.counterparty_disputes_raised.saturating_add(1);
+
+    env.storage()
+        .persistent()
+        .set(&ReputationKey::Reputation(address.clone()), &rep);
+
+    env.storage().persistent().extend_ttl(
+        &ReputationKey::Reputation(address),
         crate::commitments::TTL_THRESHOLD_LEDGERS,
         crate::commitments::TTL_EXTEND_LEDGERS,
     );

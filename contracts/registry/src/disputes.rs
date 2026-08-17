@@ -49,8 +49,11 @@ pub fn dispute(env: &Env, caller: Address, id: u64) {
         panic_with_error!(env, Error::DisputeWindowExpired);
     }
 
-    // 6. Store old status for reputation adjustment.
+    // 6. Store old status, the disputed-from status, and the disputing party
+    //    so that resolve_dispute can assess whether the dispute was justified.
     let old_status = commitment.status;
+    commitment.disputed_from = Some(old_status as u32);
+    commitment.disputed_by = Some(caller.clone());
 
     // 7. Transition status to Disputed.
     commitment.status = CommitmentStatus::Disputed;
@@ -126,11 +129,19 @@ pub fn resolve_dispute(
         panic_with_error!(env, Error::InvalidTransition);
     }
 
-    // 6. Update status to final_outcome and clear attested_at to prevent re-dispute.
+    // 6. Determine whether the dispute was raised by the counterparty on a
+    //    fairly-attested commitment: it is frivolous (ruled against the
+    //    counterparty) when the final outcome matches the original attested
+    //    status recorded when the dispute was raised.
+    let dispute_raised_by_counterparty =
+        commitment.disputed_by == Some(commitment.counterparty.clone());
+    let dispute_upheld = commitment.disputed_from == Some(final_outcome as u32);
+
+    // 7. Update status to final_outcome and clear attested_at to prevent re-dispute.
     commitment.status = final_outcome;
     commitment.attested_at = None;
 
-    // 7. Save updated commitment to storage.
+    // 8. Save updated commitment to storage.
     env.storage()
         .persistent()
         .set(&DataKey::Commitment(id), &commitment);
@@ -140,15 +151,25 @@ pub fn resolve_dispute(
         crate::commitments::TTL_EXTEND_LEDGERS,
     );
 
-    // 8. Update reputation (increment with final outcome).
+    // 9. Update reputation (increment with final outcome).
     crate::reputation::update_reputation(env, commitment.issuer.clone(), final_outcome, true);
 
-    // 9. Update trust history (increment with final outcome).
+    // 10. Record a frivolous counterparty dispute when the arbitrator rules
+    //     against the counterparty (final outcome matches the original
+    //     attestation), giving counterparty-side disputes an on-chain cost.
+    if dispute_raised_by_counterparty && dispute_upheld {
+        crate::reputation::increment_counterparty_disputes_raised(
+            env,
+            commitment.counterparty.clone(),
+        );
+    }
+
+    // 11. Update trust history (increment with final outcome).
     crate::trust_score::update_trust_history(env, commitment.issuer.clone(), final_outcome, true);
 
-    // 10. Emit dispute_resolved event.
+    // 12. Emit dispute_resolved event.
     events::dispute_resolved(env, id, final_outcome);
 
-    // 11. Release the reentrancy guard.
+    // 13. Release the reentrancy guard.
     crate::reentrancy::exit(env);
 }

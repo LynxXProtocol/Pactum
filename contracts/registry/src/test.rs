@@ -724,6 +724,81 @@ fn test_reputation_aggregates_multiple_commitments() {
 }
 
 // -----------------------------------------------------------------------------
+// Issue #9 - Counterparty-side Reputation Tracking
+// -----------------------------------------------------------------------------
+
+#[test]
+fn test_counterparty_frivolous_dispute_increments_counter() {
+    let (env, client, issuer, counterparty, arbitrator) = setup_test_with_arbitrator();
+
+    env.ledger().with_mut(|l| l.timestamp = 1000);
+    let id = client.create_commitment(
+        &issuer,
+        &counterparty,
+        &BytesN::from_array(&env, &[1u8; 32]),
+        &2000,
+    );
+
+    // Fairly attested as Fulfilled by the issuer.
+    client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
+
+    // Counterparty disputes; the arbitrator upholds the original attestation.
+    client.dispute(&counterparty, &id);
+    client.resolve_dispute(&arbitrator, &id, &CommitmentStatus::Fulfilled);
+
+    let rep = client.get_reputation(&counterparty);
+    assert_eq!(rep.counterparty_disputes_raised, 1);
+
+    // Issuer-side stats are unaffected by the new counterparty counter.
+    let issuer_rep = client.get_reputation(&issuer);
+    assert_eq!(issuer_rep.counterparty_disputes_raised, 0);
+    assert_eq!(issuer_rep.fulfilled_count, 1);
+}
+
+#[test]
+fn test_counterparty_justified_dispute_does_not_increment() {
+    let (env, client, issuer, counterparty, arbitrator) = setup_test_with_arbitrator();
+
+    env.ledger().with_mut(|l| l.timestamp = 1000);
+    let id = client.create_commitment(
+        &issuer,
+        &counterparty,
+        &BytesN::from_array(&env, &[1u8; 32]),
+        &2000,
+    );
+
+    // Attested as Breached, but the counterparty successfully contests it.
+    client.attest(&issuer, &id, &CommitmentStatus::Breached);
+    client.dispute(&counterparty, &id);
+    client.resolve_dispute(&arbitrator, &id, &CommitmentStatus::Fulfilled);
+
+    let rep = client.get_reputation(&counterparty);
+    assert_eq!(rep.counterparty_disputes_raised, 0);
+}
+
+#[test]
+fn test_issuer_raised_dispute_does_not_count_against_counterparty() {
+    let (env, client, issuer, counterparty, arbitrator) = setup_test_with_arbitrator();
+
+    env.ledger().with_mut(|l| l.timestamp = 1000);
+    let id = client.create_commitment(
+        &issuer,
+        &counterparty,
+        &BytesN::from_array(&env, &[1u8; 32]),
+        &2000,
+    );
+
+    client.attest(&issuer, &id, &CommitmentStatus::Fulfilled);
+
+    // The issuer (not the counterparty) raises the dispute.
+    client.dispute(&issuer, &id);
+    client.resolve_dispute(&arbitrator, &id, &CommitmentStatus::Fulfilled);
+
+    let rep = client.get_reputation(&counterparty);
+    assert_eq!(rep.counterparty_disputes_raised, 0);
+}
+
+// -----------------------------------------------------------------------------
 // Phase 5 - Hardening & Edge Cases
 // -----------------------------------------------------------------------------
 

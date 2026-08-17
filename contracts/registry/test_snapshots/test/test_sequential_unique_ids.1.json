@@ -135,6 +135,18 @@
                     },
                     {
                       "key": {
+                        "symbol": "disputed_by"
+                      },
+                      "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "disputed_from"
+                      },
+                      "val": "void"
+                    },
+                    {
+                      "key": {
                         "symbol": "due_at"
                       },
                       "val": {
@@ -244,6 +256,18 @@
                       "val": {
                         "u64": 1000
                       }
+                    },
+                    {
+                      "key": {
+                        "symbol": "disputed_by"
+                      },
+                      "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "disputed_from"
+                      },
+                      "val": "void"
                     },
                     {
                       "key": {

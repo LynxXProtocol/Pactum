@@ -125,6 +125,18 @@
                     },
                     {
                       "key": {
+                        "symbol": "disputed_by"
+                      },
+                      "val": "void"
+                    },
+                    {
+                      "key": {
+                        "symbol": "disputed_from"
+                      },
+                      "val": "void"
+                    },
+                    {
+                      "key": {
                         "symbol": "due_at"
                       },
                       "val": {
