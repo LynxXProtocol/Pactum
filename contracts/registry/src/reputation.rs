@@ -3,16 +3,21 @@
 use crate::commitments::CommitmentStatus;
 use soroban_sdk::{contracttype, Address, Env};
 
-/// Represents the aggregate reputation of an address as an issuer.
+/// Represents the aggregate reputation of an address.
 ///
-/// Note: Reputation only reflects an address's role as `issuer` (the party who
-/// made the commitment). It does not count counterparty-side stats.
+/// The `fulfilled_count`, `late_count`, and `breached_count` fields reflect an
+/// address's role as `issuer` (the party who made the commitment).
+/// `counterparty_disputes_raised` counts how often the address, acting as a
+/// counterparty, raised a dispute on a fairly-attested commitment (i.e., a
+/// dispute the arbitrator ruled against them).
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Reputation {
     pub fulfilled_count: u32,
     pub late_count: u32,
     pub breached_count: u32,
+    /// Number of frivolous disputes raised by this address as a counterparty.
+    pub counterparty_disputes_raised: u32,
 }
 
 #[contracttype]

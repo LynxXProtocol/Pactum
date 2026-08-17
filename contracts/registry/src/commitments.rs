@@ -53,6 +53,10 @@ pub struct Commitment {
     pub created_at: u64,
     /// Unix timestamp (seconds) when the commitment was attested, if it has been attested.
     pub attested_at: Option<u64>,
+    /// The attested status at the time a dispute was raised, if the commitment has been disputed.
+    pub disputed_from: Option<CommitmentStatus>,
+    /// The party that raised the dispute, if the commitment has been disputed.
+    pub disputed_by: Option<Address>,
 }
 
 /// Storage keys used for persisting commitments and contract state.

@@ -145,6 +145,8 @@ impl RegistryContract {
             status: CommitmentStatus::Pending,
             created_at: now,
             attested_at: None,
+            disputed_from: None,
+            disputed_by: None,
         };
 
         // 5. Store in persistent storage keyed by id and extend TTL.
