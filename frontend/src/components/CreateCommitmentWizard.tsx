@@ -5,12 +5,12 @@ import { z } from 'zod'
 
 import { sha256Hex } from '../lib/hash'
 import { stellarAddressSchema } from '../lib/stellar'
+import { decodeRegistryContractError } from '../lib/errors'
 import { useWallet } from '../context/WalletContext'
 import { submitCreateCommitment, fundTestnetAccount, type CreateCommitmentResult } from '../lib/soroban'
 import UserProfile from './UserProfile'
 import {
   CheckCircle2,
-  AlertCircle,
   ExternalLink,
   Loader2,
   RefreshCw,
@@ -66,6 +66,27 @@ const STEPS = [
 
 const STEP_COUNT = STEPS.length
 
+function clearErrorToasts(): void {
+  document.getElementById('toast-container')?.querySelectorAll('.toast.error').forEach((toast) => {
+    toast.remove()
+  })
+}
+
+function showErrorToast(message: string): void {
+  const container = document.getElementById('toast-container')
+  if (!container) {
+    return
+  }
+
+  clearErrorToasts()
+
+  const toast = document.createElement('div')
+  toast.className = 'toast error'
+  toast.setAttribute('role', 'alert')
+  toast.textContent = message
+  container.appendChild(toast)
+}
+
 export default function CreateCommitmentWizard({ onSubmit, onSuccess }: CreateCommitmentWizardProps) {
   const { address: connectedAddress, isConnected, connectWallet } = useWallet()
 
@@ -75,7 +96,6 @@ export default function CreateCommitmentWizard({ onSubmit, onSuccess }: CreateCo
   const [fundMessage, setFundMessage] = useState<string | null>(null)
   const [statusMessage, setStatusMessage] = useState<string | null>(null)
   const [txResult, setTxResult] = useState<CreateCommitmentResult | null>(null)
-  const [txError, setTxError] = useState<string | null>(null)
   const [previewHash, setPreviewHash] = useState<string | null>(null)
 
   const {
@@ -141,17 +161,17 @@ export default function CreateCommitmentWizard({ onSubmit, onSuccess }: CreateCo
 
   const handleFinalSubmit = handleSubmit(async (data) => {
     if (!isConnected || !connectedAddress) {
-      setTxError('Please connect your Freighter wallet before submitting an on-chain commitment.')
+      showErrorToast('Please connect your Freighter wallet before submitting an on-chain commitment.')
       return
     }
 
     if (isSameAddress) {
-      setTxError('Issuer and Counterparty addresses cannot be identical.')
+      showErrorToast('Issuer and Counterparty addresses cannot be identical.')
       return
     }
 
     setSubmitting(true)
-    setTxError(null)
+    clearErrorToasts()
     setTxResult(null)
     setStatusMessage('Preparing commitment data...')
 
@@ -176,9 +196,8 @@ export default function CreateCommitmentWizard({ onSubmit, onSuccess }: CreateCo
 
       setTxResult(result)
       onSuccess?.(result)
-    } catch (err: any) {
-      console.error('[CreateCommitmentWizard] Soroban error:', err)
-      setTxError(err?.message || 'Failed to submit transaction to Soroban network.')
+    } catch (err: unknown) {
+      showErrorToast(decodeRegistryContractError(err))
     } finally {
       setSubmitting(false)
       setStatusMessage(null)
@@ -189,7 +208,7 @@ export default function CreateCommitmentWizard({ onSubmit, onSuccess }: CreateCo
     reset()
     setStep(0)
     setTxResult(null)
-    setTxError(null)
+    clearErrorToasts()
     setPreviewHash(null)
     setStatusMessage(null)
     setFundMessage(null)
@@ -544,28 +563,6 @@ export default function CreateCommitmentWizard({ onSubmit, onSuccess }: CreateCo
               }}>
                 <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
                 <span>{statusMessage}</span>
-              </div>
-            )}
-
-            {/* Error Alert */}
-            {txError && (
-              <div style={{
-                marginTop: '16px',
-                background: '#fff1f2',
-                border: '1.5px solid #fecdd3',
-                borderRadius: '10px',
-                padding: '12px 14px',
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: '10px',
-                color: '#be123c',
-                fontSize: '12.5px'
-              }}>
-                <AlertCircle size={16} style={{ flexShrink: 0, marginTop: '2px' }} />
-                <div>
-                  <strong style={{ display: 'block' }}>Transaction Failed</strong>
-                  {txError}
-                </div>
               </div>
             )}
 
