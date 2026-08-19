@@ -13,7 +13,7 @@ Pactum lets any two parties register a real-world commitment on Stellar — a re
 
 ## The problem
 
-Escrow contracts handle *one-time* deals — money goes in, money comes out once conditions are met. But a lot of real commitments aren't one-time payments at all:
+Escrow contracts handle _one-time_ deals — money goes in, money comes out once conditions are met. But a lot of real commitments aren't one-time payments at all:
 
 - A landlord promising to return a deposit within 30 days of move-out
 - An API provider guaranteeing 99.9% uptime this quarter
@@ -81,34 +81,34 @@ See [`docs/architecture.md`](./docs/architecture.md) for the full breakdown.
 
 ## Tech stack
 
-| Layer | Technology |
-|---|---|
-| Smart contract | Rust + Soroban SDK |
-| Contract network | Stellar Testnet |
-| Backend API | Node.js + TypeScript + Express |
-| Indexer | Soroban RPC event listener |
-| Database | PostgreSQL + TimescaleDB (time-series analytics) |
-| Cache | Redis (optional read cache for reputation lookups) |
-| SDK | TypeScript, published as `@pactum/sdk` |
-| ZK proofs | Circom 2 + snarkjs (Groth16 over BN254) |
-| Testing | Cargo test (contract) · Jest (backend) · `node --test` (zk) |
-| CI/CD | GitHub Actions |
+| Layer            | Technology                                                  |
+| ---------------- | ----------------------------------------------------------- |
+| Smart contract   | Rust + Soroban SDK                                          |
+| Contract network | Stellar Testnet                                             |
+| Backend API      | Node.js + TypeScript + Express                              |
+| Indexer          | Soroban RPC event listener                                  |
+| Database         | PostgreSQL + TimescaleDB (time-series analytics)            |
+| Cache            | Redis (optional read cache for reputation lookups)          |
+| SDK              | TypeScript, published as `@pactum/sdk`                      |
+| ZK proofs        | Circom 2 + snarkjs (Groth16 over BN254)                     |
+| Testing          | Cargo test (contract) · Jest (backend) · `node --test` (zk) |
+| CI/CD            | GitHub Actions                                              |
 
 ---
 
 ## Contract interface (early draft)
 
-| Method | Kind | Description |
-|---|---|---|
-| `create_commitment(issuer, counterparty, terms_hash, due_at)` | write | Register a new commitment between two addresses |
-| `create_milestone_commitment(issuer, counterparty, terms_hash, due_at, resolver, milestone_count)` | write | Register a commitment fulfilled across several milestones |
-| `attest(commitment_id, outcome)` | write | Mark the next pending milestone fulfilled, late, or breached — resolving the commitment if it is the last one |
-| `attest_milestone(commitment_id, milestone_index, outcome)` | write | Mark one milestone of a commitment; the commitment resolves on the last one |
-| `get_milestone(commitment_id, milestone_index)` | read | Fetch a single milestone's outcome, or nothing while it is pending |
-| `dispute(commitment_id, reason)` | write | Flag a commitment as contested rather than resolved |
-| `resolve_dispute(commitment_id, outcome)` | write | Designated arbitrator/oracle settles a disputed commitment |
-| `get_commitment(commitment_id)` | read | Fetch a single commitment's details and status |
-| `get_reputation(address)` | read | Aggregate fulfilled / late / breached counts for an address |
+| Method                                                                                             | Kind  | Description                                                                                                   |
+| -------------------------------------------------------------------------------------------------- | ----- | ------------------------------------------------------------------------------------------------------------- |
+| `create_commitment(issuer, counterparty, terms_hash, due_at)`                                      | write | Register a new commitment between two addresses                                                               |
+| `create_milestone_commitment(issuer, counterparty, terms_hash, due_at, resolver, milestone_count)` | write | Register a commitment fulfilled across several milestones                                                     |
+| `attest(commitment_id, outcome)`                                                                   | write | Mark the next pending milestone fulfilled, late, or breached — resolving the commitment if it is the last one |
+| `attest_milestone(commitment_id, milestone_index, outcome)`                                        | write | Mark one milestone of a commitment; the commitment resolves on the last one                                   |
+| `get_milestone(commitment_id, milestone_index)`                                                    | read  | Fetch a single milestone's outcome, or nothing while it is pending                                            |
+| `dispute(commitment_id, reason)`                                                                   | write | Flag a commitment as contested rather than resolved                                                           |
+| `resolve_dispute(commitment_id, outcome)`                                                          | write | Designated arbitrator/oracle settles a disputed commitment                                                    |
+| `get_commitment(commitment_id)`                                                                    | read  | Fetch a single commitment's details and status                                                                |
+| `get_reputation(address)`                                                                          | read  | Aggregate fulfilled / late / breached counts for an address                                                   |
 
 Full spec lives in [`docs/contract-reference.md`](./docs/contract-reference.md) as the contract develops.
 
@@ -116,8 +116,8 @@ Full spec lives in [`docs/contract-reference.md`](./docs/contract-reference.md) 
 
 The contract is currently deployed on the Stellar Testnet for testing and integration.
 
-| Contract | Network | Contract ID | Explorer |
-|----------|---------|-------------|----------|
+| Contract | Network | Contract ID                                                | Explorer                                                                                                                    |
+| -------- | ------- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
 | Registry | Testnet | `CBADTVTJ6IN332HIKZ7LWUYMYTLPZYCEBV3X2HS47VHR5UDBHQ3GAA7E` | [Stellar Expert](https://stellar.expert/explorer/testnet/contract/CBADTVTJ6IN332HIKZ7LWUYMYTLPZYCEBV3X2HS47VHR5UDBHQ3GAA7E) |
 
 ### Example Transactions
@@ -153,12 +153,49 @@ cd ../backend
 npm install
 cp .env.example .env      # fill in DATABASE_URL, SOROBAN_RPC_URL, TIMESCALEDB_* config, etc.
 npm run build
-npm run migrate:timescale  # Run TimescaleDB migrations
+npm run migrate:up        # Run all pending migrations
 npm run dev
 
 # 5. Start analytics worker (optional, for background data processing)
 npm run analytics:worker
 ```
+
+### Database migrations
+
+Pactum uses a custom immutable migration runner built into the backend. Every migration file is content-addressed with a SHA-256 checksum frozen on first apply — editing an already-applied file is detected and rejected at startup, preventing silent schema drift between environments.
+
+Migration files live in `backend/src/db/migrations/` and are numbered with a three-digit prefix (`001_`, `002_`, …) so they execute in a deterministic lexicographic order.
+
+| NPM script                              | What it does                                                |
+| --------------------------------------- | ----------------------------------------------------------- |
+| `npm run migrate:up`                    | Build the backend and apply all pending migrations          |
+| `npm run migrate:make -- <description>` | Create a new numbered migration stub                        |
+| `npm run migrate:status`                | Print which migrations are applied, pending, or tampered    |
+| `npm run migrate:dry-run`               | Validate checksums and SQL syntax without writing to the DB |
+
+#### Day-to-day workflow
+
+```bash
+# Check what is currently applied
+cd backend
+npm run migrate:status
+
+# Create a new migration
+npm run migrate:make -- add_webhook_deliveries_table
+# → writes backend/src/db/migrations/008_add_webhook_deliveries_table.sql
+
+# Edit the generated stub, then apply
+npm run migrate:up
+
+# Validate all migrations without touching the database (also runs in CI)
+npm run migrate:dry-run
+```
+
+#### Immutability rules
+
+- **Never edit a migration that has already been applied to any environment.** The runner stores the SHA-256 of each file at apply time and compares it on every subsequent run. A mismatch aborts the migration cycle and exits non-zero.
+- To change something that was already applied, create a new migration that issues the corrective `ALTER`, `DROP`, or `CREATE` statement.
+- The `migrate:dry-run` script is run automatically on every pull request by CI (see `.github/workflows/ci.yml` → `migration-dry-run` job).
 
 ### Running the whole stack with Docker
 
@@ -170,11 +207,11 @@ docker compose up --build
 
 That boots TimescaleDB, the backend (which applies `backend/src/db/migrations/*.sql` on startup) and an nginx-served frontend build.
 
-| Service | URL | Override |
-|---|---|---|
-| Frontend | http://localhost | `FRONTEND_PORT` |
-| Backend | http://localhost:3000 | `BACKEND_PORT` |
-| TimescaleDB | `localhost:5432` | `TIMESCALEDB_PORT` |
+| Service     | URL                   | Override           |
+| ----------- | --------------------- | ------------------ |
+| Frontend    | http://localhost      | `FRONTEND_PORT`    |
+| Backend     | http://localhost:3000 | `BACKEND_PORT`     |
+| TimescaleDB | `localhost:5432`      | `TIMESCALEDB_PORT` |
 
 The frontend is built to call the API on its own origin, and nginx proxies `/api`, `/reputation`, `/commitments` and `/health` to the backend container. Database credentials and Soroban settings come from the same `TIMESCALEDB_*` / `SOROBAN_*` variables as `backend/.env.example`; set them in a root `.env` to override the defaults.
 

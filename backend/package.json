@@ -14,6 +14,10 @@
     "indexer": "node dist/workers/indexer.js",
     "analytics:worker": "node dist/workers/analyticsWorker.js",
     "migrate:timescale": "node dist/db/migrate.js",
+    "migrate:up": "npm run build && node dist/db/migrate.js",
+    "migrate:make": "node scripts/migrate-make.js",
+    "migrate:status": "npm run build && node dist/db/migrate-status.js",
+    "migrate:dry-run": "npm run build && node dist/db/migrate-dry-run.js",
     "backfill:commitments": "node dist/indexer/backfill-commitments.js"
   },
   "keywords": [],

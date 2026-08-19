@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   pull_request:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   contract-tests:
@@ -102,6 +102,71 @@ jobs:
       - name: Run zk test suite
         working-directory: zk
         run: npm test
+
+  migration-dry-run:
+    name: Migration Dry-Run
+    runs-on: ubuntu-latest
+    env:
+      # Custom runner reads TIMESCALEDB_* env vars; point them at the ephemeral
+      # postgres:16 service container spun up for this job.
+      TIMESCALEDB_HOST: localhost
+      TIMESCALEDB_PORT: 5432
+      TIMESCALEDB_DATABASE: pactum_migration_test
+      TIMESCALEDB_USER: postgres
+      TIMESCALEDB_PASSWORD: postgres
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: pactum_migration_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d pactum_migration_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22.x (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('backend/package-lock.json', 'backend/package.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Build backend
+        working-directory: backend
+        run: npm run build
+
+      - name: Run migration dry-run against ephemeral PostgreSQL
+        working-directory: backend
+        # Note: TimescaleDB-specific DDL (CREATE EXTENSION timescaledb,
+        # create_hypertable, time_bucket) requires the timescaledb extension
+        # which is not available in plain postgres:16. The dry-run validates
+        # checksum integrity and sequential ordering; TimescaleDB-specific
+        # syntax is exercised in the full integration stack (docker compose).
+        # Any migration that fails basic PostgreSQL parsing will still fail here.
+        run: node dist/db/migrate-dry-run.js
 
   backend-tests:
     name: Backend Tests
