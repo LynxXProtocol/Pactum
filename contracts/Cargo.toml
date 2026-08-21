@@ -5,6 +5,7 @@ members = [
     "mock_resolver",
     "timelock",
     "upgrade-fixture",
+    "fee_oracle",
 ]
 resolver = "2"
 
