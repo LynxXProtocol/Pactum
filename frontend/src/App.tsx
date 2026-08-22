@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 
 import './App.css';
@@ -174,7 +175,7 @@ export default function App() {
   const [activePage, setActivePage] = useState('landing');
   const [commitmentStatus, setCommitmentStatus] = useState<CommitmentStatus>();
   const [reputationAddress, setReputationAddress] = useState(
-    'GAJKUMA6V4MJKQPFM4MXNMWQZX3CTMK2KMMCSZQPK5JXBZWBZM7S4C',
+    'GBY54VG5G4A7DC4D6YJ6GHD4X4QW2AR43JLYZ2QVWSHKACWK3BLDR5IX',
   );
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 

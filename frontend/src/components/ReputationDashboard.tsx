@@ -4,10 +4,13 @@ import UserProfile from './UserProfile';
 import { fetchCommitments, type CommitmentFilters, type CommitmentStatus, type Reputation } from '../lib/api';
 import { fetchVerifiedReputation, type ReputationIntegrity } from '../lib/verifiedReputation';
 import {
+  Clock,
+  AlertTriangle,
   ChevronDown,
   ChevronUp,
   Layers,
   Sparkles,
+  Activity,
 } from 'lucide-react';
 
 export interface CommitmentItem {
@@ -24,6 +27,8 @@ export interface CommitmentItem {
   isExpanded?: boolean;
 }
 
+import { DEMO_ADDRESSES } from '../constants/demoAddresses';
+
 export interface ReputationDashboardProps {
   initialAddress?: string;
   onNavigateAddress?: (address: string) => void;
@@ -31,29 +36,12 @@ export interface ReputationDashboardProps {
   commitments?: CommitmentItem[];
 }
 
-const STATUS_CONFIG: Record<
-  CommitmentStatus,
-  { label: string; bg: string; color: string; border: string; dotColor: string }
-> = {
-  Fulfilled: { label: 'Fulfilled', bg: '#dcfce7', color: '#15803d', border: '#bbf7d0', dotColor: '#22c55e' },
-  Late: { label: 'Late', bg: '#fef3c7', color: '#b45309', border: '#fde68a', dotColor: '#f59e0b' },
-  Breached: { label: 'Breached', bg: '#ffe4e6', color: '#be123c', border: '#fecdd3', dotColor: '#ef4444' },
-  Pending: { label: 'Pending', bg: '#f1f5f9', color: '#475569', border: '#e2e8f0', dotColor: '#94a3b8' },
-  Disputed: { label: 'Disputed', bg: '#f3e8ff', color: '#7e22ce', border: '#e9d5ff', dotColor: '#a855f7' },
-};
-
-const BASE_ADDRESS_1 = 'GAJKUMA6V4MJKQPFM4MXNMWQZX3CTMK2KMMCSZQPK5JXBZWBZM7S4C';
-const BASE_ADDRESS_2 = 'GB4UFBX57KE2RPEXB4NCPQHXL5UZL7HSFBVQ2YEZQDZ2DXR2X3CHHZX';
-const BASE_ADDRESS_3 = 'GCJUKUMADK5PKZF7MCQBBNLRH2AIZQPK5JXBZWBZM7S4CGAJKUMA6V4';
-const BASE_ADDRESS_4 = 'GD7H8K9L0M1N2P3Q4R5S6T7U8V9W0X1Y2Z3A4B5C6D7E8F9G0H1I2J3K4L';
-const POWER_USER_ADDRESS = 'GPOWERUSERVIRTUALIZEDLISTTEST999999999999999999999999999999';
-
 // Base demo commitments with dynamic text lengths
 const DEMO_COMMITMENTS: CommitmentItem[] = [
   {
     id: 1,
-    issuer: BASE_ADDRESS_1,
-    counterparty: BASE_ADDRESS_2,
+    issuer: DEMO_ADDRESSES.BASE_1,
+    counterparty: DEMO_ADDRESSES.BASE_2,
     terms_hash: 'a3f9c1d2e4b5678901234567890abcdef1234567890abcdef1234567890ab',
     due_at: Math.floor(Date.now() / 1000) - 86400 * 5,
     status: 'Fulfilled',
@@ -69,8 +57,8 @@ const DEMO_COMMITMENTS: CommitmentItem[] = [
   },
   {
     id: 2,
-    issuer: BASE_ADDRESS_1,
-    counterparty: BASE_ADDRESS_3,
+    issuer: DEMO_ADDRESSES.BASE_1,
+    counterparty: DEMO_ADDRESSES.BASE_3,
     terms_hash: 'b7e2d1c3f5a6789012345678901abcdef234567890abcdef234567890abc',
     due_at: Math.floor(Date.now() / 1000) - 86400 * 10,
     status: 'Breached',
@@ -85,8 +73,8 @@ const DEMO_COMMITMENTS: CommitmentItem[] = [
   },
   {
     id: 3,
-    issuer: BASE_ADDRESS_2,
-    counterparty: BASE_ADDRESS_1,
+    issuer: DEMO_ADDRESSES.BASE_2,
+    counterparty: DEMO_ADDRESSES.BASE_1,
     terms_hash: 'c8f3e2d4a6b7890123456789012abcdef345678901abcdef345678901abcd',
     due_at: Math.floor(Date.now() / 1000) - 86400 * 2,
     status: 'Fulfilled',
@@ -98,8 +86,8 @@ const DEMO_COMMITMENTS: CommitmentItem[] = [
   },
   {
     id: 4,
-    issuer: BASE_ADDRESS_3,
-    counterparty: BASE_ADDRESS_2,
+    issuer: DEMO_ADDRESSES.BASE_3,
+    counterparty: DEMO_ADDRESSES.BASE_2,
     terms_hash: 'd9a4f3e5b7c8901234567890123abcdef456789012abcdef456789012abcde',
     due_at: Math.floor(Date.now() / 1000) + 86400 * 8,
     status: 'Pending',
@@ -110,8 +98,8 @@ const DEMO_COMMITMENTS: CommitmentItem[] = [
   },
   {
     id: 5,
-    issuer: BASE_ADDRESS_1,
-    counterparty: BASE_ADDRESS_4,
+    issuer: DEMO_ADDRESSES.BASE_1,
+    counterparty: DEMO_ADDRESSES.BASE_4,
     terms_hash: 'e0b5f4e6c8d9012345678901234abcdef56789012abcdef56789012abcdef',
     due_at: Math.floor(Date.now() / 1000) - 86400 * 1,
     status: 'Late',
@@ -124,52 +112,16 @@ const DEMO_COMMITMENTS: CommitmentItem[] = [
   },
 ];
 
-function generateLargeDataset(count: number, targetAddress: string): CommitmentItem[] {
-  const statuses: CommitmentItem['status'][] = ['Fulfilled', 'Late', 'Breached', 'Pending', 'Disputed'];
-  const counterparties = [BASE_ADDRESS_1, BASE_ADDRESS_2, BASE_ADDRESS_3, BASE_ADDRESS_4];
-  const sampleDescriptions = [
-    'Deliver 500 validated oracle data points across Stellar Soroban testnet validators on time.',
-    'Provide 99.99% uptime on cross-border liquidity pool balancer during high volatility window with continuous telemetry monitoring.',
-    'Short term liquidity deposit.',
-    'Multi-party cryptographic settlement and dispute mediation protocol execution with variable delay conditions and secondary attestations required by counterparty.',
-    'Execute algorithmic token swap on DEX aggregator.',
-    'Provide 24/7 technical on-call response for bridge relayer architecture including emergency pause key rotation and key recovery protocol verification.',
-  ];
 
-  const now = Math.floor(Date.now() / 1000);
-  const items: CommitmentItem[] = [];
-
-  for (let i = 1; i <= count; i++) {
-    const isIssuer = i % 2 === 0;
-    const status = statuses[i % statuses.length];
-    const cp = counterparties[i % counterparties.length];
-    const desc = sampleDescriptions[i % sampleDescriptions.length];
-
-    items.push({
-      id: 1000 + i,
-      issuer: isIssuer ? targetAddress : cp,
-      counterparty: isIssuer ? cp : targetAddress,
-      terms_hash: `hash_${i.toString().padStart(6, '0')}_${(i * 31337).toString(16).padEnd(32, '0')}`,
-      due_at: now - (count - i) * 3600,
-      status,
-      created_at: now - (count - i) * 7200,
-      attested_at: status !== 'Pending' ? now - (count - i) * 1800 : null,
-      description: `[#${1000 + i}] ${desc}`,
-      notes: i % 3 === 0 ? [`Audit trail verified for batch ${i}`, `Ledger index #${50000 + i}`] : undefined,
-    });
-  }
-
-  return items;
-}
 
 const PRESETS = [
   {
     label: 'Issuer Demo (GAJK...)',
-    address: 'GAJKUMA6V4MJKQPFM4MXNMWQZX3CTMK2KMMCSZQPK5JXBZWBZM7S4C',
+    address: DEMO_ADDRESSES.BASE_1,
   },
   {
     label: 'Counterparty (GB4U...)',
-    address: 'GB4UFBX57KE2RPEXB4NCPQHXL5UZL7HSFBVQ2YEZQDZ2DXR2X3CHHZX',
+    address: DEMO_ADDRESSES.BASE_2,
   },
   {
     label: 'Empty Account (GNEW...)',
@@ -178,7 +130,7 @@ const PRESETS = [
 ];
 
 export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
-  initialAddress = BASE_ADDRESS_1,
+  initialAddress = DEMO_ADDRESSES.BASE_1,
   onNavigateAddress,
   onLaunchCreate,
   commitments: externalCommitments,
@@ -240,32 +192,14 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
       setSearchQuery(addr);
       return;
     }
-    abortRef.current?.abort();
-    setIsLoading(true);
-    setActiveAddress(addr);
-    setSearchQuery(addr);
-    setReputation(null);
-    setReputationIntegrity(null);
-    setSecurityWarning(null);
-    setCommitmentsState([]);
-    setPage(1);
-    setHasMore(true);
-
-    if (addr === POWER_USER_ADDRESS) {
-      const generated = generateLargeDataset(500, POWER_USER_ADDRESS);
-      setCommitmentsState(generated);
-      dynamicSizeCacheRef.current.clear();
-      lastCacheSizeRef.current = 0;
-      setCachedCount(0);
-      setIsLoading(false);
-    } else if (!externalCommitments) {
-      setCommitmentsState(DEMO_COMMITMENTS);
-    }
 
     if (onNavigateAddress) {
       onNavigateAddress(addr);
     }
-  }, [activeAddress, isLoading, externalCommitments, onNavigateAddress]);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 150);
+  }, [externalCommitments, onNavigateAddress]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -273,6 +207,12 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
     triggerAddressChange(searchQuery.trim());
   };
 
+  // Filter commitments based on active address and status
+  const addressCommitments = useMemo(() => {
+    return commitmentsState.filter(
+      (c) => c.issuer === activeAddress || c.counterparty === activeAddress
+    );
+  }, [commitmentsState, activeAddress]);
   const loadCommitments = React.useCallback(
     async (pageNum: number, isAppend = false, signal?: AbortSignal) => {
       const filters: CommitmentFilters = {
@@ -301,8 +241,17 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
     [activeAddress, statusFilter],
   );
 
-  const loadMore = React.useCallback(async () => {
+  const filteredCommitments = useMemo(() => {
+    return addressCommitments.filter((c) => {
+      if (statusFilter === 'All') return true;
+      return c.status === statusFilter;
+    });
+  }, [addressCommitments, statusFilter]);
+
+
+  const loadMore = useCallback(async () => {
     if (isLoading || isFetchingRef.current || !hasMore) return;
+
     isFetchingRef.current = true;
     setIsFetchingMore(true);
     setFetchError(null);
@@ -319,19 +268,6 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
       isFetchingRef.current = false;
     }
   }, [isLoading, hasMore, page, loadCommitments]);
-
-  const addressCommitments = useMemo(() => {
-    return commitmentsState.filter(
-      (c) => c.issuer === activeAddress || c.counterparty === activeAddress,
-    );
-  }, [commitmentsState, activeAddress]);
-
-  const filteredCommitments = useMemo(() => {
-    return addressCommitments.filter((c) => {
-      if (statusFilter === 'All') return true;
-      return c.status === statusFilter;
-    });
-  }, [addressCommitments, statusFilter]);
 
   const estimateItemSize = useCallback(
     (index: number) => {
@@ -414,7 +350,7 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
       setIsLoading(true);
       try {
         // Demo addresses have no backend proof; skip verification and use placeholder reputation
-        const demoAddresses = [BASE_ADDRESS_1, BASE_ADDRESS_2, BASE_ADDRESS_3, BASE_ADDRESS_4];
+        const demoAddresses = [DEMO_ADDRESSES.BASE_1, DEMO_ADDRESSES.BASE_2, DEMO_ADDRESSES.BASE_3, DEMO_ADDRESSES.BASE_4];
         if (demoAddresses.includes(activeAddress)) {
           // Provide dummy reputation data for demo accounts
           setReputation({
@@ -1087,47 +1023,30 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
       )}
 
       {/* ── Deterministic DOM Virtualized Commitment Histories ── */}
-      {/* ── Associated Commitments ── */}
-      <div
-        style={{
-          background: '#ffffff',
-          border: '1.5px solid #e2e8f0',
-          borderRadius: '24px',
-          overflow: 'hidden',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.04)',
-          marginBottom: '32px',
-        }}
-      >
+      <div style={{
+        background: '#ffffff',
+        border: '1.5px solid #e2e8f0',
+        borderRadius: '24px',
+        overflow: 'hidden',
+        boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)',
+        marginBottom: '32px'
+      }}>
         {/* Header with Title and Filter Tabs */}
-        <div
-          style={{
-            padding: '22px 28px',
-            borderBottom: '1px solid #f1f5f9',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '14px',
-          }}
-        >
+        <div style={{ padding: '22px 28px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
-                Associated Commitments
-              </h3>
-              <span
-                style={{
-                  fontSize: '11px',
-                  fontWeight: '800',
-                  padding: '2px 8px',
-                  borderRadius: '6px',
-                  background: '#e0e7ff',
-                  color: '#4338ca',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                }}
-              >
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Associated Commitments</h3>
+              <span style={{
+                fontSize: '11px',
+                fontWeight: '800',
+                padding: '2px 8px',
+                borderRadius: '6px',
+                background: '#e0e7ff',
+                color: '#4338ca',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}>
                 <Layers size={12} />
                 Virtualized
               </span>
@@ -1135,9 +1054,26 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
             <p style={{ fontSize: '13px', color: '#64748b', margin: '3px 0 0 0' }}>
               Deterministic DOM virtualization for unlimited commitment histories
             </p>
+            {fetchError && (
+              <div
+                style={{
+                  background: '#fef2f2',
+                  color: '#dc2626',
+                  padding: '12px 24px',
+                  fontSize: '13px',
+                  fontWeight: '500',
+                  borderRadius: '12px',
+                  marginTop: '12px',
+                  border: '1px solid #fee2e2',
+                }}
+              >
+                {fetchError}
+              </div>
+            )}
           </div>
 
           {/* Filter Tabs */}
+
           <div
             style={{
               display: 'flex',
@@ -1232,17 +1168,10 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
             >
               No commitments found for this address
             </h4>
-            <p
-              style={{
-                fontSize: '13.5px',
-                color: '#64748b',
-                maxWidth: '400px',
-                margin: '0 auto 22px auto',
-              }}
-            >
-              This account currently has no registered commitment activity matching this filter on
-              Pactum Stellar Testnet.
+            <p style={{ fontSize: '13.5px', color: '#64748b', maxWidth: '400px', margin: '0 auto 22px auto' }}>
+              This account currently has no registered commitment activity matching this filter on Pactum Stellar Testnet.
             </p>
+
             {onLaunchCreate && (
               <button
                 onClick={onLaunchCreate}
@@ -1374,30 +1303,82 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
 
                         {/* Status Badge & Expand Action */}
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span
-                            style={{
-                              padding: '4px 12px',
-                              borderRadius: '100px',
-                              fontSize: '12px',
-                              fontWeight: '800',
-                              background: (STATUS_CONFIG[c.status] || STATUS_CONFIG.Pending).bg,
-                              color: (STATUS_CONFIG[c.status] || STATUS_CONFIG.Pending).color,
-                              border: `1px solid ${(STATUS_CONFIG[c.status] || STATUS_CONFIG.Pending).border}`,
-                              display: 'inline-flex',
-                              alignItems: 'center',
-                              gap: '6px',
-                            }}
-                          >
+                          {c.status === 'Fulfilled' && (
                             <span
                               style={{
-                                width: '6px',
-                                height: '6px',
-                                borderRadius: '50%',
-                                background: (STATUS_CONFIG[c.status] || STATUS_CONFIG.Pending).dotColor,
+                                padding: '4px 12px',
+                                borderRadius: '100px',
+                                fontSize: '12px',
+                                fontWeight: '800',
+                                background: '#dcfce7',
+                                color: '#15803d',
+                                border: '1px solid #bbf7d0',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
                               }}
-                            />
-                            {(STATUS_CONFIG[c.status] || STATUS_CONFIG.Pending).label}
-                          </span>
+                            >
+                              <span
+                                style={{
+                                  width: '6px',
+                                  height: '6px',
+                                  borderRadius: '50%',
+                                  background: '#22c55e',
+                                }}
+                              ></span>
+                              Fulfilled
+                            </span>
+                          )}
+                          {c.status === 'Late' && (
+                            <span
+                              style={{
+                                padding: '4px 12px',
+                                borderRadius: '100px',
+                                fontSize: '12px',
+                                fontWeight: '800',
+                                background: '#fef3c7',
+                                color: '#b45309',
+                                border: '1px solid #fde68a',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                              }}
+                            >
+                              <Clock size={14} color="#f59e0b" />
+                              Late
+                            </span>
+                          )}
+                          {c.status === 'Breached' && (
+                            <span
+                              style={{
+                                padding: '4px 12px',
+                                borderRadius: '100px',
+                                fontSize: '12px',
+                                fontWeight: '800',
+                                background: '#ffe4e6',
+                                color: '#be123c',
+                                border: '1px solid #fecdd3',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                              }}
+                            >
+                              <AlertTriangle size={14} color="#ef4444" />
+                              Breached
+                            </span>
+                          )}
+                          {c.status === 'Pending' && (
+                            <span style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '800', background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <Activity size={14} color="#94a3b8" />
+                              Pending
+                            </span>
+                          )}
+                          {c.status === 'Disputed' && (
+                            <span style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '800', background: '#f3e8ff', color: '#7e22ce', border: '1px solid #e9d5ff', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                              <AlertTriangle size={14} color="#a855f7" />
+                              Disputed
+                            </span>
+                          )}
 
                           <button
                             onClick={() => toggleExpand(c.id)}
@@ -1568,6 +1549,21 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
                 );
               })}
             </div>
+            <div ref={bottomRef} style={{ height: '20px' }}>
+              {isFetchingMore && (
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '16px',
+                    fontSize: '13px',
+                    color: '#64748b',
+                    fontWeight: '500',
+                  }}
+                >
+                  Loading more commitments...
+                </div>
+              )}
+            </div>
             {fetchError && (
               <div style={{ textAlign: 'center', color: '#ef4444', padding: '16px', fontSize: '13px' }}>
                 {fetchError}
@@ -1576,7 +1572,7 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
           </div>
         )}
       </div>
-    </div>
+      </div>
   );
 };
 

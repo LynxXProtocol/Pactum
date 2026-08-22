@@ -228,8 +228,10 @@ export default function CreateCommitmentWizard({
       const dueAtSeconds = Math.floor(new Date(data.dueAt).getTime() / 1000);
       const nowSeconds = Math.floor(Date.now() / 1000);
 
+      console.log('[DEBUG] Starting WASM validation...', { dueAtSeconds, nowSeconds });
       // Pre-flight WASM Web Worker validation before transaction simulation & wallet submission
       const wasmResult = await validateCommitmentWithWasm(dueAtSeconds, nowSeconds, 1);
+      console.log('[DEBUG] WASM validation result:', wasmResult);
       if (!wasmResult.isValid) {
         showErrorToast(wasmResult.error || 'Contract validation failed in WASM Web Worker.');
         setSubmitting(false);

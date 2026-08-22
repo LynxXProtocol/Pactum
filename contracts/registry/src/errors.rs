@@ -93,7 +93,7 @@ pub enum Error {
     DisputeTokenNotSet = 40,
     /// The dispute stake amount must be greater than zero.
     InvalidDisputeStakeAmount = 41,
-    /// The fee oracle has not yet received enough observations to produce a
-    /// recommendation.
+
+    /// The oracle has not been initialized.
     OracleNotInitialized = 42,
 }

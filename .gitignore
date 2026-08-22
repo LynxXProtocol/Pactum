@@ -28,4 +28,10 @@ evm/typechain-types/
 # Soroban test snapshots
 test_snapshots/
 
+# ZK build artifacts & ceremony files
+zk/artifacts/
+*.ptau
 .env.e2e
+
+# PR Drafts
+PR_DESCRIPTION.md

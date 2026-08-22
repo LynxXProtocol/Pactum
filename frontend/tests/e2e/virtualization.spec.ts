@@ -7,7 +7,7 @@ test.describe('Reputation Dashboard DOM Virtualization', () => {
       (window as any).freighter = {
         isConnected: () => Promise.resolve(true),
         isAllowed: () => Promise.resolve(true),
-        getUserInfo: () => Promise.resolve({ publicKey: 'GAJKUMA6V4MJKQPFM4MXNMWQZX3CTMK2KMMCSZQPK5JXBZWBZM7S4C' }),
+        getUserInfo: () => Promise.resolve({ publicKey: 'GBY54VG5G4A7DC4D6YJ6GHD4X4QW2AR43JLYZ2QVWSHKACWK3BLDR5IX' }),
         signTransaction: (tx: string) => Promise.resolve({ status: 'SUCCESS', signedTx: tx }),
       };
     });
