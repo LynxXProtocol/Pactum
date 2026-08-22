@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Optimistic rollup engine for high-frequency micro-commitment batching (#182):
+  client-side deterministic state transitions + Merkle accumulator, Soroban
+  `submit_batch_root` / `force_include` endpoints, and React UI for pending
+  rollup vs on-chain finalized states.
 - Multi-arbitrator support with majority-vote dispute resolution (#11):
   `initialize()` now accepts a `Vec<Address>` arbitrator committee stored as
   `DataKey::ArbitratorSet`, `resolve_dispute()` records per-dispute votes under

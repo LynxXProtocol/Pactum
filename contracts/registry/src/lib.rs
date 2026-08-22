@@ -13,6 +13,7 @@ pub mod fee_oracle;
 mod pausable;
 mod reentrancy;
 pub mod reputation;
+pub mod rollup;
 pub mod staking;
 pub mod trust_gate;
 pub mod trust_score;
@@ -46,6 +47,7 @@ mod test_voting;
 pub use commitments::{Commitment, CommitmentStatus, DataKey, DISPUTE_WINDOW_SECONDS};
 use errors::Error;
 use soroban_sdk::{contract, contractimpl, panic_with_error, Address, BytesN, Env, Vec};
+pub use rollup::{BatchRootRecord, ForcedInclusionRecord, MerkleNode};
 pub use staking::AttestorStake;
 pub use upgrade::{SCHEMA_VERSION_V1, SCHEMA_VERSION_V2};
 pub use voting::VoteTally;
@@ -841,6 +843,79 @@ impl RegistryContract {
     /// Returns the staking record for an attestor (zeroed if it has never staked).
     pub fn get_stake_info(env: Env, attestor: Address) -> AttestorStake {
         staking::get_stake_info(&env, attestor)
+    }
+
+    // ---------------------------------------------------------------------
+    // Optimistic rollup batch roots (Issue #182)
+    //
+    // Micro-commitments accumulate off-chain; only the Merkle batch root (and
+    // a signer quorum) is submitted on-chain. Forced inclusion covers processor
+    // failure or censorship after the challenge window.
+    // ---------------------------------------------------------------------
+
+    /// Configures rollup quorum threshold and challenge window (seconds).
+    ///
+    /// # Authorization
+    /// * Authorized caller: a designated arbitrator.
+    pub fn configure_rollup(env: Env, caller: Address, quorum: u32, challenge_secs: u64) {
+        rollup::configure_rollup(&env, caller, quorum, challenge_secs);
+    }
+
+    /// Submits a batched Merkle state root with an ordered cosigner set.
+    ///
+    /// `batch_seq` must equal `last_batch_seq + 1`. Each distinct signer in
+    /// `signers` (plus `submitter`) must authorize; the set must meet quorum.
+    pub fn submit_batch_root(
+        env: Env,
+        submitter: Address,
+        batch_root: BytesN<32>,
+        batch_seq: u64,
+        signers: Vec<Address>,
+    ) {
+        rollup::submit_batch_root(&env, submitter, batch_root, batch_seq, signers);
+    }
+
+    /// Returns the last accepted rollup batch sequence (0 if none).
+    pub fn last_batch_seq(env: Env) -> u64 {
+        rollup::last_batch_seq(&env)
+    }
+
+    /// Returns an accepted batch root record, if present.
+    pub fn get_batch_root(env: Env, batch_seq: u64) -> Option<BatchRootRecord> {
+        rollup::get_batch_root(&env, batch_seq)
+    }
+
+    /// Force-includes a micro-commitment leaf when the batch processor fails
+    /// or censors within the challenge window.
+    ///
+    /// When `against_batch_seq` is set, `proof` must resolve to that batch root.
+    /// When unset, inclusion is allowed only after the challenge window elapses
+    /// and `expected_batch_seq` was never accepted.
+    pub fn force_include(
+        env: Env,
+        submitter: Address,
+        leaf_hash: BytesN<32>,
+        sequence_id: u64,
+        proof: Vec<MerkleNode>,
+        against_batch_seq: Option<u64>,
+        opened_at: u64,
+        expected_batch_seq: u64,
+    ) {
+        rollup::force_include(
+            &env,
+            submitter,
+            leaf_hash,
+            sequence_id,
+            proof,
+            against_batch_seq,
+            opened_at,
+            expected_batch_seq,
+        );
+    }
+
+    /// Returns a forced-inclusion record for `leaf_hash`, if any.
+    pub fn get_forced_inclusion(env: Env, leaf_hash: BytesN<32>) -> Option<ForcedInclusionRecord> {
+        rollup::get_forced_inclusion(&env, leaf_hash)
     }
 
     /// Records a new fee observation and updates the PID controller state.

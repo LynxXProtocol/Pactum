@@ -93,7 +93,11 @@ pub enum Error {
     DisputeTokenNotSet = 40,
     /// The dispute stake amount must be greater than zero.
     InvalidDisputeStakeAmount = 41,
+    /// Forced inclusion was attempted before the rollup challenge window elapsed.
+    RollupChallengePending = 42,
+    /// The provided Merkle proof does not resolve to the expected batch root.
+    RollupProofInvalid = 43,
     /// The fee oracle has not yet received enough observations to produce a
     /// recommendation.
-    OracleNotInitialized = 42,
+    OracleNotInitialized = 44,
 }

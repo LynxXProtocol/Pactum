@@ -157,6 +157,34 @@ pub fn unstaked(env: &Env, attestor: &Address, amount: i128) {
         .publish((symbol_short!("unstaked"), attestor.clone()), amount);
 }
 
+/// Publishes when a rollup batch Merkle root is accepted on-chain.
+pub fn batch_root_submitted(
+    env: &Env,
+    root: &BytesN<32>,
+    batch_seq: u64,
+    submitter: &Address,
+    submitted_at: u64,
+) {
+    env.events().publish(
+        (symbol_short!("batchrt"), submitter.clone(), batch_seq),
+        (root.clone(), submitted_at),
+    );
+}
+
+/// Publishes when a micro-commitment is force-included outside the batch path.
+pub fn forced_inclusion(
+    env: &Env,
+    leaf_hash: &BytesN<32>,
+    sequence_id: u64,
+    submitter: &Address,
+    included_at: u64,
+) {
+    env.events().publish(
+        (symbol_short!("forcein"), submitter.clone(), sequence_id),
+        (leaf_hash.clone(), included_at),
+    );
+}
+
 /// Publishes an event when the fee oracle updates its recommendation.
 pub fn fee_oracle_updated(env: &Env, recommended_fee: i128, ledger: u32) {
     env.events()

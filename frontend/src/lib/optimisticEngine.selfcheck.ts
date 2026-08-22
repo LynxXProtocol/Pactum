@@ -45,4 +45,4 @@ function freshEngine() {
   assert.equal(engine.getConflict(key), undefined)
 }
 
-console.log('optimisticEngine selfcheck: OK')
+console.log('optimisticEngine.selfcheck: ok')

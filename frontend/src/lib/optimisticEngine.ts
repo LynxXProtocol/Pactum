@@ -123,3 +123,27 @@ export class OptimisticConflictEngine {
     for (const listener of this.listeners) listener()
   }
 }
+
+// Issue #182 rollup API — re-exported so callers of optimisticEngine keep working.
+export {
+  OptimisticRollupEngine,
+  applyMicroCommitment,
+  encodeMicroCommitment,
+  leafHashForCommitment,
+  MerkleAccumulator,
+  doubleSha256LeafHex,
+  verifyMerkleProof,
+} from './optimisticRollup.ts'
+
+export type {
+  RollupCommitmentStatus,
+  MicroCommitment,
+  RollupCommitmentRecord,
+  RollupBatchSnapshot,
+  RollupEngineEvent,
+  OptimisticRollupConfig,
+  OptimisticRollupState,
+  AccumulatorLeaf,
+  Hex32,
+  MerkleProofNode,
+} from './optimisticRollup.ts'

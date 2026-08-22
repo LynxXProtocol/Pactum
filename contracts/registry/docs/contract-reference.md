@@ -249,3 +249,21 @@ V1 struct under both schemas, so existing integrations need no changes.
 Adding `ReputationV2` does not disturb existing entries: `#[contracttype]` encodes an
 enum variant by name rather than by ordinal, so already-written `Reputation(addr)` keys
 remain byte-identical.
+
+## Optimistic Rollup Batch Roots (Issue #182)
+
+High-frequency micro-commitments accumulate client-side into a Merkle batch. Only the
+batch root is submitted on-chain via `submit_batch_root`, with an ordered cosigner set
+that must meet the configured quorum. If the batch processor fails to post a root
+covering a commitment within the challenge window, anyone may call `force_include`.
+
+| Entrypoint | Role |
+|------------|------|
+| `configure_rollup` | Set quorum + challenge window (arbitrator) |
+| `submit_batch_root` | Accept next sequential batch root + signer quorum |
+| `last_batch_seq` / `get_batch_root` | Read accepted roots |
+| `force_include` / `get_forced_inclusion` | Censorship / liveness fallback |
+
+Frontend: `OptimisticRollupEngine` in `frontend/src/lib/optimisticEngine.ts` with
+`MerkleAccumulator`, hook `useOptimisticRollup`, and `RollupStatusPanel` showing
+**Pending rollup** vs **On-chain finalized**.

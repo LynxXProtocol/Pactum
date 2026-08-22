@@ -36,6 +36,12 @@ jobs:
           sudo mv stellar /usr/local/bin/
           stellar --version
 
+      # Compose references .env.e2e (optional for services, but some compose
+      # versions still error on missing files during up/down). Create a stub
+      # before any compose invocation; deploy overwrites it with real values.
+      - name: Stub .env.e2e for compose
+        run: touch .env.e2e
+
       - name: Start local Soroban sandbox
         run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d soroban
 
@@ -50,7 +56,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: '22.x'
           cache: 'npm'
           cache-dependency-path: frontend/package-lock.json
 
@@ -86,4 +92,8 @@ jobs:
 
       - name: Tear down
         if: always()
-        run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v
+        run: |
+          # deploy may never have run (RPC wait failure); compose still
+          # references .env.e2e — create an empty file so down always works.
+          touch .env.e2e
+          docker compose -f docker-compose.yml -f docker-compose.e2e.yml down -v

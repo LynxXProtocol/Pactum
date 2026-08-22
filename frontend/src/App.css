@@ -1146,3 +1146,80 @@ body {
   }
 }
 
+
+/* -- Optimistic rollup panel (Issue #182) -- */
+.rollup-panel .rollup-meta {
+  margin-left: auto;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+.rollup-stats {
+  display: grid;
+  gap: 8px;
+}
+.rollup-stat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+.rollup-stat strong,
+.rollup-stat code {
+  color: var(--text-primary);
+  font-size: 12px;
+}
+.rollup-list {
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rollup-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--accent-light);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.rollup-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: var(--gray-bg);
+  color: var(--gray);
+  font-weight: 600;
+}
+.rollup-badge.pending {
+  background: var(--orange-bg);
+  color: var(--orange);
+}
+.rollup-badge.finalized {
+  background: var(--green-bg);
+  color: var(--green);
+}
+.rollup-badge.force {
+  background: var(--red-bg);
+  color: var(--red);
+}
+.rollup-seq {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.rollup-leaf,
+.rollup-tx {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  color: var(--text-secondary);
+}
+.rollup-tx.force {
+  color: var(--red);
+}
+.rollup-empty {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
