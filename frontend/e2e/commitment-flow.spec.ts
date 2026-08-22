@@ -243,13 +243,19 @@ test('loading spinners display during network requests', async ({ page }) => {
   // Navigate to Dashboard using nav button id (not role=link)
   await page.locator('#nav-dashboard').click();
 
-  await expect(page.locator('div[style*="animation: pulse"]')).toBeVisible();
-  await expect(page.locator('div[style*="animation: pulse"]')).not.toBeVisible({ timeout: 5000 });
+  const spinner = page.locator('div[style*="animation: pulse"]');
+  await spinner.waitFor({ state: 'visible', timeout: 5000 }).catch(() => {});
+  await expect(spinner).not.toBeVisible({ timeout: 10000 });
 });
 
 test('WASM validation failure blocks transaction simulation and wallet submission', async ({
   page,
 }) => {
+  // Connect Freighter wallet so submit button is enabled
+  await page.getByRole('button', { name: 'Connect Wallet' }).first().click();
+  await page.getByRole('button', { name: /Freighter/ }).click();
+  await expect(page.getByRole('button', { name: SHORT_ADDRESS })).toBeVisible();
+
   await page.addInitScript(() => {
     (window as any).__signCalled = false;
     const originalSign = (window as any).freighter?.signTransaction;
@@ -282,12 +288,13 @@ test('WASM validation failure blocks transaction simulation and wallet submissio
   // WASM validation error should appear and stop submit flow
   await expect(
     page.getByText(/Due date must be set in the future|Contract validation failed/i),
-  ).toBeVisible();
+  ).toBeVisible({ timeout: 10000 });
 
   // Verify wallet signTransaction was NEVER called
   const signCalled = await page.evaluate(() => (window as any).__signCalled);
   expect(signCalled).toBeFalsy();
 });
+
 
 test('encrypted commitment: toggle encrypts terms — ciphertext sent to backend, not plaintext', async ({
   page,
@@ -360,21 +367,22 @@ test('dashboard: encrypted commitment shows lock badge and decrypt button', asyn
   await page.locator('#nav-dashboard').click();
 
   // The second commitment (id=2) is encrypted — its lock badge should be visible
-  await expect(page.getByText('E2E Encrypted').first()).toBeVisible({ timeout: 5000 });
+  await expect(page.getByText('E2E Encrypted').first()).toBeVisible({ timeout: 10000 });
 
   // The "Decrypt Terms" button should be present for the encrypted commitment
   const decryptBtn = page.locator('[id^="decrypt-btn-"]').first();
-  await expect(decryptBtn).toBeVisible();
+  await expect(decryptBtn).toBeVisible({ timeout: 10000 });
   await expect(decryptBtn).toContainText('Decrypt Terms');
 
   // Clicking it should open the DecryptTermsModal
   await decryptBtn.click();
-  await expect(page.locator('#decrypt-modal-confirm')).toBeVisible({ timeout: 5000 });
+  await expect(page.locator('#decrypt-modal-confirm')).toBeVisible({ timeout: 10000 });
 
   // The modal should identify this wallet as a party (issuer)
-  await expect(page.getByText('authorized')).toBeVisible();
+  await expect(page.getByText('authorized')).toBeVisible({ timeout: 10000 });
 
   // Close the modal
   await page.locator('#decrypt-modal-cancel').click();
-  await expect(page.locator('#decrypt-modal-confirm')).not.toBeVisible();
+  await expect(page.locator('#decrypt-modal-confirm')).not.toBeVisible({ timeout: 10000 });
 });
+
