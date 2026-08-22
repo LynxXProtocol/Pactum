@@ -19,6 +19,8 @@ import {
 import { postEncryptedTerms } from '../lib/api';
 import UserProfile from './UserProfile';
 import EncryptionConsentModal from './EncryptionConsentModal';
+import { SorobanErrorModal } from './SorobanErrorModal';
+import { SorobanSimulationError } from '../lib/soroban';
 import {
   CheckCircle2,
   ExternalLink,
@@ -138,6 +140,9 @@ export default function CreateCommitmentWizard({
   // Resolved after the consent modal signs and encrypts (used in reset)
   const [encryptResolve, setEncryptResolve] = useState<((r: EncryptResult) => void) | null>(null);
   const [encryptReject, setEncryptReject] = useState<((e: Error) => void) | null>(null);
+
+  // ── XDR Error Modal state ─────────────────────────────────────────────────
+  const [xdrError, setXdrError] = useState<SorobanSimulationError | null>(null);
 
   const isFreighter = provider === 'freighter';
 
@@ -298,7 +303,7 @@ export default function CreateCommitmentWizard({
           // Non-fatal: on-chain commitment is already confirmed
           showErrorToast(
             'On-chain commitment created, but the encrypted terms could not be stored. ' +
-            'Please retry uploading later.',
+              'Please retry uploading later.',
           );
         }
       }
@@ -307,7 +312,12 @@ export default function CreateCommitmentWizard({
       onSuccess?.(result);
     } catch (err: unknown) {
       console.error('[CreateCommitmentWizard] Soroban error:', err);
-      showErrorToast(decodeRegistryContractError(err));
+      // Show rich modal for Soroban XDR simulation errors, simple toast for everything else
+      if (err instanceof SorobanSimulationError) {
+        setXdrError(err);
+      } else {
+        showErrorToast(decodeRegistryContractError(err));
+      }
     } finally {
       setSubmitting(false);
       setStatusMessage(null);
@@ -705,12 +715,14 @@ export default function CreateCommitmentWizard({
                       >
                         {encryptEnabled ? 'E2E Encrypted' : 'Encryption Off'}
                       </div>
-                      <div style={{ fontSize: '11px', color: encryptEnabled ? '#4338ca' : '#94a3b8' }}>
+                      <div
+                        style={{ fontSize: '11px', color: encryptEnabled ? '#4338ca' : '#94a3b8' }}
+                      >
                         {encryptEnabled
                           ? 'Only you & counterparty can read the terms'
                           : isFreighter
-                          ? 'Enable to encrypt terms with your wallet key'
-                          : 'Requires Freighter wallet'}
+                            ? 'Enable to encrypt terms with your wallet key'
+                            : 'Requires Freighter wallet'}
                       </div>
                     </div>
                   </div>
@@ -948,6 +960,28 @@ export default function CreateCommitmentWizard({
           issuerAddress={connectedAddress}
           counterpartyAddress={values.counterparty}
           isFreighter={isFreighter}
+        />
+      )}
+
+      {/* ── Soroban XDR Error Modal ── */}
+      {xdrError && (
+        <SorobanErrorModal
+          error={xdrError}
+          diagnosticEventBlobs={xdrError.diagnosticEventBlobs}
+          attemptedFunction={xdrError.attemptedFunction ?? undefined}
+          onDismiss={() => {
+            setXdrError(null);
+            setSubmitting(false);
+            setStatusMessage(null);
+          }}
+          onRetry={
+            isConnected && isLastStep
+              ? () => {
+                  setXdrError(null);
+                  handleFinalSubmit();
+                }
+              : undefined
+          }
         />
       )}
     </div>
