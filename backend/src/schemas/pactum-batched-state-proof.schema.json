@@ -1,0 +1,60 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "PactumBatchedStateProof",
+  "description": "Unified Merkle aggregation of multiple Pactum trust-score state proofs for a single EVM submission.",
+  "type": "object",
+  "required": [
+    "version",
+    "networkPassphrase",
+    "ledgerSeq",
+    "ledgerHeaderHash",
+    "stateRootHash",
+    "contractId",
+    "aggregationRoot",
+    "headerProof",
+    "entries"
+  ],
+  "properties": {
+    "version": { "type": "string", "enum": ["1.1.0"] },
+    "networkPassphrase": { "type": "string" },
+    "ledgerSeq": { "type": "integer", "minimum": 1, "maximum": 4294967295 },
+    "ledgerHeaderHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+    "stateRootHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+    "contractId": { "type": "string" },
+    "aggregationRoot": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+    "headerProof": {
+      "type": "object",
+      "required": ["previousLedgerHash", "txSetResultHash", "bucketListHash", "ledgerVersion"],
+      "properties": {
+        "previousLedgerHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+        "txSetResultHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+        "bucketListHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+        "ledgerVersion": { "type": "integer", "minimum": 0, "maximum": 4294967295 }
+      },
+      "additionalProperties": false
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 128,
+      "items": {
+        "type": "object",
+        "required": ["sequenceId", "stellarAddress", "scoreData", "leafHash", "merkleProof", "aggregationProof"],
+        "properties": {
+          "sequenceId": { "type": "integer", "minimum": 0 },
+          "stellarAddress": { "type": "string" },
+          "scoreData": {
+            "type": "object",
+            "required": ["score", "fulfilledCount", "lateCount", "breachedCount", "epoch", "sourceLedgerSeq"],
+            "additionalProperties": false
+          },
+          "leafHash": { "type": "string", "pattern": "^0x[0-9a-fA-F]{64}$" },
+          "merkleProof": { "type": "array", "maxItems": 64 },
+          "aggregationProof": { "type": "array", "maxItems": 64 }
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

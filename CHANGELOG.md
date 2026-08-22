@@ -6,6 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [Unreleased]
 ### Added
+- Zero-trust state proof aggregation pipeline (#178): the relayer buffers
+  commitment proofs until `MAX_BATCH_SIZE` or `BATCH_TTL`, emits one unified
+  Merkle aggregation proof, and `PactumZeroTrustOracle.submitBatchedStateProof`
+  unpacks the batch on-chain so EVM verification cost no longer scales linearly
+  with event volume.
 - Multi-arbitrator support with majority-vote dispute resolution (#11):
   `initialize()` now accepts a `Vec<Address>` arbitrator committee stored as
   `DataKey::ArbitratorSet`, `resolve_dispute()` records per-dispute votes under

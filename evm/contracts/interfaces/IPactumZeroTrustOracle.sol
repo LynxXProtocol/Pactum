@@ -29,9 +29,23 @@ interface IPactumZeroTrustOracle {
     event TrustedLedgerHeaderUpdated(uint64 indexed ledgerSeq, bytes32 indexed headerHash);
     event RegistryContractIdUpdated(bytes32 indexed contractId);
 
+    event BatchedStateProofVerified(
+        bytes32 indexed aggregationRoot,
+        uint256 entryCount,
+        uint64 indexed ledgerSeq,
+        bytes32 indexed ledgerHeaderHash,
+        address submitter
+    );
+
     /// @notice Submits and verifies a zero-trust Stellar state proof.
     /// @dev Reverts if cryptographic proof verification fails or header is untrusted.
     function submitStateProof(PactumStateProofVerifier.StateProof calldata proof) external returns (bool);
+
+    /// @notice Submits and verifies a batched aggregation of state proofs in one transaction.
+    /// @dev Shared header is checked once; each compact entry is unpacked against the unified roots.
+    function submitBatchedStateProof(
+        PactumStateProofVerifier.BatchedStateProof calldata batch
+    ) external returns (uint256 verifiedCount);
 
     /// @notice Queries the verified trust score record for a given Stellar address.
     function getVerifiedTrustScore(bytes32 stellarAddress) external view returns (TrustScoreRecord memory);

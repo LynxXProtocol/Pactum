@@ -198,4 +198,246 @@ library PactumStateProofVerifier {
 
         return (true, proof.scoreData.score);
     }
+
+    // ---------------------------------------------------------------------
+    // Batched proof (aggregation pipeline)
+    // ---------------------------------------------------------------------
+
+    uint8 internal constant BATCH_PROOF_VERSION = 1;
+    uint256 internal constant MAX_BATCH_SIZE = 64;
+
+    struct CompactBatchEntry {
+        bytes32 stellarAddress;
+        uint32 score;
+        uint32 fulfilledCount;
+        uint32 lateCount;
+        uint32 breachedCount;
+        uint32 epoch;
+        uint64 sourceLedgerSeq;
+    }
+
+    struct BatchedStateProof {
+        uint8 version;
+        uint64 ledgerSeq;
+        bytes32 ledgerHeaderHash;
+        bytes32 contractId;
+        bytes32 aggregationRoot;
+        HeaderProof headerProof;
+        CompactBatchEntry[] entries;
+    }
+
+    error EmptyBatch();
+    error BatchTooLarge(uint256 size, uint256 max);
+    error UnsortedBatchEntries(uint256 index);
+    error AggregationRootMismatch(bytes32 expected, bytes32 actual);
+
+    /// @notice Reconstructs a Merkle root from an ordered leaf set (odd leaf duplicated).
+    function computeMerkleRootFromLeaves(bytes32[] memory leaves) internal pure returns (bytes32) {
+        uint256 n = leaves.length;
+        if (n == 0) {
+            revert EmptyBatch();
+        }
+        if (n == 1) {
+            return leaves[0];
+        }
+
+        bytes32[] memory layer = new bytes32[](n);
+        for (uint256 i = 0; i < n; i++) {
+            layer[i] = leaves[i];
+        }
+
+        while (n > 1) {
+            uint256 nextLen = (n + 1) / 2;
+            bytes32[] memory next = new bytes32[](nextLen);
+            for (uint256 i = 0; i < nextLen; i++) {
+                uint256 leftIdx = i * 2;
+                uint256 rightIdx = leftIdx + 1;
+                bytes32 left = layer[leftIdx];
+                bytes32 right = rightIdx < n ? layer[rightIdx] : left;
+                next[i] = sha256(abi.encodePacked(left, right));
+            }
+            layer = next;
+            n = nextLen;
+        }
+
+        return layer[0];
+    }
+
+    /// @notice Double-SHA256 aggregation leaf. `sequenceId` is the sorted batch index.
+    function computeAggregationLeaf(
+        uint64 sequenceId,
+        bytes32 stellarAddress,
+        bytes32 leafHash,
+        uint32 score,
+        uint64 sourceLedgerSeq
+    ) internal pure returns (bytes32) {
+        bytes32 inner = sha256(
+            abi.encodePacked(sequenceId, stellarAddress, leafHash, score, sourceLedgerSeq)
+        );
+        return sha256(abi.encodePacked(inner));
+    }
+
+    /// @notice Recursively unpacks each compact entry, rebuilds the state and aggregation
+    /// roots, and checks the shared ledger header once.
+    function verifyBatchedProofOrRevert(
+        BatchedStateProof calldata batch,
+        bytes32 trustedLedgerHeaderHash
+    ) internal pure returns (uint256 entryCount) {
+        _verifyBatchHeader(batch, trustedLedgerHeaderHash);
+        _unpackAndVerifyEntries(batch);
+        return batch.entries.length;
+    }
+
+    /// @notice Boolean batched verification (no revert on cryptographic failure).
+    function verifyBatchedProof(
+        BatchedStateProof calldata batch,
+        bytes32 trustedLedgerHeaderHash
+    ) internal pure returns (bool isValid, uint256 entryCount) {
+        if (batch.version != BATCH_PROOF_VERSION) {
+            return (false, 0);
+        }
+        uint256 n = batch.entries.length;
+        if (n == 0 || n > MAX_BATCH_SIZE) {
+            return (false, 0);
+        }
+        if (batch.ledgerSeq > type(uint32).max) {
+            return (false, 0);
+        }
+        if (trustedLedgerHeaderHash == bytes32(0)) {
+            return (false, 0);
+        }
+
+        bytes32 computedHeader = computeHeaderHash(batch.ledgerSeq, batch.headerProof);
+        if (computedHeader != batch.ledgerHeaderHash || batch.ledgerHeaderHash != trustedLedgerHeaderHash) {
+            return (false, 0);
+        }
+
+        if (!_tryUnpackEntries(batch)) {
+            return (false, 0);
+        }
+        return (true, n);
+    }
+
+    function _verifyBatchHeader(
+        BatchedStateProof calldata batch,
+        bytes32 trustedLedgerHeaderHash
+    ) private pure {
+        if (batch.version != BATCH_PROOF_VERSION) {
+            revert UnsupportedVersion();
+        }
+
+        uint256 n = batch.entries.length;
+        if (n == 0) {
+            revert EmptyBatch();
+        }
+        if (n > MAX_BATCH_SIZE) {
+            revert BatchTooLarge(n, MAX_BATCH_SIZE);
+        }
+
+        bytes32 computedHeader = computeHeaderHash(batch.ledgerSeq, batch.headerProof);
+        if (computedHeader != batch.ledgerHeaderHash) {
+            revert HeaderHashMismatch(computedHeader, batch.ledgerHeaderHash);
+        }
+
+        if (trustedLedgerHeaderHash == bytes32(0) || batch.ledgerHeaderHash != trustedLedgerHeaderHash) {
+            revert UntrustedHeaderHash(batch.ledgerHeaderHash, trustedLedgerHeaderHash);
+        }
+    }
+
+    function _unpackAndVerifyEntries(BatchedStateProof calldata batch) private pure {
+        (bytes32 stateRoot, bytes32 aggregationRoot) = _computeBatchRoots(batch);
+
+        if (stateRoot != batch.headerProof.bucketListHash) {
+            revert BucketListMismatch(stateRoot, batch.headerProof.bucketListHash);
+        }
+        if (aggregationRoot != batch.aggregationRoot) {
+            revert AggregationRootMismatch(aggregationRoot, batch.aggregationRoot);
+        }
+    }
+
+    function _tryUnpackEntries(BatchedStateProof calldata batch) private pure returns (bool) {
+        (bool ok, bytes32 stateRoot, bytes32 aggregationRoot) = _tryComputeBatchRoots(batch);
+        if (!ok) {
+            return false;
+        }
+        if (stateRoot != batch.headerProof.bucketListHash) {
+            return false;
+        }
+        if (aggregationRoot != batch.aggregationRoot) {
+            return false;
+        }
+        return true;
+    }
+
+    function _computeBatchRoots(
+        BatchedStateProof calldata batch
+    ) private pure returns (bytes32 stateRoot, bytes32 aggregationRoot) {
+        uint256 n = batch.entries.length;
+        bytes32[] memory stateLeaves = new bytes32[](n);
+        bytes32[] memory aggLeaves = new bytes32[](n);
+
+        bytes32 prevAddr = bytes32(0);
+        for (uint256 i = 0; i < n; i++) {
+            bytes32 addr = batch.entries[i].stellarAddress;
+            if (i > 0 && addr <= prevAddr) {
+                revert UnsortedBatchEntries(i);
+            }
+            prevAddr = addr;
+            (stateLeaves[i], aggLeaves[i]) = _commitmentHashes(batch, i);
+        }
+
+        stateRoot = computeMerkleRootFromLeaves(stateLeaves);
+        aggregationRoot = computeMerkleRootFromLeaves(aggLeaves);
+    }
+
+    function _tryComputeBatchRoots(
+        BatchedStateProof calldata batch
+    ) private pure returns (bool ok, bytes32 stateRoot, bytes32 aggregationRoot) {
+        uint256 n = batch.entries.length;
+        bytes32[] memory stateLeaves = new bytes32[](n);
+        bytes32[] memory aggLeaves = new bytes32[](n);
+
+        bytes32 prevAddr = bytes32(0);
+        for (uint256 i = 0; i < n; i++) {
+            bytes32 addr = batch.entries[i].stellarAddress;
+            if (i > 0 && addr <= prevAddr) {
+                return (false, bytes32(0), bytes32(0));
+            }
+            prevAddr = addr;
+            (stateLeaves[i], aggLeaves[i]) = _commitmentHashes(batch, i);
+        }
+
+        return (
+            true,
+            computeMerkleRootFromLeaves(stateLeaves),
+            computeMerkleRootFromLeaves(aggLeaves)
+        );
+    }
+
+    /// @dev Unpacks one compact entry into the Soroban state leaf and the aggregation leaf.
+    function _commitmentHashes(
+        BatchedStateProof calldata batch,
+        uint256 index
+    ) private pure returns (bytes32 leaf, bytes32 aggregationLeaf) {
+        CompactBatchEntry calldata entry = batch.entries[index];
+        leaf = sha256(
+            abi.encodePacked(
+                batch.contractId,
+                entry.stellarAddress,
+                entry.score,
+                entry.fulfilledCount,
+                entry.lateCount,
+                entry.breachedCount,
+                entry.epoch,
+                entry.sourceLedgerSeq
+            )
+        );
+        aggregationLeaf = computeAggregationLeaf(
+            uint64(index),
+            entry.stellarAddress,
+            leaf,
+            entry.score,
+            entry.sourceLedgerSeq
+        );
+    }
 }

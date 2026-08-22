@@ -52,6 +52,51 @@ export function createProofsRouter(relayerService: RelayerService): Router {
     }
   });
 
+  /**
+   * GET /batch
+   * Returns the most recently flushed aggregated batch proof, if any.
+   */
+  router.get('/batch', (_req: Request, res: Response): void => {
+    const batch = relayerService.getLatestBatch();
+    if (!batch) {
+      res.status(404).json({ error: 'No aggregated batch proof has been flushed yet' });
+      return;
+    }
+    res.status(200).json({ success: true, batch });
+  });
+
+  /**
+   * POST /batch
+   * Generates a unified batched proof over the provided addresses (or all tracked scores).
+   * Body: { addresses?: string[], ledgerSeq?: number }
+   */
+  router.post('/batch', async (req: Request, res: Response): Promise<void> => {
+    const addresses = Array.isArray(req.body?.addresses)
+      ? (req.body.addresses as unknown[]).map((a) => String(a))
+      : undefined;
+
+    let targetLedgerSeq: number | undefined;
+    if (req.body?.ledgerSeq !== undefined) {
+      const parsed = Number(req.body.ledgerSeq);
+      if (!Number.isSafeInteger(parsed) || parsed < 1 || parsed > 4294967295) {
+        res.status(400).json({ error: 'ledgerSeq must be a valid uint32 integer' });
+        return;
+      }
+      targetLedgerSeq = parsed;
+    }
+
+    try {
+      const batch = await relayerService.getBatchProof(addresses, { targetLedgerSeq });
+      res.status(200).json({ success: true, batch });
+    } catch (error) {
+      console.error('Failed to generate batched state proof:', error);
+      res.status(500).json({
+        error: 'Failed to generate batched zero-trust state proof',
+        details: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+
   return router;
 }
 

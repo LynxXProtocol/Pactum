@@ -1,7 +1,20 @@
 import { rpc, xdr, Address as StellarAddress, scValToNative } from '@stellar/stellar-sdk';
-import { PactumStateProof, ScoreData, HeaderProof } from '../schemas/stateProof';
-import { computeLeafHash, computeHeaderHash, addressToBytes32 } from './encoder';
-import { MerkleTree, sha256Hex } from './merkleTree';
+import {
+  BATCH_PROOF_VERSION,
+  PactumStateProof,
+  PactumBatchedStateProof,
+  ScoreData,
+  HeaderProof,
+  CommitmentEnvelope,
+  BatchedProofEntry,
+} from '../schemas/stateProof';
+import {
+  computeLeafHash,
+  computeHeaderHash,
+  computeAggregationLeaf,
+  addressToBytes32,
+} from './encoder';
+import { MerkleTree } from './merkleTree';
 
 export interface ProofGeneratorConfig {
   rpcUrl?: string;
@@ -14,6 +27,20 @@ export interface TrustScoreEntryRecord {
   scoreData: ScoreData;
 }
 
+export interface GenerateProofOptions {
+  targetLedgerSeq?: number;
+  allEntries?: TrustScoreEntryRecord[];
+  headerProof?: HeaderProof;
+}
+
+/**
+ * Zero-trust state proof generator.
+ *
+ * Single-proof `generateProof` stays available for immediate finality. The default
+ * aggregation path is `generateBatchProof`, which emits one unified Merkle root
+ * plus per-entry inclusion paths so each state transition remains independently
+ * verifiable against that root.
+ */
 export class StateProofGenerator {
   private rpcServer?: rpc.Server;
   private contractId: string;
@@ -35,6 +62,17 @@ export class StateProofGenerator {
     this.localState.set(stellarAddress, scoreData);
   }
 
+  public getTrackedAddresses(): string[] {
+    return [...this.localState.keys()];
+  }
+
+  public getLocalEntries(): TrustScoreEntryRecord[] {
+    return [...this.localState.entries()].map(([stellarAddress, scoreData]) => ({
+      stellarAddress,
+      scoreData,
+    }));
+  }
+
   /**
    * Fetches trust score data for an address either from live RPC or local state.
    */
@@ -45,7 +83,6 @@ export class StateProofGenerator {
 
     if (this.rpcServer) {
       try {
-        // Build LedgerKey for contract data
         const contractAddr = StellarAddress.fromString(this.contractId);
         const addressObj = StellarAddress.fromString(stellarAddress);
         const sym = xdr.ScVal.scvSymbol('TrustHistory');
@@ -68,7 +105,6 @@ export class StateProofGenerator {
           const contractData = entryData.contractData();
           const nativeVal = scValToNative(contractData.val());
 
-          // Map nativeVal to ScoreData
           const scoreData: ScoreData = {
             score: typeof nativeVal.score === 'number' ? nativeVal.score : 50,
             fulfilledCount: nativeVal.current?.fulfilled || nativeVal.fulfilled || 0,
@@ -86,7 +122,6 @@ export class StateProofGenerator {
       }
     }
 
-    // Default baseline score data if not found
     const defaultData: ScoreData = {
       score: 50,
       fulfilledCount: 0,
@@ -100,57 +135,30 @@ export class StateProofGenerator {
 
   /**
    * Generates a zero-trust PactumStateProof for an address at a given ledger sequence.
+   * Kept for callers that need immediate single-proof finality.
    */
   public async generateProof(
     stellarAddress: string,
-    options?: {
-      targetLedgerSeq?: number;
-      allEntries?: TrustScoreEntryRecord[];
-      headerProof?: HeaderProof;
-    }
+    options?: GenerateProofOptions
   ): Promise<PactumStateProof> {
     const scoreData = await this.fetchScoreData(stellarAddress);
     const ledgerSeq = options?.targetLedgerSeq || scoreData.sourceLedgerSeq || 1;
 
-    // Collect all entries in the ledger state to construct the Merkle Tree
-    const entries = options?.allEntries && options.allEntries.length > 0
-      ? [...options.allEntries]
-      : [{ stellarAddress, scoreData }];
-
-    // Ensure the target entry is included in the list
-    if (!entries.some(e => e.stellarAddress === stellarAddress)) {
-      entries.push({ stellarAddress, scoreData });
-    }
-
-    // Sort entries deterministically by address bytes
-    entries.sort((a, b) =>
-      addressToBytes32(a.stellarAddress).compare(addressToBytes32(b.stellarAddress))
+    const entries = this.collectSortedEntries(
+      options?.allEntries,
+      { stellarAddress, scoreData }
     );
 
-    const targetIndex = entries.findIndex(e => e.stellarAddress === stellarAddress);
-
-    // Compute leaves
-    const leaves = entries.map(e =>
-      computeLeafHash(this.contractId, e.stellarAddress, e.scoreData)
-    );
-
-    const tree = new MerkleTree(leaves);
+    const { leaves, tree, targetIndex } = this.buildStateTree(entries, stellarAddress);
     const merkleProof = tree.getProof(targetIndex);
     const stateRootHash = tree.getRootHex();
     const leafHash = `0x${leaves[targetIndex].toString('hex')}`;
 
-    // Build header proof
-    const headerProof: HeaderProof = options?.headerProof || {
-      previousLedgerHash: '0x' + '11'.repeat(32),
-      txSetResultHash: '0x' + '22'.repeat(32),
-      bucketListHash: stateRootHash,
-      ledgerVersion: 21,
-    };
-
+    const headerProof: HeaderProof = options?.headerProof || this.defaultHeaderProof(stateRootHash);
     const headerHash = computeHeaderHash(ledgerSeq, headerProof);
     const ledgerHeaderHash = `0x${headerHash.toString('hex')}`;
 
-    const proof: PactumStateProof = {
+    return {
       version: '1.0.0',
       networkPassphrase: this.networkPassphrase,
       ledgerSeq,
@@ -163,7 +171,150 @@ export class StateProofGenerator {
       merkleProof,
       headerProof,
     };
+  }
 
-    return proof;
+  /**
+   * Builds one unified proof over an ordered set of state transitions.
+   *
+   * Each entry carries a commitment envelope (score data, leaf hash, sequence id)
+   * plus inclusion paths against both the Soroban state tree and the aggregation tree.
+   * The batch is the complete leaf set of both trees, so the EVM verifier can
+   * reconstruct the roots from the compact entries without shipping audit paths.
+   */
+  public async generateBatchProof(
+    targets: string[] | TrustScoreEntryRecord[],
+    options?: {
+      targetLedgerSeq?: number;
+      headerProof?: HeaderProof;
+    }
+  ): Promise<PactumBatchedStateProof> {
+    if (targets.length === 0) {
+      throw new Error('generateBatchProof requires at least one state transition');
+    }
+
+    const resolved: TrustScoreEntryRecord[] = [];
+    for (const target of targets) {
+      if (typeof target === 'string') {
+        resolved.push({
+          stellarAddress: target,
+          scoreData: await this.fetchScoreData(target),
+        });
+      } else {
+        resolved.push(target);
+      }
+    }
+
+    const entries = this.collectSortedEntries(resolved);
+    if (entries.length === 0) {
+      throw new Error('generateBatchProof produced an empty entry set');
+    }
+
+    const ledgerSeq =
+      options?.targetLedgerSeq ||
+      Math.max(...entries.map((e) => e.scoreData.sourceLedgerSeq || 1));
+
+    const { leaves, tree } = this.buildStateTree(entries);
+    const stateMerkleProofs = tree.getAllProofs();
+    const stateRootHash = tree.getRootHex();
+
+    const aggregationLeaves: Buffer[] = [];
+    const envelopes: CommitmentEnvelope[] = [];
+
+    for (let i = 0; i < entries.length; i++) {
+      const entry = entries[i];
+      const leafHash = `0x${leaves[i].toString('hex')}`;
+      envelopes.push({
+        sequenceId: i,
+        stellarAddress: entry.stellarAddress,
+        scoreData: entry.scoreData,
+        leafHash,
+        contractId: this.contractId,
+      });
+      aggregationLeaves.push(
+        computeAggregationLeaf(
+          i,
+          entry.stellarAddress,
+          leaves[i],
+          entry.scoreData.score,
+          entry.scoreData.sourceLedgerSeq
+        )
+      );
+    }
+
+    const aggregationTree = new MerkleTree(aggregationLeaves);
+    const aggregationProofs = aggregationTree.getAllProofs();
+    const aggregationRoot = aggregationTree.getRootHex();
+
+    const headerProof: HeaderProof = options?.headerProof || this.defaultHeaderProof(stateRootHash);
+    const headerHash = computeHeaderHash(ledgerSeq, headerProof);
+    const ledgerHeaderHash = `0x${headerHash.toString('hex')}`;
+
+    const batchEntries: BatchedProofEntry[] = envelopes.map((envelope, i) => ({
+      sequenceId: envelope.sequenceId,
+      stellarAddress: envelope.stellarAddress,
+      scoreData: envelope.scoreData,
+      leafHash: envelope.leafHash,
+      merkleProof: stateMerkleProofs[i],
+      aggregationProof: aggregationProofs[i],
+    }));
+
+    return {
+      version: BATCH_PROOF_VERSION,
+      networkPassphrase: this.networkPassphrase,
+      ledgerSeq,
+      ledgerHeaderHash,
+      stateRootHash,
+      contractId: this.contractId,
+      aggregationRoot,
+      headerProof,
+      entries: batchEntries,
+    };
+  }
+
+  private defaultHeaderProof(stateRootHash: string): HeaderProof {
+    return {
+      previousLedgerHash: '0x' + '11'.repeat(32),
+      txSetResultHash: '0x' + '22'.repeat(32),
+      bucketListHash: stateRootHash,
+      ledgerVersion: 21,
+    };
+  }
+
+  private collectSortedEntries(
+    allEntries?: TrustScoreEntryRecord[],
+    extra?: TrustScoreEntryRecord
+  ): TrustScoreEntryRecord[] {
+    const byAddress = new Map<string, TrustScoreEntryRecord>();
+    const source = allEntries && allEntries.length > 0 ? allEntries : [];
+    for (const entry of source) {
+      byAddress.set(entry.stellarAddress, entry);
+    }
+    if (extra && !byAddress.has(extra.stellarAddress)) {
+      byAddress.set(extra.stellarAddress, extra);
+    }
+    if (byAddress.size === 0 && extra) {
+      byAddress.set(extra.stellarAddress, extra);
+    }
+
+    return [...byAddress.values()].sort((a, b) =>
+      addressToBytes32(a.stellarAddress).compare(addressToBytes32(b.stellarAddress))
+    );
+  }
+
+  private buildStateTree(
+    entries: TrustScoreEntryRecord[],
+    targetAddress?: string
+  ): { leaves: Buffer[]; tree: MerkleTree; targetIndex: number } {
+    const leaves = entries.map((e) =>
+      computeLeafHash(this.contractId, e.stellarAddress, e.scoreData)
+    );
+    const tree = new MerkleTree(leaves);
+    const targetIndex = targetAddress
+      ? entries.findIndex((e) => e.stellarAddress === targetAddress)
+      : 0;
+    if (targetAddress && targetIndex < 0) {
+      throw new Error(`Target address ${targetAddress} missing from state tree`);
+    }
+    return { leaves, tree, targetIndex };
   }
 }

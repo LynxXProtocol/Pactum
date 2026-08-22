@@ -4,11 +4,17 @@ import {
   verifyPactumStateProof,
   computeLeafHash,
   computeMerkleRoot,
+  computeMerkleRootFromLeaves,
   computeHeaderHash,
+  computeAggregationLeaf,
   addressToBytes32,
   bytesToHex,
   type PactumStateProof,
+  type PactumBatchedStateProof,
   type ScoreData,
+  type MerkleProofNode,
+  verifyPactumBatchedStateProof,
+  BATCH_PROOF_VERSION,
 } from '../src/index.js';
 
 describe('Zero-Trust StateProofVerifier (TypeScript SDK)', () => {
@@ -234,5 +240,67 @@ describe('Zero-Trust StateProofVerifier (TypeScript SDK)', () => {
     const expectedC = StrKey.decodeContract(cAddr);
     expect(cBytes.length).toBe(32);
     expect(Array.from(cBytes)).toEqual(Array.from(expectedC));
+  });
+
+  it('verifies a two-entry batched state proof against a shared trusted header', () => {
+    const a = '0x' + '01'.repeat(32);
+    const b = '0x' + '02'.repeat(32);
+    const scoreA: ScoreData = { ...defaultScoreData, score: 70 };
+    const scoreB: ScoreData = { ...defaultScoreData, score: 80 };
+    const contractId = sampleProof.contractId;
+
+    const leafA = computeLeafHash(contractId, a, scoreA);
+    const leafB = computeLeafHash(contractId, b, scoreB);
+    const stateRoot = computeMerkleRootFromLeaves([leafA, leafB]);
+
+    const proofA: MerkleProofNode[] = [{ sibling: bytesToHex(leafB), isRight: true }];
+    const proofB: MerkleProofNode[] = [{ sibling: bytesToHex(leafA), isRight: false }];
+
+    const aggA = computeAggregationLeaf(0, a, leafA, scoreA.score, scoreA.sourceLedgerSeq);
+    const aggB = computeAggregationLeaf(1, b, leafB, scoreB.score, scoreB.sourceLedgerSeq);
+    const aggregationRoot = computeMerkleRootFromLeaves([aggA, aggB]);
+
+    const headerProof = {
+      previousLedgerHash: '0x' + '11'.repeat(32),
+      txSetResultHash: '0x' + '22'.repeat(32),
+      bucketListHash: bytesToHex(stateRoot),
+      ledgerVersion: 21,
+    };
+    const ledgerSeq = 10500;
+    const ledgerHeaderHash = bytesToHex(computeHeaderHash(ledgerSeq, headerProof));
+
+    const batch: PactumBatchedStateProof = {
+      version: BATCH_PROOF_VERSION,
+      networkPassphrase: sampleProof.networkPassphrase,
+      ledgerSeq,
+      ledgerHeaderHash,
+      stateRootHash: bytesToHex(stateRoot),
+      contractId,
+      aggregationRoot: bytesToHex(aggregationRoot),
+      headerProof,
+      entries: [
+        {
+          sequenceId: 0,
+          stellarAddress: a,
+          scoreData: scoreA,
+          leafHash: bytesToHex(leafA),
+          merkleProof: proofA,
+          aggregationProof: [{ sibling: bytesToHex(aggB), isRight: true }],
+        },
+        {
+          sequenceId: 1,
+          stellarAddress: b,
+          scoreData: scoreB,
+          leafHash: bytesToHex(leafB),
+          merkleProof: proofB,
+          aggregationProof: [{ sibling: bytesToHex(aggA), isRight: false }],
+        },
+      ],
+    };
+
+    const result = verifyPactumBatchedStateProof(batch, ledgerHeaderHash);
+    expect(result.valid).toBe(true);
+    expect(result.entryCount).toBe(2);
+    expect(result.scores).toEqual([70, 80]);
   });
 });

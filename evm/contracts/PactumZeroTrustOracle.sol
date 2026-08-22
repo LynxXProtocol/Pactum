@@ -115,6 +115,53 @@ contract PactumZeroTrustOracle is IPactumZeroTrustOracle, Ownable {
         return true;
     }
 
+    /// @inheritdoc IPactumZeroTrustOracle
+    function submitBatchedStateProof(
+        PactumStateProofVerifier.BatchedStateProof calldata batch
+    ) external returns (uint256) {
+        if (registryContractId != bytes32(0) && batch.contractId != registryContractId) {
+            revert MismatchedRegistry(registryContractId, batch.contractId);
+        }
+
+        bytes32 trustedHeader = trustedLedgerHeaders[batch.ledgerSeq];
+        if (trustedHeader == bytes32(0) || trustedHeader != batch.ledgerHeaderHash) {
+            revert UntrustedHeader(batch.ledgerSeq, batch.ledgerHeaderHash);
+        }
+
+        uint256 verifiedCount = PactumStateProofVerifier.verifyBatchedProofOrRevert(
+            batch,
+            trustedHeader
+        );
+
+        uint256 n = batch.entries.length;
+        for (uint256 i = 0; i < n; i++) {
+            PactumStateProofVerifier.CompactBatchEntry calldata entry = batch.entries[i];
+            TrustScoreRecord storage existing = _verifiedScores[entry.stellarAddress];
+            if (entry.sourceLedgerSeq <= existing.sourceLedgerSeq && existing.updatedAt != 0) {
+                revert StaleLedgerSeq(entry.sourceLedgerSeq, existing.sourceLedgerSeq);
+            }
+
+            existing.score = entry.score;
+            existing.fulfilledCount = entry.fulfilledCount;
+            existing.lateCount = entry.lateCount;
+            existing.breachedCount = entry.breachedCount;
+            existing.epoch = entry.epoch;
+            existing.sourceLedgerSeq = entry.sourceLedgerSeq;
+            existing.updatedAt = uint64(block.timestamp);
+            existing.verifiedHeaderHash = batch.ledgerHeaderHash;
+        }
+
+        emit BatchedStateProofVerified(
+            batch.aggregationRoot,
+            verifiedCount,
+            batch.ledgerSeq,
+            batch.ledgerHeaderHash,
+            msg.sender
+        );
+
+        return verifiedCount;
+    }
+
     // ---------------------------------------------------------------------
     // View Functions
     // ---------------------------------------------------------------------

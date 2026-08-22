@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "outDir": "./dist-relayer-test",
+    "rootDir": "."
+  },
+  "include": [
+    "src/relayer/**/*.ts",
+    "src/schemas/**/*.ts",
+    "tests/relayer.test.ts"
+  ],
+  "exclude": ["node_modules", "dist", "dist-relayer-test"]
+}

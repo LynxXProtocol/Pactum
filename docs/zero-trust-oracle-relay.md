@@ -156,3 +156,38 @@ Query proof by address:
 ```http
 GET /api/v1/proofs/trust-score/:address?ledgerSeq=12050
 ```
+
+Generate a batched aggregation proof:
+```http
+POST /api/v1/proofs/batch
+{ "addresses": ["G...", "G..."], "ledgerSeq": 12050 }
+```
+
+---
+
+## 4. State Proof Aggregation Pipeline
+
+Discrete `submitStateProof` calls scale linearly with event volume. The aggregation pipeline batches N commitment state proofs into one unified Merkle root before the EVM submission.
+
+```text
+Indexer / score updates
+        │
+        ▼
+ Relayer ProofBatchEngine
+ (flush on MAX_BATCH_SIZE or BATCH_TTL)
+        │
+        ▼
+ generateBatchProof
+  ├─ state Merkle tree over packed score leaves
+  └─ aggregation Merkle tree over double-SHA256 commitments
+        │
+        ▼
+ PactumZeroTrustOracle.submitBatchedStateProof
+  (header verified once, entries unpacked against both roots)
+```
+
+Defaults: `RELAYER_MAX_BATCH_SIZE=32`, `RELAYER_BATCH_TTL_MS=10000`. Set `RELAYER_BATCH_QUEUE_PATH` to persist the in-flight buffer across restarts, and `RELAYER_AUTO_START=on` to enable TTL polling.
+
+Single-proof `generateProof` / `submitStateProof` remain available when immediate finality is required.
+
+On-chain, `PactumStateProofVerifier.verifyBatchedProofOrRevert` reconstructs the state and aggregation roots from the compact entries (no per-entry audit paths in calldata). That is what produces the ≥75% per-entry verification gas reduction versus N discrete proofs.

@@ -289,3 +289,179 @@ export function verifyPactumStateProof(
     };
   }
 }
+
+export const BATCH_PROOF_VERSION = '1.1.0';
+
+export interface BatchedProofEntry {
+  sequenceId: number;
+  stellarAddress: string;
+  scoreData: ScoreData;
+  leafHash: string;
+  merkleProof: MerkleProofNode[];
+  aggregationProof: MerkleProofNode[];
+}
+
+export interface PactumBatchedStateProof {
+  version: string;
+  networkPassphrase: string;
+  ledgerSeq: number;
+  ledgerHeaderHash: string;
+  stateRootHash: string;
+  contractId: string;
+  aggregationRoot: string;
+  headerProof: HeaderProof;
+  entries: BatchedProofEntry[];
+}
+
+export interface BatchVerificationResult {
+  valid: boolean;
+  scores?: number[];
+  ledgerSeq?: number;
+  aggregationRoot?: string;
+  entryCount?: number;
+  error?: string;
+}
+
+export function doubleSha256(data: Uint8Array): Uint8Array {
+  return sha256(sha256(data));
+}
+
+export function computeMerkleRootFromLeaves(leaves: Uint8Array[]): Uint8Array {
+  if (leaves.length === 0) {
+    throw new Error('computeMerkleRootFromLeaves requires at least one leaf');
+  }
+  let layer = leaves.map((leaf) => leaf);
+  while (layer.length > 1) {
+    const next: Uint8Array[] = [];
+    for (let i = 0; i < layer.length; i += 2) {
+      const left = layer[i];
+      const right = i + 1 < layer.length ? layer[i + 1] : left;
+      const combined = new Uint8Array(64);
+      combined.set(left, 0);
+      combined.set(right, 32);
+      next.push(sha256(combined));
+    }
+    layer = next;
+  }
+  return layer[0];
+}
+
+export function computeAggregationLeaf(
+  sequenceId: number,
+  stellarAddress: string,
+  leafHash: Uint8Array,
+  score: number,
+  sourceLedgerSeq: number
+): Uint8Array {
+  const buf = new Uint8Array(84);
+  const view = new DataView(buf.buffer);
+  const seq = BigInt(sequenceId);
+  view.setUint32(0, Number(seq >> 32n), false);
+  view.setUint32(4, Number(seq & 0xffffffffn), false);
+  buf.set(addressToBytes32(stellarAddress), 8);
+  buf.set(leafHash, 40);
+  view.setUint32(72, score, false);
+  const source = BigInt(sourceLedgerSeq);
+  view.setUint32(76, Number(source >> 32n), false);
+  view.setUint32(80, Number(source & 0xffffffffn), false);
+  return doubleSha256(buf);
+}
+
+/**
+ * Verifies a batched Pactum state proof: shared header once, then each entry
+ * against the unified state and aggregation Merkle roots.
+ */
+export function verifyPactumBatchedStateProof(
+  batch: PactumBatchedStateProof,
+  trustedLedgerHeaderHash?: string
+): BatchVerificationResult {
+  try {
+    if (!batch || batch.version !== BATCH_PROOF_VERSION) {
+      return { valid: false, error: `Unsupported batch proof version: ${batch?.version}` };
+    }
+
+    if (!trustedLedgerHeaderHash) {
+      return {
+        valid: false,
+        error: 'Trusted ledger header hash anchor is required for zero-trust verification',
+      };
+    }
+
+    if (!batch.entries || batch.entries.length === 0) {
+      return { valid: false, error: 'Batch proof contains no entries' };
+    }
+
+    const expectedRootHex = normalizeHex32(batch.stateRootHash);
+    const expectedAggRootHex = normalizeHex32(batch.aggregationRoot);
+    const scores: number[] = [];
+
+    for (let i = 0; i < batch.entries.length; i++) {
+      const entry = batch.entries[i];
+      if (entry.sequenceId !== i) {
+        return {
+          valid: false,
+          error: `Sequence id mismatch at index ${i}: expected ${i}, got ${entry.sequenceId}`,
+        };
+      }
+
+      const expectedLeaf = computeLeafHash(batch.contractId, entry.stellarAddress, entry.scoreData);
+      if (normalizeHex32(bytesToHex(expectedLeaf)) !== normalizeHex32(entry.leafHash)) {
+        return {
+          valid: false,
+          error: `Leaf hash mismatch for ${entry.stellarAddress}`,
+        };
+      }
+
+      const computedRoot = computeMerkleRoot(expectedLeaf, entry.merkleProof);
+      if (normalizeHex32(bytesToHex(computedRoot)) !== expectedRootHex) {
+        return { valid: false, error: `State Merkle root mismatch for ${entry.stellarAddress}` };
+      }
+
+      const aggLeaf = computeAggregationLeaf(
+        entry.sequenceId,
+        entry.stellarAddress,
+        expectedLeaf,
+        entry.scoreData.score,
+        entry.scoreData.sourceLedgerSeq
+      );
+      const computedAgg = computeMerkleRoot(aggLeaf, entry.aggregationProof);
+      if (normalizeHex32(bytesToHex(computedAgg)) !== expectedAggRootHex) {
+        return { valid: false, error: `Aggregation Merkle root mismatch for ${entry.stellarAddress}` };
+      }
+
+      scores.push(entry.scoreData.score);
+    }
+
+    if (normalizeHex32(batch.headerProof.bucketListHash) !== expectedRootHex) {
+      return { valid: false, error: 'Header proof bucketListHash does not match stateRootHash' };
+    }
+
+    const computedHeader = computeHeaderHash(batch.ledgerSeq, batch.headerProof);
+    const computedHeaderHex = normalizeHex32(bytesToHex(computedHeader));
+    const proofHeaderHex = normalizeHex32(batch.ledgerHeaderHash);
+
+    if (computedHeaderHex !== proofHeaderHex) {
+      return { valid: false, error: `Ledger header hash mismatch. Claimed ${batch.ledgerHeaderHash}` };
+    }
+
+    if (proofHeaderHex !== normalizeHex32(trustedLedgerHeaderHash)) {
+      return {
+        valid: false,
+        error: `Header hash ${batch.ledgerHeaderHash} does not match trusted hash ${trustedLedgerHeaderHash}`,
+      };
+    }
+
+    return {
+      valid: true,
+      scores,
+      ledgerSeq: batch.ledgerSeq,
+      aggregationRoot: batch.aggregationRoot,
+      entryCount: batch.entries.length,
+    };
+  } catch (err) {
+    return {
+      valid: false,
+      error: `Verification exception: ${err instanceof Error ? err.message : String(err)}`,
+    };
+  }
+}
