@@ -51,8 +51,10 @@ async function ensureWasmInitialized(): Promise<void> {
 
 self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
   const req = event.data;
+  console.log('[DEBUG] Worker received:', req);
   try {
     await ensureWasmInitialized();
+    console.log('[DEBUG] WASM initialized');
 
     if (req.type === 'EVALUATE_AST') {
       const { id, ruleSetBinary, values, now, gasLimit, recordSteps } = req;
@@ -71,11 +73,14 @@ self.onmessage = async (event: MessageEvent<WorkerRequest>) => {
       self.postMessage(response);
     } else {
       const { id, dueAt, currentTime, milestoneCount } = req;
+      console.log('[DEBUG] Calling validate_commitment_params');
       validate_commitment_params(BigInt(dueAt), BigInt(currentTime), milestoneCount);
       const response: ValidationResponse = { id, isValid: true };
+      console.log('[DEBUG] Worker success:', response);
       self.postMessage(response);
     }
   } catch (err: any) {
+    console.log('[DEBUG] Worker error:', err);
     const errorMsg = typeof err === 'string' ? err : err?.message || 'WASM validation failed.';
     const response: ValidationResponse = { id: req.id, isValid: false, error: errorMsg };
     self.postMessage(response);

@@ -19,6 +19,7 @@ export function useWasmValidation() {
     })
 
     worker.onmessage = (event: MessageEvent<ValidationResponse>) => {
+      console.log('[DEBUG] Worker onmessage:', event.data)
       const { id, isValid, error } = event.data
       const callbacks = pendingMapRef.current.get(id)
       if (callbacks) {
@@ -65,6 +66,7 @@ export function useWasmValidation() {
           milestoneCount,
         }
 
+        console.log('[DEBUG] Posting to worker:', payload)
         workerRef.current.postMessage(payload)
       })
     },

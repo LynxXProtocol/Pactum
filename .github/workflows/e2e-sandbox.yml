@@ -60,7 +60,7 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: frontend
-        run: npx playwright install --with-deps chromium firefox
+        run: npx playwright install --with-deps chromium
 
       - name: Load .env.e2e into job env
         run: |

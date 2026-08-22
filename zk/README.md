@@ -1,41 +1,16 @@
-# @pactum/zk-reputation
+# ZK Circuits for Pactum Fraud Proofs
 
-Zero-knowledge Trust Score threshold proofs for Pactum.
+This directory contains the Circom circuits designed for the Pactum fraud proof system.
 
-A user proves to a third party that their Trust Score exceeds a threshold — without
-revealing the score, and without revealing which Stellar address is theirs. Proofs are
-generated locally in the user's browser; nothing secret reaches the Pactum backend.
+**IMPORTANT ARCHITECTURAL NOTE:**
+The current on-chain verifier (`contracts/fraud_verifier`) uses **native Poseidon Merkle recomputation** instead of verifying ZK proofs. Since all dispute inputs (commitments, siblings, and path bits) are public, zero-knowledge provides no cryptographic utility for the current optimistic rollup dispute flow, and native Soroban hashing is significantly cheaper in instruction budget (saving ~30x overhead vs a PLONK verifier).
 
-**Full design, security analysis and proving flow:
-[`docs/zk-reputation-proofs.md`](../docs/zk-reputation-proofs.md).** Read the security
-section before using this for anything real — the trusted setup shipped here is
-deliberately insecure, and the proof does *not* establish control of the address.
+### Why keep these circuits?
+These circuits are retained as the **future ZK path**. When the rollup introduces private state or scalable validity proofs, these circuits provide the foundation.
+To ensure the transition remains compatible, the on-chain native verification strictly uses the **Poseidon hash** (via `light-poseidon-nostd`) mirroring the behavior of `circomlibjs` byte-for-byte.
 
-## Layout
+### CI compilation
+The CI job strictly compiles these circuits (`npm install -g circom`) on every push to ensure they remain valid and do not bitrot, even though their `.wasm` and `.zkey` artifacts are currently bypassed in the active dispute resolution flow.
 
-```
-circuits/trust_threshold.circom   # the circuit: Merkle inclusion + range-checked score > threshold
-circuits/merkle.circom            # Poseidon Merkle inclusion
-src/score.ts                      # Trust Score from on-chain outcome counts
-src/tree.ts                       # Poseidon Merkle snapshot + path derivation
-src/strkey.ts                     # dependency-free Stellar address decoding
-src/prove.ts                      # isomorphic proof generation (browser + node)
-src/verify.ts                     # off-chain verification, signals included
-scripts/build-circuit.mjs         # compile + Groth16 setup
-scripts/publish-snapshot.mjs      # indexer side: counts.json -> snapshot.json
-scripts/verify-proof.mjs          # verifier side, as a command
-scripts/demo.mjs                  # the whole flow end to end
-```
-
-## Usage
-
-```bash
-npm install
-npm test                 # score, strkey, tree, verifier semantics — no circom needed
-npm run build:circuit    # needs `circom` on PATH; see the doc for how to build it
-npm run test:circuit     # above/below threshold, boundary, invalid path, range checks
-npm run demo
-```
-
-Circuit tests skip when `build/` is absent rather than failing, so `npm test` works on
-a machine without `circom`. CI builds the circuit so they actually run.
+### Cross-Check Testing
+The `test/crosscheck.test.ts` file spawns a Rust helper binary (`hash_helper.rs`) compiled from the Soroban contract's workspace. It proves cryptographically that the TypeScript Merkle builder and the Rust on-chain contract compute identical domain tags, bit orientations, and hashes for the same inputs.

@@ -16,7 +16,7 @@ const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 // Pre-configured identities for demo testnet accounts
 const KNOWN_IDENTITIES: Record<string, { username: string; domain: string; avatarUrl: string }> = {
-  GAJKUMA6V4MJKQPFM4MXNMWQZX3CTMK2KMMCSZQPK5JXBZWBZM7S4C: {
+  GBY54VG5G4A7DC4D6YJ6GHD4X4QW2AR43JLYZ2QVWSHKACWK3BLDR5IX: {
     username: 'alice*pactum.id',
     domain: 'pactum.id',
     avatarUrl: 'https://api.dicebear.com/7.x/identicon/svg?seed=alice',

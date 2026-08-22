@@ -1,0 +1,80 @@
+name: ZK Circuits & Soroban Fraud Verifier
+
+on:
+  push:
+    branches: [main, "fix/**", "feat/**"]
+    paths:
+      - "zk/**"
+      - "contracts/fraud_verifier/**"
+  pull_request:
+    paths:
+      - "zk/**"
+      - "contracts/fraud_verifier/**"
+
+jobs:
+  soroban-verifier:
+    name: Soroban Fraud Verifier (cargo test)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+
+      - name: Cache Cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            contracts/target
+          key: ${{ runner.os }}-cargo-fraud-${{ hashFiles('contracts/fraud_verifier/Cargo.toml') }}
+          restore-keys: ${{ runner.os }}-cargo-fraud-
+
+      - name: Build WASM artifact
+        working-directory: contracts/fraud_verifier
+        run: cargo build --target wasm32-unknown-unknown --release --locked
+
+      - name: Run tests
+        working-directory: contracts/fraud_verifier
+        run: cargo test --features testutils --locked 2>&1
+
+  zk-crosscheck:
+    name: ZK TypeScript Cross-Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: zk/package.json
+
+      - name: Install Rust (for hash_helper)
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Build Poseidon hash helper for cross-check test
+        working-directory: contracts/fraud_verifier
+        run: cargo build --bin hash_helper
+
+      - name: Install dependencies (strict, no scripts)
+        working-directory: zk
+        run: npm ci --ignore-scripts
+
+      - name: Compile Circom circuits (verify they remain valid)
+        working-directory: zk
+        run: |
+          wget -qO circom https://github.com/iden3/circom/releases/download/v2.1.5/circom-linux-amd64
+          chmod +x circom
+          sudo mv circom /usr/local/bin/
+          circom circuits/fraud_proof.circom --r1cs --sym -o artifacts/
+          circom circuits/batch_merkle.circom --r1cs --sym -o artifacts/
+          circom circuits/commitment_hash.circom --r1cs --sym -o artifacts/
+
+      - name: Run cross-check tests
+        working-directory: zk
+        run: npm test

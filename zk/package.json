@@ -26,6 +26,7 @@
   },
   "devDependencies": {
     "@stellar/stellar-sdk": "^16.2.0",
+    "@types/node": "^26.2.0",
     "circomlib": "^2.0.5"
   },
   "engines": {

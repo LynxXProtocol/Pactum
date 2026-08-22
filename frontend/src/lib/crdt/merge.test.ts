@@ -5,7 +5,7 @@ import { mergeCommitmentsFromCanonical, mergeReputationsFromCanonical } from './
 import type { StoredCommitment, StoredReputation } from './types'
 
 const BASE: Omit<Commitment, 'id'> = {
-  issuer: 'GAJKUMA6V4MJKQPFM4MXNMWQZX3CTMK2KMMCSZQPK5JXBZWBZM7S4C',
+  issuer: 'GBY54VG5G4A7DC4D6YJ6GHD4X4QW2AR43JLYZ2QVWSHKACWK3BLDR5IX',
   counterparty: 'GB4UFBX57KE2RPEXB4NCPQHXL5UZL7HSFBVQ2YEZQDZ2DXR2X3CHHZX',
   terms_hash: 'a3f9c1d2e4b5678901234567890abcdef1234567890abcdef1234567890ab',
   due_at: 1700000000,
