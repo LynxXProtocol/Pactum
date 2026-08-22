@@ -1,0 +1,30 @@
+# Formal Verification (Kani) — Issue #192
+#
+# Manual only. Default PR CI must stay green without Kani installed.
+# Trigger: Actions → Formal Verification (Kani) → Run workflow
+
+name: Formal Verification (Kani)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  kani:
+    name: Kani slash / vault proofs
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Rust stable toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install Kani
+        run: |
+          cargo install --locked kani-verifier
+          cargo kani setup
+
+      - name: Prove economics invariants
+        working-directory: contracts
+        run: cargo kani -p registry --tests

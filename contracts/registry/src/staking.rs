@@ -74,23 +74,18 @@ pub(crate) fn set_locked(env: &Env, attestor: &Address, locked: bool) {
 /// Reduces an attestor's staked amount by `percent` percent of its current
 /// value, leaving the forfeited amount in the vault. Called by the voting
 /// phase to slash dissenting attestors when a dispute resolves.
+///
+/// Arithmetic is delegated to [`crate::economics::slash_cut`] so the same
+/// checked math is what Issue #192 formal proofs discharge.
 pub(crate) fn slash(env: &Env, attestor: &Address, percent: u64) {
     let mut stake = load_stake(env, attestor);
-    if stake.staked <= 0 {
+    let Some(cut) = crate::economics::slash_cut(stake.staked, percent) else {
+        panic_with_error!(env, Error::Overflow);
+    };
+    if cut.cut <= 0 {
         return;
     }
-    let cut = stake
-        .staked
-        .checked_mul(percent as i128)
-        .and_then(|v| v.checked_div(100))
-        .unwrap_or_else(|| panic_with_error!(env, Error::Overflow));
-    if cut <= 0 {
-        return;
-    }
-    stake.staked = stake
-        .staked
-        .checked_sub(cut)
-        .unwrap_or_else(|| panic_with_error!(env, Error::Overflow));
+    stake.staked = cut.remaining;
     save_stake(env, attestor, &stake);
 }
 

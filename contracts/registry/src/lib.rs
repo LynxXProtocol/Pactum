@@ -7,6 +7,7 @@
 pub mod attestation;
 pub mod commitments;
 pub mod disputes;
+pub mod economics;
 pub mod errors;
 pub mod events;
 pub mod fee_oracle;

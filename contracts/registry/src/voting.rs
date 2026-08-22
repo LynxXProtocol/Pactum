@@ -21,9 +21,9 @@ use soroban_sdk::{contracttype, panic_with_error, Address, Env};
 /// attestation timestamp that preceded the dispute.
 pub const ATTESTOR_VOTE_TIMEOUT_SECONDS: u64 = 7 * 24 * 60 * 60;
 
-/// The percentage of a dissenting attestor's stake that is slashed when the
-/// dispute resolves to an outcome they voted against.
-pub const SLASH_PERCENT: u64 = 10;
+/// Slash rate for dissenting panel voters. Sourced from `economics` so the
+/// Issue #192 formal proofs discharge the same constant the contract uses.
+pub const SLASH_PERCENT: u64 = crate::economics::SLASH_PERCENT_OF_STAKE;
 
 /// The running tally of votes cast on a disputed commitment.
 #[contracttype]
@@ -102,16 +102,16 @@ fn unlock_panel_and_clear(
     winning: CommitmentStatus,
 ) {
     for attestor in commitment.attestors.iter() {
-        if slash_dissenters {
-            if let Some(voted) = env
-                .storage()
-                .persistent()
-                .get::<DataKey, CommitmentStatus>(&DataKey::VoteRecord(id, attestor.clone()))
-            {
-                if voted != winning {
-                    crate::staking::slash(env, &attestor, SLASH_PERCENT);
-                }
-            }
+        let voted: Option<CommitmentStatus> = env
+            .storage()
+            .persistent()
+            .get(&DataKey::VoteRecord(id, attestor.clone()));
+        let cast_a_vote = voted.is_some();
+        let voted_with_winner = matches!(voted, Some(v) if v == winning);
+        if crate::economics::should_slash_attestor(slash_dissenters, cast_a_vote, voted_with_winner)
+            == crate::economics::SlashDecision::Slash
+        {
+            crate::staking::slash(env, &attestor, SLASH_PERCENT);
         }
         crate::staking::set_locked(env, &attestor, false);
         env.storage()
