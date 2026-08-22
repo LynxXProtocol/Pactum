@@ -94,7 +94,7 @@ export async function resolveIdentity(address: string): Promise<StellarIdentity>
   // 3. Attempt external Stellar Expert / Federation directory query
   try {
     const res = await fetch(`https://api.stellar.expert/explorer/testnet/directory/${cleanAddr}`, {
-      signal: AbortSignal.timeout(3000),
+      signal: AbortSignal.timeout(500),
     });
     if (res.ok) {
       const data = await res.json();

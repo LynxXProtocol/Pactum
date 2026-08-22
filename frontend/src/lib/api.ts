@@ -120,6 +120,27 @@ export async function fetchCommitments(
   return res?.items ?? [];
 }
 
+/**
+ * Creates a commitment record on the backend (optimistic, before on-chain confirmation).
+ */
+export function createCommitment(payload: {
+  issuer: string;
+  counterparty: string;
+  termsHash: string;
+  dueAt: number;
+}): Promise<{ id: number; status: string }> {
+  return request<{ id: number; status: string }>('/commitments', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      issuer: payload.issuer,
+      counterparty: payload.counterparty,
+      terms_hash: payload.termsHash,
+      due_at: payload.dueAt,
+    }),
+  });
+}
+
 // ── Encrypted Terms API ──────────────────────────────────────────────────────
 
 export interface EncryptedTermsPayload {

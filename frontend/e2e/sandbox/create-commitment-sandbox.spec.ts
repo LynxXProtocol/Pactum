@@ -60,9 +60,11 @@ test.describe('create_commitment against local Soroban sandbox (#8)', () => {
     const shortAddress = `${E2E_ISSUER_ADDRESS.slice(0, 6)}...${E2E_ISSUER_ADDRESS.slice(-4)}`;
     await expect(page.getByRole('button', { name: shortAddress })).toBeVisible({ timeout: 20_000 });
 
-    // Launch the create wizard
-    if (await page.locator('#hero-launch-btn').isVisible()) {
-      await page.locator('#hero-launch-btn').click();
+    // Enter the app shell (landing page gates the nav behind "Launch App"),
+    // then open the create wizard via its stable nav id.
+    const launchBtn = page.locator('#hero-launch-btn');
+    if (await launchBtn.isVisible()) {
+      await launchBtn.click();
     }
     await page.locator('#nav-create').click();
     await expect(page.locator('#wizard-counterparty')).toBeVisible({ timeout: 10_000 });
@@ -98,6 +100,7 @@ test.describe('create_commitment against local Soroban sandbox (#8)', () => {
     await expect(page.locator('#page-reputation')).toHaveClass(/active/, {
       timeout: 45_000,
     });
+    });
 
     const commitmentId = 1;
 
@@ -106,12 +109,14 @@ test.describe('create_commitment against local Soroban sandbox (#8)', () => {
     const onChain = await getCommitmentOnChain(commitmentId, E2E_ISSUER_ADDRESS);
     expect(onChain.status).toBe('Pending');
 
-    // Confirm the commitments list (fed by backend/indexer) picks up the same commitment
+    // Confirm the commitments list (fed by backend/indexer) picks up the same
+    // commitment. This is the part that catches indexer/backend desync bugs --
+    // the wizard succeeding doesn't guarantee the list's separate read path agrees.
     await page.locator('#nav-commitments').click();
     await expect(page.locator('#commitments-list-page')).toBeVisible({ timeout: 15_000 });
 
     const commitmentCard = page.locator('.commitment-item', { hasText: `Commitment #${commitmentId}` });
-    await expect(commitmentCard).toBeVisible({ timeout: 25_000 });
-    await expect(commitmentCard.getByText('Pending')).toBeVisible();
+    await expect(commitmentCard).toBeVisible({ timeout: 25_000 }); // indexer poll latency
+    await expect(commitmentCard.locator('.badge')).toHaveText(/Pending/i);
   });
 });

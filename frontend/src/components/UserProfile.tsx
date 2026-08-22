@@ -95,6 +95,8 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             <img
               src={identity.avatarUrl}
               alt={displayName}
+              loading="lazy"
+              fetchPriority="low"
               style={{ width: '100%', height: '100%', objectFit: 'cover' }}
               onError={(e) => {
                 (e.currentTarget as HTMLElement).style.display = 'none';

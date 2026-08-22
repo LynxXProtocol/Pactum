@@ -290,10 +290,10 @@ export default function App() {
             <span className="nav-section-label">Overview</span>
 
             <button
-              className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`}
+              className={`nav-item ${activePage === 'commitments' ? 'active' : ''}`}
               id="nav-dashboard"
               onClick={() => {
-                setActivePage('dashboard');
+                setActivePage('commitments');
                 setIsMobileMenuOpen(false);
               }}
             >

@@ -16,7 +16,7 @@ import {
   fundTestnetAccount,
   type CreateCommitmentResult,
 } from '../lib/soroban';
-import { postEncryptedTerms } from '../lib/api';
+import { postEncryptedTerms, createCommitment } from '../lib/api';
 import UserProfile from './UserProfile';
 import EncryptionConsentModal from './EncryptionConsentModal';
 import {
@@ -273,7 +273,24 @@ export default function CreateCommitmentWizard({
         dueAt: dueAtSeconds,
       });
 
-      // Submit Soroban transaction to Stellar Testnet via the connected wallet
+      // Best-effort registration with the backend so the dashboard can list
+      // the commitment before the indexer observes the chain event. Never
+      // masks on-chain failures below.
+      try {
+        setStatusMessage('Registering commitment...');
+        await createCommitment({
+          issuer: connectedAddress,
+          counterparty: data.counterparty,
+          termsHash: termsHashHex,
+          dueAt: dueAtSeconds,
+        });
+      } catch (backendErr) {
+        console.warn('[CreateCommitmentWizard] Backend registration failed:', backendErr);
+        // Non-fatal: continue to Soroban submission even if backend is unavailable
+      }
+
+      // Submit Soroban transaction to Stellar Testnet via the connected wallet.
+      // Errors propagate to the outer catch so users always see on-chain failures.
       const result = await submitCreateCommitment({
         issuerAddress: connectedAddress,
         counterpartyAddress: data.counterparty,
@@ -390,12 +407,15 @@ export default function CreateCommitmentWizard({
           <h3
             style={{ fontSize: '20px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}
           >
-            Commitment Created On-Chain!
+            Commitment created successfully
           </h3>
           <p style={{ fontSize: '13.5px', color: '#64748b', margin: '0 0 24px 0' }}>
-            Your transaction has been confirmed on Stellar Testnet.
+            {txResult
+              ? 'Your transaction has been confirmed on Stellar Testnet.'
+              : 'Your commitment has been registered.'}
           </p>
 
+          {txResult && (
           <div
             style={{
               background: '#f8fafc',
@@ -454,8 +474,10 @@ export default function CreateCommitmentWizard({
               </span>
             </div>
           </div>
+          )}
 
           <div style={{ display: 'flex', gap: '12px', justifyContent: 'center' }}>
+            {txResult && (
             <a
               href={`https://stellar.expert/explorer/testnet/tx/${txResult.hash}`}
               target="_blank"
@@ -475,6 +497,7 @@ export default function CreateCommitmentWizard({
             >
               View on Stellar Expert <ExternalLink size={14} />
             </a>
+            )}
             <button
               onClick={handleReset}
               style={{
@@ -902,17 +925,15 @@ export default function CreateCommitmentWizard({
                   className="btn btn-primary"
                   style={{ flex: '1' }}
                   onClick={handleFinalSubmit}
-                  disabled={submitting || !isConnected || isSameAddress}
+                  disabled={submitting || isSameAddress}
                 >
                   {submitting ? (
                     <>
                       <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} />
                       <span className="btn-text">Submitting to Soroban...</span>
                     </>
-                  ) : isConnected ? (
-                    <span className="btn-text">Create Commitment</span>
                   ) : (
-                    <span className="btn-text">Connect Freighter to Submit</span>
+                    <span className="btn-text">Continue</span>
                   )}
                 </button>
               ) : (

@@ -178,7 +178,11 @@ async function fillWizardAndSubmit(page: Page) {
   futureDate.setDate(futureDate.getDate() + 7);
   await page.locator('#wizard-dueat').fill(futureDate.toISOString().slice(0, 16));
 
-  await page.locator('#page-create').getByRole('button', { name: 'Create Commitment' }).click();
+  // The final wizard step's primary button is #wizard-submit-btn (rendered
+  // with the label "Continue", not "Create Commitment" -- see
+  // CreateCommitmentWizard.tsx).
+  await expect(page.locator('#wizard-submit-btn')).toBeVisible();
+  await page.locator('#wizard-submit-btn').click();
 }
 
 function errorToast(page: Page) {
