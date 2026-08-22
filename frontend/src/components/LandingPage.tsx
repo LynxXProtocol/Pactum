@@ -89,82 +89,168 @@ export default function LandingPage({ onLaunchApp, onOpenDocs }: LandingPageProp
         {/* ── Bento Grid ── */}
         <section className="lp-bento-container">
           <div className="lp-bento-grid">
-            
             {/* Card 1: Immutable Registry */}
             <div className="lp-card lp-card-span-8">
               <div className="lp-card-icon" style={{ color: '#0ea5e9', background: '#e0f2fe' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
                 </svg>
               </div>
               <h3 className="lp-card-title">Immutable Registry</h3>
               <p className="lp-card-desc">
-                Either party registers the commitment on-chain: issuer, counterparty, terms hash, and due date. 
-                Immutable from this point forward, secured by the Stellar network.
+                Either party registers the commitment on-chain: issuer, counterparty, terms hash,
+                and due date. Immutable from this point forward, secured by the Stellar network.
               </p>
             </div>
 
             {/* Card 2: Stat */}
-            <div className="lp-card lp-card-span-4" style={{ alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+            <div
+              className="lp-card lp-card-span-4"
+              style={{ alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
+            >
               <div className="lp-stat-huge">4</div>
-              <div className="lp-card-title" style={{ marginTop: 0, fontSize: '18px' }}>Active Commitments</div>
-              <p className="lp-card-desc" style={{ fontSize: '14px' }}>Recorded securely on Soroban</p>
+              <div className="lp-card-title" style={{ marginTop: 0, fontSize: '18px' }}>
+                Active Commitments
+              </div>
+              <p className="lp-card-desc" style={{ fontSize: '14px' }}>
+                Recorded securely on Soroban
+              </p>
             </div>
 
             {/* Card 3: Stat */}
-            <div className="lp-card lp-card-span-4" style={{ alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}>
+            <div
+              className="lp-card lp-card-span-4"
+              style={{ alignItems: 'center', justifyContent: 'center', textAlign: 'center' }}
+            >
               <div className="lp-stat-huge">7d</div>
-              <div className="lp-card-title" style={{ marginTop: 0, fontSize: '18px' }}>Dispute Window</div>
-              <p className="lp-card-desc" style={{ fontSize: '14px' }}>Time allowed to contest an outcome</p>
+              <div className="lp-card-title" style={{ marginTop: 0, fontSize: '18px' }}>
+                Dispute Window
+              </div>
+              <p className="lp-card-desc" style={{ fontSize: '14px' }}>
+                Time allowed to contest an outcome
+              </p>
             </div>
 
             {/* Card 4: Verifiable Reputation */}
             <div className="lp-card lp-card-span-8">
               <div className="lp-card-icon" style={{ color: '#f59e0b', background: '#fef3c7' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path>
                 </svg>
               </div>
               <h3 className="lp-card-title">Verifiable Reputation</h3>
               <p className="lp-card-desc">
-                After the due date, the issuer or counterparty records the outcome: Fulfilled, Late, or Breached. 
-                Every resolved outcome feeds the issuer's on-chain reputation score.
+                After the due date, the issuer or counterparty records the outcome: Fulfilled, Late,
+                or Breached. Every resolved outcome feeds the issuer's on-chain reputation score.
               </p>
             </div>
 
             {/* Card 5: Lifecycle Steps */}
             <div className="lp-card lp-card-span-12">
-              <div className="lp-card-icon" style={{ color: '#10b981', background: '#d1fae5', marginBottom: '24px' }}>
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <div
+                className="lp-card-icon"
+                style={{ color: '#10b981', background: '#d1fae5', marginBottom: '24px' }}
+              >
+                <svg
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
                   <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
                 </svg>
               </div>
-              <h3 className="lp-card-title" style={{ marginTop: 0 }}>Lifecycle Overview</h3>
+              <h3 className="lp-card-title" style={{ marginTop: 0 }}>
+                Lifecycle Overview
+              </h3>
               <div style={{ display: 'flex', gap: '24px', marginTop: '16px', flexWrap: 'wrap' }}>
-                
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>01 / CREATE</div>
-                  <div style={{ fontSize: '14px', color: '#475569' }}>Register the commitment on-chain.</div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#94a3b8',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    01 / CREATE
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#475569' }}>
+                    Register the commitment on-chain.
+                  </div>
                 </div>
-                
+
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>02 / ATTEST</div>
-                  <div style={{ fontSize: '14px', color: '#475569' }}>Record the outcome after the due date.</div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#94a3b8',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    02 / ATTEST
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#475569' }}>
+                    Record the outcome after the due date.
+                  </div>
                 </div>
 
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>03 / DISPUTE</div>
-                  <div style={{ fontSize: '14px', color: '#475569' }}>7-day window to raise any disagreements.</div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#94a3b8',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    03 / DISPUTE
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#475569' }}>
+                    7-day window to raise any disagreements.
+                  </div>
                 </div>
 
                 <div style={{ flex: 1, minWidth: '200px' }}>
-                  <div style={{ fontSize: '12px', fontWeight: 700, color: '#94a3b8', marginBottom: '8px' }}>04 / RESOLVE</div>
-                  <div style={{ fontSize: '14px', color: '#475569' }}>Outcome updates public reputation score.</div>
+                  <div
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 700,
+                      color: '#94a3b8',
+                      marginBottom: '8px',
+                    }}
+                  >
+                    04 / RESOLVE
+                  </div>
+                  <div style={{ fontSize: '14px', color: '#475569' }}>
+                    Outcome updates public reputation score.
+                  </div>
                 </div>
-
               </div>
             </div>
-
           </div>
         </section>
 
@@ -172,9 +258,19 @@ export default function LandingPage({ onLaunchApp, onOpenDocs }: LandingPageProp
         <footer className="lp-footer">
           <div>© 2026 Pactum Protocol. Built on Soroban / Stellar.</div>
           <div style={{ marginTop: '12px' }}>
-            <a href="https://github.com/amankoli09/Pactum" style={{ color: '#64748b', textDecoration: 'none' }}>GitHub</a>
+            <a
+              href="https://github.com/amankoli09/Pactum"
+              style={{ color: '#64748b', textDecoration: 'none' }}
+            >
+              GitHub
+            </a>
             <span style={{ margin: '0 8px' }}>•</span>
-            <a href="https://stellar.expert/explorer/testnet/contract/CBADTVTJ6IN332HIKZ7LWUYMYTLPZYCEBV3X2HS47VHR5UDBHQ3GAA7E" style={{ color: '#64748b', textDecoration: 'none' }}>Contract</a>
+            <a
+              href="https://stellar.expert/explorer/testnet/contract/CBADTVTJ6IN332HIKZ7LWUYMYTLPZYCEBV3X2HS47VHR5UDBHQ3GAA7E"
+              style={{ color: '#64748b', textDecoration: 'none' }}
+            >
+              Contract
+            </a>
           </div>
         </footer>
       </div>

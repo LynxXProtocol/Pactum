@@ -1,0 +1,15 @@
+{
+  "name": "pactum-validation",
+  "type": "module",
+  "version": "0.1.0",
+  "files": [
+    "pactum_validation_bg.wasm",
+    "pactum_validation.js",
+    "pactum_validation.d.ts"
+  ],
+  "main": "pactum_validation.js",
+  "types": "pactum_validation.d.ts",
+  "sideEffects": [
+    "./snippets/*"
+  ]
+}

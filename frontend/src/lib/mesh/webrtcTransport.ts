@@ -42,7 +42,7 @@ export class WebRtcMeshTransport {
 
   constructor(
     config: WebRtcTransportConfig = {},
-    onEventDeliver?: (event: any, senderId: string) => void
+    onEventDeliver?: (event: any, senderId: string) => void,
   ) {
     this.localPeerId = config.peerId || this.generatePeerId();
     this.maxPeers = config.maxPeers ?? 8;
@@ -58,7 +58,7 @@ export class WebRtcMeshTransport {
       (targetId, msg) => this.sendToPeer(targetId, msg),
       (event, senderId) => {
         if (onEventDeliver) onEventDeliver(event, senderId);
-      }
+      },
     );
 
     this.initSignaling(config.signalingChannelName ?? 'pactum-webrtc-mesh-signaling');
@@ -67,7 +67,9 @@ export class WebRtcMeshTransport {
   }
 
   private generatePeerId(): string {
-    return 'peer_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36).substring(4);
+    return (
+      'peer_' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36).substring(4)
+    );
   }
 
   private initSignaling(channelName: string): void {
@@ -205,7 +207,10 @@ export class WebRtcMeshTransport {
     }
   }
 
-  private async handleIceCandidate(senderId: string, candidate: RTCIceCandidateInit): Promise<void> {
+  private async handleIceCandidate(
+    senderId: string,
+    candidate: RTCIceCandidateInit,
+  ): Promise<void> {
     const peer = this.connections.get(senderId);
     if (peer && peer.connection && candidate) {
       try {
@@ -229,7 +234,11 @@ export class WebRtcMeshTransport {
     };
 
     pc.onconnectionstatechange = () => {
-      if (pc.connectionState === 'disconnected' || pc.connectionState === 'failed' || pc.connectionState === 'closed') {
+      if (
+        pc.connectionState === 'disconnected' ||
+        pc.connectionState === 'failed' ||
+        pc.connectionState === 'closed'
+      ) {
         this.disconnectPeer(peerId);
       }
     };

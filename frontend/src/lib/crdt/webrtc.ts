@@ -90,7 +90,9 @@ function channelToPeerLink(channel: RTCDataChannel): PeerLink {
 
   return {
     send(bytes) {
-      if (channel.readyState === 'open') channel.send(bytes as any)
+      // Same runtime shape as RTCDataChannel.send's ArrayBufferView<ArrayBuffer> overload
+      // expects — this is a TS lib.dom.d.ts type-parameter mismatch, not a real incompatibility.
+      if (channel.readyState === 'open') channel.send(bytes as ArrayBufferView<ArrayBuffer>);
     },
     onMessage(handler) {
       messageHandlers.add(handler);

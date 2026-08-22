@@ -13,7 +13,9 @@ export const MeshNetworkMonitor: React.FC = () => {
       topic: topicInput,
       xdrPayload: btoa(JSON.stringify({ score: 95, timestamp: Date.now() })),
       ledgerSeq: 104520 + Math.floor(Math.random() * 100),
-      txHash: '0x' + Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+      txHash:
+        '0x' +
+        Array.from({ length: 64 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
       timestamp: Date.now(),
       originPeerId: stats.peerId,
     };
@@ -28,7 +30,9 @@ export const MeshNetworkMonitor: React.FC = () => {
             <Radio className="w-5 h-5 animate-pulse" />
           </div>
           <div>
-            <h3 className="font-semibold text-lg text-slate-100">BFT Service Worker Mesh Monitor</h3>
+            <h3 className="font-semibold text-lg text-slate-100">
+              BFT Service Worker Mesh Monitor
+            </h3>
             <p className="text-xs text-slate-400">
               Peer ID: <span className="font-mono text-indigo-300">{stats.peerId}</span>
             </p>
@@ -123,7 +127,9 @@ export const MeshNetworkMonitor: React.FC = () => {
                   <span className="text-slate-400 font-mono text-[10px] block">
                     Origin: {evt.originPeerId.substring(0, 10)}...
                   </span>
-                  <span className="text-slate-500 text-[9px]">{new Date(evt.timestamp).toLocaleTimeString()}</span>
+                  <span className="text-slate-500 text-[9px]">
+                    {new Date(evt.timestamp).toLocaleTimeString()}
+                  </span>
                 </div>
               </div>
             ))

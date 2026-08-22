@@ -56,18 +56,19 @@ find .github/workflows -type f | sort
 
 Read every `.yml` / `.yaml` file in full. For each file extract:
 
-| What to extract | Why |
-|---|---|
-| `name:` of the workflow | Maps to the GitHub check name |
-| `on:` triggers | Confirms it runs on `pull_request` |
-| Every `jobs.<id>.name` | The display name shown in GitHub checks |
-| Every `run:` step | Commands to reproduce locally |
-| Every `uses:` action | Identifies setup steps (node, python, etc.) |
-| `env:` at workflow / job / step level | Environment variable requirements |
-| `working-directory:` overrides | Critical for monorepos |
-| `strategy.matrix` values | Which variant to reproduce locally |
+| What to extract                       | Why                                         |
+| ------------------------------------- | ------------------------------------------- |
+| `name:` of the workflow               | Maps to the GitHub check name               |
+| `on:` triggers                        | Confirms it runs on `pull_request`          |
+| Every `jobs.<id>.name`                | The display name shown in GitHub checks     |
+| Every `run:` step                     | Commands to reproduce locally               |
+| Every `uses:` action                  | Identifies setup steps (node, python, etc.) |
+| `env:` at workflow / job / step level | Environment variable requirements           |
+| `working-directory:` overrides        | Critical for monorepos                      |
+| `strategy.matrix` values              | Which variant to reproduce locally          |
 
 **Specifically look for jobs whose `name:` matches (case-insensitive):**
+
 - `core` → this is `CI / core`
 - `web` → this is `CI / web`
 
@@ -75,6 +76,7 @@ If the names don't obviously match, look at what the workflow file is
 called (e.g. `ci.yml`) and check for jobs triggered on `pull_request`.
 
 **Watch for:**
+
 - `node-version` / `python-version` — note if it differs from local
 - Cache steps (`actions/cache`, `actions/setup-node` with `cache:`) — skip locally
 - `if:` conditions on steps — some steps are conditional; check if they'd run on a PR
@@ -161,42 +163,42 @@ check `working-directory:` in the workflow and `cd` there before running.
 
 For **each** failing command produce this table (do not skip any):
 
-| Field | Value |
-|---|---|
-| **Check** | `CI / core` or `CI / web` |
-| **Workflow file** | `.github/workflows/xxx.yml` |
-| **Job** | job id |
-| **Step** | exact `run:` value |
-| **Error output** | the meaningful error lines (not the whole log) |
-| **Root cause** | why it's failing |
-| **Files involved** | specific files / paths |
-| **Severity** | `blocking` or `warning` |
-| **Recommended fix** | what to change |
+| Field               | Value                                          |
+| ------------------- | ---------------------------------------------- |
+| **Check**           | `CI / core` or `CI / web`                      |
+| **Workflow file**   | `.github/workflows/xxx.yml`                    |
+| **Job**             | job id                                         |
+| **Step**            | exact `run:` value                             |
+| **Error output**    | the meaningful error lines (not the whole log) |
+| **Root cause**      | why it's failing                               |
+| **Files involved**  | specific files / paths                         |
+| **Severity**        | `blocking` or `warning`                        |
+| **Recommended fix** | what to change                                 |
 
 ### Root cause lookup table
 
-| Symptom | Likely cause | Fix |
-|---|---|---|
-| `Cannot find module 'X'` | Missing dep or wrong import path | `npm install X` or fix import |
-| `Module not found: X` | Bundler can't resolve path | Fix alias / path in config |
-| `error TS2...` | TypeScript type error | Fix types per message |
-| `error TS6...` | tsconfig problem | Fix tsconfig |
-| `ESLint: ...` | Lint rule violation | Fix code or run `eslint --fix` |
-| `Parsing error:` (ESLint) | ESLint parser mismatch | Check `parser` in eslint config |
-| `Expected ... but got ...` (Prettier/Biome) | Formatting | Run formatter with `--write` |
-| `ENOENT: no such file` | Missing generated/built file | Run build step first |
-| `command not found: X` | Missing devDependency | Add to `devDependencies` |
-| `SyntaxError` | Bad JS/TS syntax | Fix the file |
-| `Cannot read properties of undefined` | Runtime error in test | Fix test or source |
-| Lockfile out of sync | `package-lock.json` stale | `npm install`, commit lockfile |
-| `secret not found` / `undefined` env var | Missing env var | Note it for GitHub secrets |
-| `FAIL src/...test...` | Test failure | Fix failing test |
-| `husky: command not found` | Husky not installed | `npm run prepare` |
-| Peer dep conflict | Version mismatch | Align versions |
-| Case mismatch `./Foo` vs `./foo` | Linux is case-sensitive, macOS isn't | Fix import casing to match filename |
-| `Cannot use import statement` | CJS/ESM mismatch | Check `"type"` in package.json |
-| Wrong branch / outdated rebase | Branch diverged from base | `git rebase origin/main` |
-| Changes outside PR scope | Accidental edits | Revert unrelated changes |
+| Symptom                                     | Likely cause                         | Fix                                 |
+| ------------------------------------------- | ------------------------------------ | ----------------------------------- |
+| `Cannot find module 'X'`                    | Missing dep or wrong import path     | `npm install X` or fix import       |
+| `Module not found: X`                       | Bundler can't resolve path           | Fix alias / path in config          |
+| `error TS2...`                              | TypeScript type error                | Fix types per message               |
+| `error TS6...`                              | tsconfig problem                     | Fix tsconfig                        |
+| `ESLint: ...`                               | Lint rule violation                  | Fix code or run `eslint --fix`      |
+| `Parsing error:` (ESLint)                   | ESLint parser mismatch               | Check `parser` in eslint config     |
+| `Expected ... but got ...` (Prettier/Biome) | Formatting                           | Run formatter with `--write`        |
+| `ENOENT: no such file`                      | Missing generated/built file         | Run build step first                |
+| `command not found: X`                      | Missing devDependency                | Add to `devDependencies`            |
+| `SyntaxError`                               | Bad JS/TS syntax                     | Fix the file                        |
+| `Cannot read properties of undefined`       | Runtime error in test                | Fix test or source                  |
+| Lockfile out of sync                        | `package-lock.json` stale            | `npm install`, commit lockfile      |
+| `secret not found` / `undefined` env var    | Missing env var                      | Note it for GitHub secrets          |
+| `FAIL src/...test...`                       | Test failure                         | Fix failing test                    |
+| `husky: command not found`                  | Husky not installed                  | `npm run prepare`                   |
+| Peer dep conflict                           | Version mismatch                     | Align versions                      |
+| Case mismatch `./Foo` vs `./foo`            | Linux is case-sensitive, macOS isn't | Fix import casing to match filename |
+| `Cannot use import statement`               | CJS/ESM mismatch                     | Check `"type"` in package.json      |
+| Wrong branch / outdated rebase              | Branch diverged from base            | `git rebase origin/main`            |
+| Changes outside PR scope                    | Accidental edits                     | Revert unrelated changes            |
 
 ---
 
@@ -214,6 +216,7 @@ For each blocking issue, before touching a file say:
 Then implement the fix.
 
 **Safe to auto-fix (no confirmation needed):**
+
 - Auto-fixable lint: `eslint --fix` / `biome check --write` / `ruff --fix`
 - Auto-fixable formatting: `prettier --write`
 - Wrong import paths (typos, wrong case, missing extension)
@@ -223,6 +226,7 @@ Then implement the fix.
 - Regenerate lockfile: `npm install` then commit
 
 **Ask user before changing:**
+
 - `tsconfig.json` compiler options (e.g. disabling `strict`, `noImplicitAny`)
 - `package.json` version bumps
 - Logic in source files
@@ -239,7 +243,7 @@ After each fix round, rerun the full suite for both jobs:
 # CI / core commands
 npm run build && npm run typecheck && npm test
 
-# CI / web commands  
+# CI / web commands
 npm run lint && npm run build:web && npm run test:web
 ```
 
@@ -258,34 +262,40 @@ exits with code `0` locally.
 ## CI Fix Summary
 
 ### Check Status
-- ✅ CI / core  — all steps passing
-- ✅ CI / web   — all steps passing
+
+- ✅ CI / core — all steps passing
+- ✅ CI / web — all steps passing
 
 ### Commands confirmed passing
-- `npm run build`         ✅
-- `npm run typecheck`     ✅
-- `npm test`              ✅
-- `npm run lint`          ✅
-- `npm run build:web`     ✅
-- `npm run test:web`      ✅
+
+- `npm run build` ✅
+- `npm run typecheck` ✅
+- `npm test` ✅
+- `npm run lint` ✅
+- `npm run build:web` ✅
+- `npm run test:web` ✅
 
 ### Files Modified
+
 1. `path/to/file.ts` — description of change
 2. `package-lock.json` — regenerated after install
 
 ### Fixes Applied
 
 #### Fix 1: [Title]
+
 - **Check affected:** CI / core
 - **Root cause:** ...
 - **Change:** ...
 
 #### Fix 2: [Title]
+
 - **Check affected:** CI / web
 - **Root cause:** ...
 - **Change:** ...
 
 ### Remaining Notes
+
 - ENV VARS required in GitHub Actions secrets: `FOO`, `BAR`
 - Local Node version (v18) differs from CI (v20) — may cause issues
 - Warning-level lint issues left unfixed (non-blocking)
@@ -296,12 +306,14 @@ exits with code `0` locally.
 ## Edge Cases
 
 ### Monorepo
+
 - Check `package.json` `"workspaces"` / `pnpm-workspace.yaml` / `turbo.json`
 - Check `working-directory:` in workflow steps
 - Run commands from the right package dir, not repo root
 - Each package may have its own `tsconfig.json` and lint config
 
 ### Lockfile mismatch
+
 ```bash
 rm package-lock.json
 npm install          # regenerates lockfile
@@ -309,11 +321,13 @@ git add package-lock.json
 ```
 
 ### Environment variables
+
 - If a step needs `NEXT_PUBLIC_*`, `VITE_*`, or a secret key: it will fail in CI if not set in repo secrets
 - Create a `.env.test` with dummy values for local reproduction
 - Note them clearly in the report — do NOT try to add real secrets to files
 
 ### Case-sensitive paths (Linux CI vs macOS local)
+
 ```bash
 # Find mismatched imports:
 grep -r "from './" src/ | grep -i "mycomponent"
@@ -322,31 +336,39 @@ ls src/components/
 ```
 
 ### Generated files
+
 - If CI runs `npm run generate` or `npm run codegen` before build, run it locally too
 - Check for `pre` scripts: `prebuild`, `pretest` in `package.json`
 
 ### Path aliases
+
 TypeScript path aliases need to be configured in **three places**:
+
 1. `tsconfig.json` → `paths`
 2. Bundler config (vite/webpack) → `resolve.alias`
 3. Jest config → `moduleNameMapper`
-Missing any one of these will break in exactly the tool that's missing it.
+   Missing any one of these will break in exactly the tool that's missing it.
 
 ### Wrong base branch / diverged branch
+
 ```bash
 git log --oneline origin/main..HEAD    # see what's different
 git rebase origin/main                  # sync with base
 ```
 
 ### Changes outside PR scope
+
 ```bash
 git diff origin/main --name-only       # all changed files
 ```
+
 Review this list. If files are changed that shouldn't be, revert them:
+
 ```bash
 git checkout origin/main -- path/to/file
 ```
 
 ### OS differences (macOS vs Ubuntu CI)
+
 - `sed -i` requires `-i ''` on macOS; CI runs Ubuntu where it doesn't
 - Use `perl -i -pe` or Python for portable in-place edits

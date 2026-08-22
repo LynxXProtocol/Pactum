@@ -1,24 +1,22 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
-import { computeSha256Hex, type CryptoWorkerRequest, type CryptoWorkerResponse } from '../../src/workers/crypto.worker.ts';
+import {
+  computeSha256Hex,
+  type CryptoWorkerRequest,
+  type CryptoWorkerResponse,
+} from '../../src/workers/crypto.worker.ts';
 import { sha256Hex, sha256Batch } from '../../src/lib/hash.ts';
 import { CryptoWorkerClient } from '../../src/lib/cryptoWorkerClient.ts';
 
 describe('Web Worker Cryptographic Engine', () => {
   it('computes standard SHA-256 hex digest for empty string', async () => {
     const emptyHash = await computeSha256Hex('');
-    assert.equal(
-      emptyHash,
-      'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'
-    );
+    assert.equal(emptyHash, 'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855');
   });
 
   it('computes correct SHA-256 for known test vector ("hello world")', async () => {
     const hash = await computeSha256Hex('hello world');
-    assert.equal(
-      hash,
-      'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9'
-    );
+    assert.equal(hash, 'b94d27b9934d3e08a52e52d7da7dabfac484efe37a5380ee9088f7ace2efcde9');
   });
 
   it('computes SHA-256 via hash.ts interface seamlessly with fallback', async () => {

@@ -37,6 +37,7 @@ The **Pactum Service Worker Mesh** provides an in-browser, decentralized Peer-to
 ### 1. Epidemic Routing (Plumtree Protocol)
 
 The mesh uses a hybrid **Plumtree-style dual overlay**:
+
 - **Eager Spanning Tree (`eagerNeighbors`)**: Low-latency spanning tree where novel `GOSSIP_DATA` messages are forwarded immediately to active peer connections. Target fanout is bounded ($D_{low} \le |E| \le D_{high}$) to avoid flooding browser resources.
 - **Lazy Graph (`lazyNeighbors`)**: Passive graph where message IDs are batched into periodic `IHAVE` announcements. If a node detects a missing message from an `IHAVE` announcement, a timer triggers a `GRAFT` message to promote that link and fetch the payload.
 - **Dynamic Optimization (`PRUNE`)**: If a node receives duplicate `GOSSIP_DATA` on an eager link, it sends a `PRUNE` message to demote the redundant link into the lazy graph, keeping tree depth and message amplification optimal.
@@ -44,6 +45,7 @@ The mesh uses a hybrid **Plumtree-style dual overlay**:
 ### 2. Local Byzantine-Abuse Mitigation
 
 Every node runs an autonomous `PeerScoringManager` maintaining local reputation across `[-100, +100]`:
+
 - **Novel Valid Event**: `+5` points
 - **Duplicate Message Delivery**: `-2` points (triggers `PRUNE`)
 - **Malformed / Bad Schema Payload**: `-40` points

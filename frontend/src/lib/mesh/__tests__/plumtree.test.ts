@@ -14,7 +14,7 @@ describe('PlumtreeEngine', () => {
       { localPeerId, targetEagerFanout: 2, minEagerFanout: 1, maxEagerFanout: 4 },
       scoring,
       (targetPeerId, message) => sentMessages.push({ targetPeerId, message }),
-      (event, senderId) => deliveredEvents.push({ event, senderId })
+      (event, senderId) => deliveredEvents.push({ event, senderId }),
     );
 
     return { engine, scoring, sentMessages, deliveredEvents };
@@ -97,7 +97,9 @@ describe('PlumtreeEngine', () => {
     engine.handleMessage('node-b', msg);
 
     expect(engine.duplicatesPrunedCount).toBe(1);
-    const pruneMsgs = sentMessages.filter((s) => s.targetPeerId === 'node-b' && s.message.type === 'PRUNE');
+    const pruneMsgs = sentMessages.filter(
+      (s) => s.targetPeerId === 'node-b' && s.message.type === 'PRUNE',
+    );
     expect(pruneMsgs.length).toBe(1);
     expect(engine.getLazyNeighbors().includes('node-b')).toBe(true);
 

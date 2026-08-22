@@ -163,7 +163,7 @@ async function openCreateWizard(page: Page) {
   await page.getByRole('button', { name: 'Connect Wallet' }).first().click();
   await page.getByRole('button', { name: /Freighter/ }).click();
   await expect(page.getByRole('button', { name: /GASV7Z\.\.\./ })).toBeVisible();
-  await page.locator('#hero-launch-btn').click();
+  await page.getByRole('button', { name: 'Launch App' }).first().click();
   await page.locator('#nav-create').click();
   await expect(page.locator('.section-title').filter({ hasText: 'Create Commitment' })).toBeVisible();
 }

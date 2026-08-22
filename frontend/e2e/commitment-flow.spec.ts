@@ -4,6 +4,14 @@ const MOCK_ADDRESS = 'GASV7ZZOPNYYFEPJ6N3GX4VINJELUQQDRX6UWWOO43F55CV6OBQUEGVK';
 const COUNTERPARTY = 'GCM5SKB5PS3ZCUXZ4GPLIBY42E63ILOT2EAIIT4UWGDFYOULCTLTRMMB';
 const SHORT_ADDRESS = 'GASV7Z...EGVK';
 
+// A fixed future date goes stale the moment it's in the past; compute one relative to "now"
+// instead, matching contract-errors.spec.ts's own pattern.
+function futureDueDate(): string {
+  const date = new Date();
+  date.setDate(date.getDate() + 7);
+  return date.toISOString().slice(0, 16);
+}
+
 /**
  * Simulates the Freighter browser extension content script (postMessage protocol).
  * Must be self-contained: Playwright serializes init scripts via toString().
@@ -127,7 +135,9 @@ async function mockSorobanRpc(page: Page) {
     let parsed: { id?: number | string; method?: string; params?: any } = {};
     try {
       parsed = JSON.parse(postData);
-    } catch {}
+    } catch {
+      // Malformed/non-JSON body: fall through with the empty `parsed` default.
+    }
     const id = parsed.id ?? 1;
 
     if (parsed.method === 'getAccount') {
@@ -387,11 +397,13 @@ test.beforeEach(async ({ page }) => {
   });
 
   await page.goto('/');
-  // If landing page is shown, launch the app first
-  const launchBtn = page.getByRole('button', { name: /launch app/i }).first();
-  if (await launchBtn.isVisible()) {
-    await launchBtn.click();
-  }
+  // `isVisible()` doesn't auto-wait, so it can read the DOM before the landing page has
+  // hydrated and race to false on a slower load — `click()`'s own actionability wait is the
+  // reliable way to land on this always-present button.
+  await page
+    .getByRole('button', { name: /launch app/i })
+    .first()
+    .click();
 });
 
 test('critical user journey: connect wallet -> create commitment -> view dashboard', async ({
@@ -400,19 +412,19 @@ test('critical user journey: connect wallet -> create commitment -> view dashboa
   // 1. Connect the wallet from the landing page
   await page.getByRole('button', { name: 'Connect Wallet' }).first().click();
   await page.getByRole('button', { name: /Freighter/ }).click();
+  // The connected-wallet button (above) is WalletConnectButton's own indicator of connected
+  // state — it never renders literal "Connected" text, so that assertion never matched anything.
   await expect(page.getByRole('button', { name: SHORT_ADDRESS })).toBeVisible();
 
-  // The sr-only "Connected" span in WalletConnectButton confirms wallet connection
-  await expect(page.getByText('Connected').first()).toBeVisible();
-
-  // 2. Create Commitment — use the nav button by its id to avoid strict mode violation
-  await page.locator('#nav-create').click();
+  // 2. Create Commitment
+  await page.getByRole('button', { name: 'Create Commitment' }).click();
 
   // Step 1: Counterparty
-  await expect(page.locator('#wizard-counterparty')).toBeVisible();
-  await page
-    .locator('#wizard-counterparty')
-    .fill('GCM5SKB5PS3ZCUXZ4GPLIBY42E63ILOT2EAIIT4UWGDFYOULCTLTRMMB');
+  await expect(page.getByLabel('Counterparty Address')).toBeVisible();
+  // The wizard's real client-side StrKey validation requires a well-formed 56-char address;
+  // the placeholder previously here ('GCV7GCOUNTERPARTY...', 47 chars) failed that check and
+  // silently blocked the Continue button.
+  await page.getByLabel('Counterparty Address').fill(COUNTERPARTY);
   await page.getByRole('button', { name: 'Continue' }).click();
 
   // Step 2: Terms
@@ -420,25 +432,34 @@ test('critical user journey: connect wallet -> create commitment -> view dashboa
   await page.locator('#wizard-terms').fill('Test commitment terms');
   await page.getByRole('button', { name: 'Continue' }).click();
 
-  // Step 3: Due Date
-  await expect(page.locator('#wizard-dueat')).toBeVisible();
-  await page.locator('#wizard-dueat').fill('2026-12-31T12:00');
-  await page.locator('#wizard-submit-btn').click();
+  // Step 3: Due Date + Review — the final step is a review screen, not another form to
+  // Continue past; it submits via "Create Commitment", scoped to #page-create the same way as
+  // the encrypted-commitment test (the sidebar nav item shares that accessible name).
+  await expect(page.getByLabel('Due Date')).toBeVisible();
+  await page.getByLabel('Due Date').fill(futureDueDate());
+  await page.locator('#page-create').getByRole('button', { name: 'Create Commitment' }).click();
 
-  // Verify success & transition to Reputation Dashboard
+  // Verify success & transition to Reputation Dashboard — App.tsx's onSuccess navigates away
+  // (setActivePage('reputation')) in the same commit the wizard sets its own success state, so
+  // the wizard's "Commitment Created On-Chain!" view is written to the DOM but never actually
+  // painted while #page-create is active; asserting on it directly is a false negative.
   await expect(page.locator('#page-reputation')).toHaveClass(/active/, { timeout: 10000 });
 
-  // 3. View Commitments — use nav button id, not role=link (it's a button)
+  // 3. View Commitments — #commitments-list-page only exists on the Commitments page, not the
+  // Dashboard's own (unrelated, id-less) "Recent Commitments" card.
   await page.locator('#nav-commitments').click();
 
   await expect(page.locator('#commitments-list-page')).toBeVisible();
   await expect(page.getByText('Commitment #1').first()).toBeVisible();
-  await expect(page.getByText('GCM5SKB5PS3ZCUXZ4GPLIBY42E63ILOT2EAIIT4UWGDFYOULCTLTRMMB').first()).toBeVisible();
+  await expect(
+    page.getByText('GCM5SKB5PS3ZCUXZ4GPLIBY42E63ILOT2EAIIT4UWGDFYOULCTLTRMMB').first(),
+  ).toBeVisible();
 });
 
 test('form validation errors appear on bad input', async ({ page }) => {
-  // Landing page is already dismissed in beforeEach; navigate directly to create
-  await page.locator('#nav-create').click();
+  // beforeEach already lands on the dashboard (via its own Launch App click), so there's no
+  // landing page left to launch from here.
+  await page.click('#nav-create');
 
   // Try to continue without filling counterparty
   await page.getByRole('button', { name: 'Continue' }).click();
@@ -484,7 +505,16 @@ test('loading spinners display during network requests', async ({ page }) => {
     });
   });
 
-  // Navigate to Reputation using nav button id (not role=link)
+  // beforeEach's own Launch App click already lands on the dashboard before this route mock
+  // existed — and the dashboard/nav items just toggle a CSS class (App.tsx), they don't
+  // remount/refetch on a repeat visit. Reload for a fresh mount that actually goes through this
+  // mocked, artificially-delayed route, then navigate to the Reputation page (nav button id, not
+  // role=link) where the search input this test drives actually lives.
+  await page.reload();
+  await page
+    .getByRole('button', { name: /launch app/i })
+    .first()
+    .click();
   await page.locator('#nav-reputation').click();
 
   // Fill search input and click Lookup Account to trigger network request
@@ -585,9 +615,10 @@ test('encrypted commitment: toggle encrypts terms — ciphertext sent to backend
   await page.getByRole('button', { name: 'Continue' }).click();
 
   // Step 3: Due date
-  await page.locator('#wizard-dueat').fill('2026-12-31T12:00');
-  // Use the specific submit button id to avoid strict mode violation
-  await page.locator('#wizard-submit-btn').click();
+  await page.locator('#wizard-dueat').fill(futureDueDate());
+  // Scoped to #page-create: the unscoped locator also matches the sidebar's #nav-create button,
+  // which carries the same accessible name.
+  await page.locator('#page-create').getByRole('button', { name: 'Create Commitment' }).click();
 
   // Encryption consent modal should appear
   await expect(page.locator('#encrypt-modal-confirm')).toBeVisible({ timeout: 5000 });

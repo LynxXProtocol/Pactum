@@ -102,20 +102,32 @@ export class PeerScoringManager {
   /**
    * Validates a Soroban indexed event against Byzantine faults.
    */
-  public validateSorobanEvent(event: SorobanIndexedEvent): { isValid: boolean; isByzantine: boolean; reason?: string } {
+  public validateSorobanEvent(event: SorobanIndexedEvent): {
+    isValid: boolean;
+    isByzantine: boolean;
+    reason?: string;
+  } {
     if (!event.id || !event.contractId || !event.topic || !event.xdrPayload) {
       return { isValid: false, isByzantine: false, reason: 'Missing mandatory event fields' };
     }
 
     if (typeof event.ledgerSeq !== 'number' || event.ledgerSeq <= 0) {
-      return { isValid: false, isByzantine: true, reason: 'Invalid or non-positive ledger sequence' };
+      return {
+        isValid: false,
+        isByzantine: true,
+        reason: 'Invalid or non-positive ledger sequence',
+      };
     }
 
     // Verify timestamp within reasonable clock skew (e.g. 10 minutes)
     const now = Date.now();
     const skew = Math.abs(now - event.timestamp);
     if (skew > 10 * 60 * 1000) {
-      return { isValid: false, isByzantine: true, reason: 'Event timestamp skewed beyond acceptable boundary' };
+      return {
+        isValid: false,
+        isByzantine: true,
+        reason: 'Event timestamp skewed beyond acceptable boundary',
+      };
     }
 
     // Verify valid Soroban XDR structure (either ScVal or ContractEvent)
@@ -125,7 +137,11 @@ export class PeerScoringManager {
       try {
         xdr.ContractEvent.fromXDR(event.xdrPayload, 'base64');
       } catch {
-        return { isValid: false, isByzantine: true, reason: 'Malformed or invalid Soroban XDR structure' };
+        return {
+          isValid: false,
+          isByzantine: true,
+          reason: 'Malformed or invalid Soroban XDR structure',
+        };
       }
     }
 

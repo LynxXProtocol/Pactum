@@ -42,7 +42,8 @@ export function useMeshNetwork() {
         const pruned = t.plumtree.duplicatesPrunedCount;
         const dropped = t.plumtree.byzantineDroppedCount;
 
-        const offload = received > 0 ? Math.min(100, Math.round((received / (received + 1)) * 100)) : 0;
+        const offload =
+          received > 0 ? Math.min(100, Math.round((received / (received + 1)) * 100)) : 0;
 
         setStats({
           peerId: t.localPeerId,

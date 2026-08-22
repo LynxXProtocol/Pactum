@@ -2,23 +2,27 @@ import { useState, useEffect, useMemo } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
+// Both consumed from the host over Module Federation, not local relative imports — the host owns
+// and exposes the single WalletContext and QueryClient module instances so every remote reads
+// and writes the exact same Provider state and cache. See docs/module-federation.md.
+import { queryClient } from 'host/queryClient';
 
-import { sha256Hex } from '../lib/hash';
-import { encryptCommitmentTerms, type EncryptResult } from '../lib/crypto';
-import { stellarAddressSchema } from '../lib/stellar';
-import { decodeRegistryContractError } from '../lib/errors';
-import { createAstResolver, composeResolvers } from '../lib/ast';
-import { useValidationRules } from '../hooks/useValidationRules';
-import { useWallet } from '../context/WalletContext';
-import { useWasmValidation } from '../hooks/useWasmValidation';
+import { sha256Hex } from './lib/hash';
+import { encryptCommitmentTerms, type EncryptResult } from './lib/crypto';
+import { stellarAddressSchema } from './lib/stellar';
+import { decodeRegistryContractError } from './lib/errors';
+import { createAstResolver, composeResolvers } from './lib/ast';
+import { useValidationRules } from './hooks/useValidationRules';
+import { useWallet } from 'host/WalletContext';
+import { useWasmValidation } from './hooks/useWasmValidation';
 import {
   submitCreateCommitment,
   fundTestnetAccount,
   type CreateCommitmentResult,
-} from '../lib/soroban';
-import { postEncryptedTerms } from '../lib/api';
-import UserProfile from './UserProfile';
-import EncryptionConsentModal from './EncryptionConsentModal';
+} from './lib/soroban';
+import { postEncryptedTerms } from './lib/api';
+import UserProfile from './components/UserProfile';
+import EncryptionConsentModal from './components/EncryptionConsentModal';
 import {
   CheckCircle2,
   ExternalLink,
@@ -109,7 +113,17 @@ export default function CreateCommitmentWizard({
   onSubmit,
   onSuccess,
 }: CreateCommitmentWizardProps) {
-  const { address: connectedAddress, isConnected, connectWallet, provider } = useWallet();
+  // Read from the host's federated WalletContext, not a local copy — see the import comment
+  // above. Also used by the e2e suite to prove this remote shares the exact same Provider
+  // instance as the host, by comparing `contextModuleId` to window.__PACTUM_WALLET_PROVIDER_MODULE_ID__.
+  const wallet = useWallet();
+  const {
+    address: connectedAddress,
+    isConnected,
+    connectWallet,
+    provider,
+    contextModuleId,
+  } = wallet;
   const { validateCommitmentWithWasm } = useWasmValidation();
 
   // Dynamic, governance-controlled validation rules (downloaded as a JSON AST,
@@ -140,6 +154,15 @@ export default function CreateCommitmentWizard({
   const [encryptReject, setEncryptReject] = useState<((e: Error) => void) | null>(null);
 
   const isFreighter = provider === 'freighter';
+
+  useEffect(() => {
+    // VITE_E2E_DIAGNOSTICS, not DEV: needs to be readable from a real production build served
+    // via `vite preview` too. See frontend/src/contexts/WalletContext.tsx for the full rationale.
+    if (import.meta.env.VITE_E2E_DIAGNOSTICS === 'true') {
+      (window as unknown as Record<string, unknown>).__PACTUM_WIZARD_SEEN_WALLET_MODULE_ID__ =
+        contextModuleId;
+    }
+  }, [contextModuleId]);
 
   const {
     register,
@@ -298,13 +321,19 @@ export default function CreateCommitmentWizard({
           // Non-fatal: on-chain commitment is already confirmed
           showErrorToast(
             'On-chain commitment created, but the encrypted terms could not be stored. ' +
-            'Please retry uploading later.',
+              'Please retry uploading later.',
           );
         }
       }
 
       setTxResult(result);
       onSuccess?.(result);
+
+      // Invalidate the shared `commitments` cache on the host's QueryClient — this remote never
+      // fetched into it directly, so a subsequent refetch succeeding here (rather than acting on
+      // an empty, separately-instantiated cache) is a functional proof that this is the same
+      // QueryClient the host and dashboard remote read. See docs/module-federation.md.
+      await queryClient.invalidateQueries({ queryKey: ['commitments'] });
     } catch (err: unknown) {
       console.error('[CreateCommitmentWizard] Soroban error:', err);
       showErrorToast(decodeRegistryContractError(err));
@@ -347,6 +376,20 @@ export default function CreateCommitmentWizard({
 
   return (
     <div className="wizard">
+      {/* Wallet status, read from the host's shared WalletContext singleton (see useWallet import above). */}
+      <div
+        id="wizard-remote-wallet-status"
+        data-connected={wallet.isConnected}
+        style={{
+          fontSize: '12px',
+          color: 'var(--text-secondary, #64748b)',
+          marginBottom: '10px',
+          fontFamily: 'monospace',
+        }}
+      >
+        {wallet.isConnected ? `Issuing as: ${wallet.address}` : 'Wallet: not connected'}
+      </div>
+
       {/* Step Indicator */}
       <ol className="wizard-steps">
         {STEPS.map((s, index) => {
@@ -705,12 +748,14 @@ export default function CreateCommitmentWizard({
                       >
                         {encryptEnabled ? 'E2E Encrypted' : 'Encryption Off'}
                       </div>
-                      <div style={{ fontSize: '11px', color: encryptEnabled ? '#4338ca' : '#94a3b8' }}>
+                      <div
+                        style={{ fontSize: '11px', color: encryptEnabled ? '#4338ca' : '#94a3b8' }}
+                      >
                         {encryptEnabled
                           ? 'Only you & counterparty can read the terms'
                           : isFreighter
-                          ? 'Enable to encrypt terms with your wallet key'
-                          : 'Requires Freighter wallet'}
+                            ? 'Enable to encrypt terms with your wallet key'
+                            : 'Requires Freighter wallet'}
                       </div>
                     </div>
                   </div>

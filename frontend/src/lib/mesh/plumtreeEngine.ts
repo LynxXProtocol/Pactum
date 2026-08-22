@@ -45,7 +45,7 @@ export class PlumtreeEngine {
     config: PlumtreeConfig,
     scoring: PeerScoringManager,
     sendMessage: SendMessageHandler,
-    onDeliver: MessageDeliveryHandler
+    onDeliver: MessageDeliveryHandler,
   ) {
     this.localPeerId = config.localPeerId;
     this.scoring = scoring;
@@ -270,7 +270,7 @@ export class PlumtreeEngine {
   private rebalanceOverlays(): void {
     if (this.eagerNeighbors.size < this.config.minEagerFanout && this.lazyNeighbors.size > 0) {
       const candidates = Array.from(this.lazyNeighbors).filter((p) =>
-        this.scoring.isPeerEligibleForEagerGossip(p)
+        this.scoring.isPeerEligibleForEagerGossip(p),
       );
 
       if (candidates.length > 0) {

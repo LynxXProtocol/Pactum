@@ -24,7 +24,10 @@ export class MeshServiceWorkerCoordinator {
         console.log('[MeshSW] Service Worker registered with scope:', registration.scope);
         return true;
       } catch (err) {
-        console.warn('[MeshSW] Failed to register service worker, falling back to window thread:', err);
+        console.warn(
+          '[MeshSW] Failed to register service worker, falling back to window thread:',
+          err,
+        );
         return false;
       }
     }

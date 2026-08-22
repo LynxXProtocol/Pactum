@@ -223,11 +223,24 @@ jobs:
 
       - name: Install Playwright browsers
         working-directory: frontend
+        # playwright.config.ts (testDir: ./e2e) runs both a chromium and a firefox project.
         run: npx playwright install --with-deps chromium firefox
 
-      - name: Run Playwright end-to-end tests
+      # playwright.config.ts's webServer also builds+previews the dashboard/wizard Module
+      # Federation remotes (see docs/module-federation.md) since the host now lazy-loads them
+      # instead of bundling them directly -- each is an independent npm project needing its own
+      # install.
+      - name: Install dashboard remote dependencies
+        working-directory: frontend-dashboard-remote
+        run: npm ci
+
+      - name: Install wizard remote dependencies
+        working-directory: frontend-wizard-remote
+        run: npm ci
+
+      - name: Run frontend e2e tests
         working-directory: frontend
-        run: npx playwright test --reporter=list
+        run: npm run test:e2e
 
   sdk-tests:
     name: SDK Tests (@pactum/sdk)
@@ -266,3 +279,63 @@ jobs:
       - name: Run SDK tests
         working-directory: sdk/js
         run: npm test
+
+  frontend-tests:
+    name: Frontend Tests (Module Federation)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22.x (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      # The host and the two Module Federation remotes it loads at runtime (see
+      # docs/module-federation.md) are independent npm projects, each installed separately.
+      - name: Install host dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Install dashboard remote dependencies
+        working-directory: frontend-dashboard-remote
+        run: npm ci
+
+      - name: Install wizard remote dependencies
+        working-directory: frontend-wizard-remote
+        run: npm ci
+
+      - name: Typecheck and build dashboard remote
+        working-directory: frontend-dashboard-remote
+        run: npm run build
+
+      - name: Typecheck and build wizard remote
+        working-directory: frontend-wizard-remote
+        run: npm run build
+
+      # Not `npm run build`: that chains through `build:wasm`, which needs a Rust toolchain to
+      # regenerate src/wasm/pactum-validation/ via wasm-pack. This job doesn't set one up, and
+      # that output is already committed and current, so typecheck + bundle directly instead.
+      - name: Typecheck and build host
+        working-directory: frontend
+        run: npx tsc -b && npx vite build
+
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      # playwright.module-federation.config.ts starts the host and both remotes (build + preview,
+      # not dev servers — see the config file's comments) and tears them down afterwards.
+      - name: Run Module Federation e2e tests
+        working-directory: frontend
+        run: npx playwright test --config=playwright.module-federation.config.ts
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report-module-federation
+          path: frontend/playwright-report/
+          retention-days: 7

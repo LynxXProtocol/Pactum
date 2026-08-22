@@ -113,7 +113,10 @@ export async function fetchCommitments(
   if (filters.limit) params.set('limit', filters.limit.toString());
 
   const query = params.toString();
-  const res = await request<Commitment[] | CommitmentsResponse>(`/commitments${query ? `?${query}` : ''}`, { signal });
+  const res = await request<Commitment[] | CommitmentsResponse>(
+    `/commitments${query ? `?${query}` : ''}`,
+    { signal },
+  );
   if (Array.isArray(res)) {
     return res;
   }

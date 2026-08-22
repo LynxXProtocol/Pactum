@@ -80,25 +80,32 @@ export function verifyAttestation(attestation: Attestation, now = Date.now()): b
       attestation.sessionPublicKeyRaw,
       attestation.issuedAt,
       attestation.expiresAt,
-    )
-    const pub = Keypair.fromPublicKey(attestation.address)
+    );
+    const pub = Keypair.fromPublicKey(attestation.address);
     // `verifyMessage` (SEP-53) accepts Uint8Array data and signature at runtime.
     // The typed adapter isolates the BufferSource -> SDK parameter compatibility.
-    const signature = attestation.walletSignature as unknown as Parameters<typeof pub.verifyMessage>[1]
-    return pub.verifyMessage(payload, signature)
+    const signature = attestation.walletSignature as unknown as Parameters<
+      typeof pub.verifyMessage
+    >[1];
+    return pub.verifyMessage(payload, signature);
   } catch {
     return false;
   }
 }
 
 export async function importSessionPublicKey(raw: Uint8Array): Promise<CryptoKey> {
-  return crypto.subtle.importKey('raw', raw as BufferSource, SESSION_KEY_ALGO, false, ['verify'])
+  // WebCrypto's BufferSource type doesn't accept a Uint8Array whose buffer is typed as the
+  // broader ArrayBufferLike (which includes SharedArrayBuffer) — it's the same shape at
+  // runtime, this is purely a TS lib.dom.d.ts type-parameter mismatch.
+  return crypto.subtle.importKey('raw', raw as unknown as BufferSource, SESSION_KEY_ALGO, false, [
+    'verify',
+  ]);
 }
 
 /** Signs one outgoing sync frame with the tab's fast session key. */
 export async function signFrame(privateKey: CryptoKey, bytes: Uint8Array): Promise<Uint8Array> {
-  const sig = await crypto.subtle.sign(SIGN_ALGO, privateKey, bytes as BufferSource)
-  return new Uint8Array(sig)
+  const sig = await crypto.subtle.sign(SIGN_ALGO, privateKey, bytes as BufferSource);
+  return new Uint8Array(sig);
 }
 
 /** Verifies an incoming sync frame against the sender's attested session key. */
@@ -108,7 +115,12 @@ export async function verifyFrame(
   signature: Uint8Array,
 ): Promise<boolean> {
   try {
-    return await crypto.subtle.verify(SIGN_ALGO, publicKey, signature as BufferSource, bytes as BufferSource)
+    return await crypto.subtle.verify(
+      SIGN_ALGO,
+      publicKey,
+      signature as BufferSource,
+      bytes as BufferSource,
+    );
   } catch {
     return false;
   }

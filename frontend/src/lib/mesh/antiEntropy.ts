@@ -1,4 +1,8 @@
-import type { SorobanIndexedEvent, AntiEntropyReqMessage, AntiEntropyRespMessage } from './types.ts';
+import type {
+  SorobanIndexedEvent,
+  AntiEntropyReqMessage,
+  AntiEntropyRespMessage,
+} from './types.ts';
 import { WebRtcMeshTransport } from './webrtcTransport.ts';
 
 export interface AntiEntropyConfig {

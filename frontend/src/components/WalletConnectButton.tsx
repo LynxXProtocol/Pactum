@@ -33,7 +33,7 @@ const variantStyles: Record<'dark' | 'light', React.CSSProperties> = {
     backdropFilter: 'blur(12px)',
     WebkitBackdropFilter: 'blur(12px)',
     border: '1px solid rgba(0, 0, 0, 0.08)',
-    borderRadius: '9999px', /* Pill shape */
+    borderRadius: '9999px' /* Pill shape */,
     padding: '8px 18px',
     fontSize: '13px',
     fontWeight: '500',

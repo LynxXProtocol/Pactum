@@ -22,17 +22,21 @@ export interface StoreState {
   realtimeCommitments: Record<string, RealtimeCommitmentState>;
   // track last processed sequence to deduplicate events
   lastProcessedSequence: number;
-  
+
   applyEvent: (event: ContractEvent) => void;
   getRealtimeCommitment: (id: number | string) => RealtimeCommitmentState | undefined;
 }
 
 const mapOutcomeToStatus = (outcome?: CommitmentOutcomeName): CommitmentStatus | null => {
   switch (outcome) {
-    case 'fulfilled': return 'Fulfilled';
-    case 'late': return 'Late';
-    case 'breached': return 'Breached';
-    default: return null;
+    case 'fulfilled':
+      return 'Fulfilled';
+    case 'late':
+      return 'Late';
+    case 'breached':
+      return 'Breached';
+    default:
+      return null;
   }
 };
 
@@ -62,50 +66,55 @@ function getState(): StoreState {
 state = {
   realtimeCommitments: {},
   lastProcessedSequence: 0,
-  
-  applyEvent: (event) => setState((prev) => {
-    if (event.sequence && event.sequence <= prev.lastProcessedSequence) {
-      // Deduplicate old events or repeat events — signal no change
-      return null;
-    }
-    
-    const commitmentIdStr = event.commitmentId.toString();
-    const current = prev.realtimeCommitments[commitmentIdStr] || {};
-    
-    let nextStatus = current.status;
-    let nextOutcome = current.outcome;
-    
-    switch (event.type) {
-      case 'created':
-        nextStatus = 'Pending';
-        break;
-      case 'attested':
-      case 'resolved':
-        nextStatus = mapOutcomeToStatus(event.outcome) || 'Pending';
-        nextOutcome = nextStatus;
-        break;
-      case 'disputed':
-        nextStatus = 'Disputed';
-        break;
-    }
-    
-    return {
-      realtimeCommitments: {
-        ...prev.realtimeCommitments,
-        [commitmentIdStr]: {
-          ...current,
-          status: nextStatus,
-          outcome: nextOutcome,
-        }
-      },
-      lastProcessedSequence: event.sequence ? Math.max(prev.lastProcessedSequence, event.sequence) : prev.lastProcessedSequence,
-    };
-  }),
+
+  applyEvent: (event) =>
+    setState((prev) => {
+      if (event.sequence && event.sequence <= prev.lastProcessedSequence) {
+        // Deduplicate old events or repeat events — signal no change
+        return null;
+      }
+
+      const commitmentIdStr = event.commitmentId.toString();
+      const current = prev.realtimeCommitments[commitmentIdStr] || {};
+
+      let nextStatus = current.status;
+      let nextOutcome = current.outcome;
+
+      switch (event.type) {
+        case 'created':
+          nextStatus = 'Pending';
+          break;
+        case 'attested':
+        case 'resolved':
+          nextStatus = mapOutcomeToStatus(event.outcome) || 'Pending';
+          nextOutcome = nextStatus;
+          break;
+        case 'disputed':
+          nextStatus = 'Disputed';
+          break;
+      }
+
+      return {
+        realtimeCommitments: {
+          ...prev.realtimeCommitments,
+          [commitmentIdStr]: {
+            ...current,
+            status: nextStatus,
+            outcome: nextOutcome,
+          },
+        },
+        lastProcessedSequence: event.sequence
+          ? Math.max(prev.lastProcessedSequence, event.sequence)
+          : prev.lastProcessedSequence,
+      };
+    }),
 
   getRealtimeCommitment: (id) => state.realtimeCommitments[id.toString()],
 };
 
-export function useStore<T = StoreState>(selector: (s: StoreState) => T = (s) => s as unknown as T): T {
+export function useStore<T = StoreState>(
+  selector: (s: StoreState) => T = (s) => s as unknown as T,
+): T {
   const lastStateRef = useRef(state);
   const lastSelectedRef = useRef<T>(selector(state));
 

@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 
 import './App.css';
 import LandingPage from './components/LandingPage';
 import DocsPage from './components/DocsPage';
-import CreateCommitmentWizard from './components/CreateCommitmentWizard';
-import ReputationDashboard from './components/ReputationDashboard';
+import RemoteErrorBoundary from './components/RemoteErrorBoundary';
 import FreighterInstallModal from './components/FreighterInstallModal';
 import WalletConnectButton from './components/WalletConnectButton';
 import DecryptTermsModal from './components/DecryptTermsModal';
@@ -162,6 +161,15 @@ function InlineWalletError() {
   return errorCode === 'NOT_INSTALLED' ? (
     <FreighterInstallModal error={error} onDismiss={clearError} />
   ) : null;
+}
+
+// Loaded at runtime from independently compiled/deployed remotes over Module Federation, not
+// bundled into the host — see vite.config.ts `remotes` and docs/module-federation.md.
+const CreateCommitmentWizard = lazy(() => import('wizard/CreateCommitmentWizard'));
+const ReputationDashboard = lazy(() => import('dashboard/ReputationDashboard'));
+
+function RemoteFallback({ label }: { label: string }) {
+  return <div className="inline-alert info">Loading {label}…</div>;
 }
 
 export default function App() {
@@ -1023,17 +1031,21 @@ export default function App() {
               </div>
             </div>
 
-            <CreateCommitmentWizard
-              onSubmit={(payload) => console.log('commitment payload', payload)}
-              onSuccess={(result) => {
-                console.log('Transaction successful:', result);
-                if (wallet.address) {
-                  handleNavigateReputation(wallet.address);
-                } else {
-                  setActivePage('reputation');
-                }
-              }}
-            />
+            <RemoteErrorBoundary remoteName="wizard">
+              <Suspense fallback={<RemoteFallback label="Create Commitment wizard" />}>
+                <CreateCommitmentWizard
+                  onSubmit={(payload) => console.log('commitment payload', payload)}
+                  onSuccess={(result) => {
+                    console.log('Transaction successful:', result);
+                    if (wallet.address) {
+                      handleNavigateReputation(wallet.address);
+                    } else {
+                      setActivePage('reputation');
+                    }
+                  }}
+                />
+              </Suspense>
+            </RemoteErrorBoundary>
           </section>
 
           {/* ──────────────────────────────────────────────
@@ -1508,11 +1520,15 @@ export default function App() {
             className={`page ${activePage === 'reputation' ? 'active' : ''}`}
             id="page-reputation"
           >
-            <ReputationDashboard
-              initialAddress={reputationAddress}
-              onNavigateAddress={(addr) => handleNavigateReputation(addr)}
-              onLaunchCreate={() => setActivePage('create')}
-            />
+            <RemoteErrorBoundary remoteName="dashboard">
+              <Suspense fallback={<RemoteFallback label="Reputation Dashboard" />}>
+                <ReputationDashboard
+                  initialAddress={reputationAddress}
+                  onNavigateAddress={(addr) => handleNavigateReputation(addr)}
+                  onLaunchCreate={() => setActivePage('create')}
+                />
+              </Suspense>
+            </RemoteErrorBoundary>
           </section>
 
           {/* ──────────────────────────────────────────────

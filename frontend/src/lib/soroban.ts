@@ -61,8 +61,7 @@ export async function fetchReputationFromRpc(
   address: string,
   rpcUrl = import.meta.env.VITE_SOROBAN_RPC_URL || DEFAULT_SOROBAN_RPC_URL,
   contractId = import.meta.env.VITE_PACTUM_CONTRACT_ID || DEFAULT_CONTRACT_ID,
-  networkPassphrase =
-    import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE || DEFAULT_NETWORK_PASSPHRASE,
+  networkPassphrase = import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE || DEFAULT_NETWORK_PASSPHRASE,
 ): Promise<Reputation> {
   const server = new rpc.Server(rpcUrl, { allowHttp: true });
   const contract = new Contract(contractId);
