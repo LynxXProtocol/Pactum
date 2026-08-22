@@ -11,13 +11,16 @@ import App from './App.tsx';
 import { queryClient } from './lib/queryClient';
 import { WalletProvider } from './context/WalletContext';
 import { ThemeProvider } from './context/ThemeContext';
+import { IndexerModeProvider } from './context/IndexerModeContext';
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <WalletProvider>
         <ThemeProvider>
-          <App />
+          <IndexerModeProvider>
+            <App />
+          </IndexerModeProvider>
         </ThemeProvider>
       </WalletProvider>
     </QueryClientProvider>

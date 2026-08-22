@@ -276,6 +276,35 @@ body {
 .network-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
 .network-sub  { font-size: 11px; color: var(--text-secondary); margin-left: auto; font-weight: 500; }
 
+.indexer-mode-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.indexer-mode-toggle-label select {
+  width: 100%;
+  border: 1px solid var(--separator-opaque);
+  border-radius: var(--radius-md);
+  padding: 8px 10px;
+  background: var(--bg-input);
+  color: var(--text-primary);
+  font: inherit;
+  font-size: 12px;
+}
+.indexer-mode-status {
+  align-self: flex-start;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  color: var(--text-secondary);
+  background: var(--bg-tag);
+}
+.indexer-mode-status--synced { color: #15803d; background: rgba(52, 199, 89, 0.12); }
+.indexer-mode-status--syncing { color: #0369a1; background: rgba(3, 105, 161, 0.1); }
+.indexer-mode-status--error { color: #b91c1c; background: rgba(255, 59, 48, 0.1); }
+
 /* ── Main Content ── */
 .main-content {
   flex: 1;

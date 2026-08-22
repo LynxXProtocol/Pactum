@@ -52,6 +52,16 @@ test.describe('create_commitment against local Soroban sandbox (#8)', () => {
   test('creating a commitment lands on-chain and appears Pending on the dashboard', async ({
     page,
   }) => {
+    // CreateCommitmentWizard's catch block does `console.error('[CreateCommitmentWizard] Soroban
+    // error:', err)` with the raw error *before* decoding it into the generic toast label
+    // (decodeRegistryContractError falls back to "Transaction Failed" for anything that isn't a
+    // recognized `Error(Contract, #N)` code) -- capture it so a real submission/RPC failure here
+    // shows its actual message instead of just "Transaction Failed".
+    const consoleErrors: string[] = [];
+    page.on('console', (msg) => {
+      if (msg.type() === 'error') consoleErrors.push(msg.text());
+    });
+
     // Connect the (mocked, but really-signing) Freighter wallet
     const connectBtn = page.getByRole('button', { name: 'Connect Wallet' }).first();
     await expect(connectBtn).toBeVisible({ timeout: 15_000 });
@@ -86,18 +96,39 @@ test.describe('create_commitment against local Soroban sandbox (#8)', () => {
     await expect(submitBtn).toBeEnabled({ timeout: 10_000 });
     await submitBtn.click();
 
-    // Check if an immediate contract or signing error toast appears
-    const errorToast = page.locator('#toast-container .toast.error');
-    if (await errorToast.isVisible({ timeout: 2000 }).catch(() => false)) {
-      const msg = await errorToast.innerText();
-      throw new Error(`Commitment creation failed with toast error: ${msg}`);
-    }
+    // The real signing + RPC round-trip takes longer than the mocked-route tests, and a real
+    // submission/simulation/confirmation error can surface well after the click (not just in the
+    // first couple of seconds) -- capture the first error toast's text the instant it appears,
+    // for the whole wait, so a real failure here shows up as its actual message instead of a
+    // generic "waited 45s and nothing happened" timeout with no diagnostic value.
+    let toastMessage: string | null = null;
+    const errorToast = page.locator('#toast-container .toast.error').first();
+    const toastWatcher = errorToast
+      .waitFor({ state: 'visible', timeout: 45_000 })
+      .then(async () => {
+        toastMessage = await errorToast.innerText();
+      })
+      .catch(() => {});
 
-    // The real signing + RPC round-trip takes longer than the mocked-route
-    // tests; on success App.tsx's onSuccess handler transitions to the Reputation page.
-    await expect(page.locator('#page-reputation')).toHaveClass(/active/, {
-      timeout: 45_000,
-    });
+    // On success, App.tsx's onSuccess handler transitions to the Reputation page.
+    try {
+      await expect(page.locator('#page-reputation')).toHaveClass(/active/, {
+        timeout: 45_000,
+      });
+    } catch (err) {
+      await toastWatcher;
+      if (toastMessage) {
+        const rawError = consoleErrors.find((line) =>
+          line.includes('[CreateCommitmentWizard] Soroban error:'),
+        );
+        throw new Error(
+          `Commitment creation failed with toast error: ${toastMessage}` +
+            (rawError ? `\nRaw console error: ${rawError}` : ''),
+        );
+      }
+      throw err;
+    }
+    await toastWatcher;
 
     const commitmentId = 1;
 
@@ -110,7 +141,9 @@ test.describe('create_commitment against local Soroban sandbox (#8)', () => {
     await page.locator('#nav-commitments').click();
     await expect(page.locator('#commitments-list-page')).toBeVisible({ timeout: 15_000 });
 
-    const commitmentCard = page.locator('.commitment-item', { hasText: `Commitment #${commitmentId}` });
+    const commitmentCard = page.locator('.commitment-item', {
+      hasText: `Commitment #${commitmentId}`,
+    });
     await expect(commitmentCard).toBeVisible({ timeout: 25_000 });
     await expect(commitmentCard.getByText('Pending')).toBeVisible();
   });
