@@ -120,6 +120,23 @@ export async function fetchCommitments(
   return res?.items ?? [];
 }
 
+// ── Commitment History Export ────────────────────────────────────────────────
+
+/**
+ * Triggers a file download of the commitment history for the given address.
+ * @param address - Stellar public key (G...).
+ * @param format  - 'csv' (default) or 'pdf'.
+ */
+export function exportCommitments(address: string, format: 'csv' | 'pdf' = 'csv'): void {
+  const url = `${API_BASE_URL}/commitments/export/${encodeURIComponent(address)}?format=${format}`;
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `pactum-history-${address.slice(0, 12)}.${format}`;
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+}
+
 // ── Encrypted Terms API ──────────────────────────────────────────────────────
 
 export interface EncryptedTermsPayload {

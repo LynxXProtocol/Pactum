@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import UserProfile from './UserProfile';
-import { fetchCommitments, type CommitmentFilters, type CommitmentStatus, type Reputation } from '../lib/api';
+import { fetchCommitments, type CommitmentFilters, type CommitmentStatus, type Reputation, exportCommitments } from '../lib/api';
 import { fetchVerifiedReputation, type ReputationIntegrity } from '../lib/verifiedReputation';
 import {
   ChevronDown,
@@ -664,6 +664,89 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
           ))}
         </div>
       </div>
+
+      {/* ── Export Buttons ── */}
+      {activeAddress && (
+        <div
+          style={{
+            display: 'flex',
+            gap: '10px',
+            marginBottom: '24px',
+            justifyContent: 'flex-end',
+          }}
+        >
+          <button
+            onClick={() => exportCommitments(activeAddress, 'csv')}
+            title="Download commitment history as CSV"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#f8fafc',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '10px 18px',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#1e293b',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#6366f1';
+              e.currentTarget.style.background = '#eef2ff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#e2e8f0';
+              e.currentTarget.style.background = '#f8fafc';
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+              <polyline points="7 10 12 15 17 10" />
+              <line x1="12" y1="15" x2="12" y2="3" />
+            </svg>
+            Export CSV
+          </button>
+          <button
+            onClick={() => exportCommitments(activeAddress, 'pdf')}
+            title="Download commitment history as PDF"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: '#f8fafc',
+              border: '1.5px solid #e2e8f0',
+              borderRadius: '12px',
+              padding: '10px 18px',
+              fontSize: '13px',
+              fontWeight: '600',
+              color: '#1e293b',
+              cursor: 'pointer',
+              fontFamily: 'inherit',
+              transition: 'all 0.15s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.borderColor = '#6366f1';
+              e.currentTarget.style.background = '#eef2ff';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.borderColor = '#e2e8f0';
+              e.currentTarget.style.background = '#f8fafc';
+            }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366f1" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+              <polyline points="14 2 14 8 20 8" />
+              <line x1="16" y1="13" x2="8" y2="13" />
+              <line x1="16" y1="17" x2="8" y2="17" />
+              <polyline points="10 9 9 9 8 9" />
+            </svg>
+            Export PDF
+          </button>
+        </div>
+      )}
 
       {/* ── Light Pastel Hero Identity Card ── */}
       <div

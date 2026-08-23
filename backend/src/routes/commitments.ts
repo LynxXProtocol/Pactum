@@ -4,6 +4,7 @@ import { z, ZodError } from 'zod';
 import { strictLimiter } from '../middleware/rateLimiter';
 import pool from '../db/timescale';
 import { logger } from '../logger/logger';
+import exportRouter from './export';
 
 // ── Encrypted Payload Schema ──────────────────────────────────────────────────
 // Validates the body of POST /commitments/encrypted.
@@ -84,6 +85,12 @@ const validateCommitment = (req: Request, res: Response, next: NextFunction): vo
     next(error);
   }
 };
+
+// ── Commitment History Export (CSV / PDF) ──────────────────────────────
+// GET /commitments/export/:address?format=csv|pdf
+// Must be mounted BEFORE the GET /:id catch-all below so the `export` path
+// segment is never captured as a commitment id.
+router.use('/export', exportRouter);
 
 // POST /commitments - Create a new commitment
 router.post('/', strictLimiter, validateCommitment, (req: Request, res: Response) => {
