@@ -24,6 +24,8 @@ import {
 import { ThemeSelector } from './context/ThemeContext';
 import { Menu, X, User, Lock } from 'lucide-react';
 import { MeshNetworkMonitor } from './components/MeshNetworkMonitor';
+import LanguageSwitcher from './components/LanguageSwitcher';
+import { useTranslation } from 'react-i18next';
 
 interface CommitmentItemProps {
   commitment: Commitment;
@@ -32,6 +34,7 @@ interface CommitmentItemProps {
 }
 
 function CommitmentItem({ commitment, connectedAddress, provider }: CommitmentItemProps) {
+  const { t } = useTranslation();
   const [showDecryptModal, setShowDecryptModal] = useState(false);
   const [ciphertext, setCiphertext] = useState<string | null>(null);
   const [loadingCiphertext, setLoadingCiphertext] = useState(false);
@@ -67,7 +70,7 @@ function CommitmentItem({ commitment, connectedAddress, provider }: CommitmentIt
             Commitment #{commitment.id}
             {commitment.encrypted && (
               <span
-                title="Terms are end-to-end encrypted"
+                title={t('app.commitment.termsEncrypted')}
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -121,7 +124,7 @@ function CommitmentItem({ commitment, connectedAddress, provider }: CommitmentIt
               }}
             >
               <Lock size={10} />
-              {loadingCiphertext ? 'Loading…' : 'Decrypt Terms'}
+              {loadingCiphertext ? t('app.commitment.loading') : t('app.commitment.decrypt')}
             </button>
           )}
         </div>
@@ -165,6 +168,7 @@ function InlineWalletError() {
 }
 
 export default function App() {
+  const { t } = useTranslation();
   const wallet = useWallet();
   // WebRTC peer sync needs a wallet that can sign an arbitrary message to attest its
   // session key (SEP-53 `signMessage`) — today that's Freighter only, same gating the
@@ -281,13 +285,13 @@ export default function App() {
                   <path d="M10 2L3 6v8l7 4 7-4V6l-7-4zm0 2.2l5 2.8v5.6L10 15.4 5 12.6V7l5-2.8z" />
                 </svg>
               </div>
-              <span className="logo-name">Pactum</span>
+              <span className="logo-name">{t('app.title')}</span>
             </div>
-            <div className="logo-tagline">Commitment Registry · Stellar Testnet</div>
+            <div className="logo-tagline">{t('app.tagline')}</div>
           </div>
 
           <nav className="sidebar-nav">
-            <span className="nav-section-label">Overview</span>
+            <span className="nav-section-label">{t('app.nav.overview')}</span>
 
             <button
               className={`nav-item ${activePage === 'dashboard' ? 'active' : ''}`}
@@ -312,7 +316,7 @@ export default function App() {
                   <rect x="9" y="9" width="6" height="6" rx="1.5" />
                 </svg>
               </span>
-              Dashboard
+              {t('app.nav.dashboard')}
             </button>
 
             <button
@@ -335,18 +339,18 @@ export default function App() {
                   <path d="M2 4h12M2 8h12M2 12h8" />
                 </svg>
               </span>
-              Commitments
+              {t('app.nav.commitments')}
               <span className="nav-badge" id="badge-commitments">
                 4
               </span>
             </button>
 
-            <span className="nav-section-label">Actions</span>
+            <span className="nav-section-label">{t('app.nav.actions')}</span>
 
             <button
               className={`nav-item ${activePage === 'create' ? 'active' : ''}`}
               id="nav-create"
-              aria-label="Create Commitment navigation"
+              aria-label={t('app.nav.create')}
               onClick={() => {
                 setActivePage('create');
                 setIsMobileMenuOpen(false);
@@ -363,7 +367,7 @@ export default function App() {
                   <path d="M8 2v12M2 8h12" />
                 </svg>
               </span>
-              Create Commitment
+              {t('app.nav.create')}
             </button>
 
             <button
@@ -386,7 +390,7 @@ export default function App() {
                   <path d="M2.5 8.5l3.5 3.5 7.5-7.5" />
                 </svg>
               </span>
-              Attest
+              {t('app.nav.attest')}
             </button>
 
             <button
@@ -410,7 +414,7 @@ export default function App() {
                   <path d="M8 6v4M8 11.5v.5" />
                 </svg>
               </span>
-              Raise Dispute
+              {t('app.nav.raiseDispute')}
             </button>
 
             <button
@@ -434,16 +438,16 @@ export default function App() {
                   <path d="M5 8l2 2 4-4" />
                 </svg>
               </span>
-              Resolve Dispute
+              {t('app.nav.resolveDispute')}
             </button>
 
-            <span className="nav-section-label">Lookup & Profile</span>
+            <span className="nav-section-label">{t('app.nav.lookupProfile')}</span>
 
             <button className="nav-item" id="nav-my-profile" onClick={handleMyProfile}>
               <span className="nav-icon">
                 <User size={16} />
               </span>
-              My Profile
+              {t('app.nav.myProfile')}
             </button>
 
             <button
@@ -467,7 +471,7 @@ export default function App() {
                   <path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6" />
                 </svg>
               </span>
-              Reputation Lookup
+              {t('app.nav.reputationLookup')}
             </button>
 
             <button
@@ -490,10 +494,10 @@ export default function App() {
                   <path d="M14 14l-3-3" />
                 </svg>
               </span>
-              Get Commitment
+              {t('app.nav.getCommitment')}
             </button>
 
-            <span className="nav-section-label">System</span>
+            <span className="nav-section-label">{t('app.nav.system')}</span>
 
             <button
               className={`nav-item ${activePage === 'docs' ? 'active' : ''}`}
@@ -516,7 +520,7 @@ export default function App() {
                   <path d="M5 5.5h6M5 8.5h6M5 11.5h4" />
                 </svg>
               </span>
-              Docs
+              {t('app.nav.docs')}
             </button>
 
             <button
@@ -540,7 +544,7 @@ export default function App() {
                   <path d="M2 8h12M8 2a10 10 0 010 12M8 2a10 10 0 000 12" />
                 </svg>
               </span>
-              BFT Mesh Network
+              {t('app.nav.bftMesh')}
             </button>
 
             <button
@@ -564,7 +568,7 @@ export default function App() {
                   <path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.05 3.05l1.42 1.42M11.54 11.54l1.41 1.41M3.05 12.95l1.42-1.42M11.54 4.46l1.41-1.41" />
                 </svg>
               </span>
-              Initialize
+              {t('app.nav.initialize')}
             </button>
           </nav>
 
@@ -594,12 +598,12 @@ export default function App() {
                   <path d="M1 6.5L8 1l7 5.5V14a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V6.5z" />
                 </svg>
               </span>
-              Home
+              {t('app.nav.home')}
             </button>
             <div className="sidebar-network">
               <span className="network-dot"></span>
-              <span className="network-name">Stellar Testnet</span>
-              <span className="network-sub">Live</span>
+              <span className="network-name">{t('app.nav.network')}</span>
+              <span className="network-sub">{t('app.nav.live')}</span>
             </div>
           </div>
         </aside>
@@ -616,7 +620,7 @@ export default function App() {
               <button
                 className="hamburger-btn"
                 onClick={() => setIsMobileMenuOpen((prev: boolean) => !prev)}
-                aria-label="Toggle Navigation Menu"
+                aria-label={t('app.topbar.toggleNav')}
               >
                 {isMobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
               </button>
@@ -624,31 +628,31 @@ export default function App() {
               <button
                 onClick={() => setActivePage('landing')}
                 className="btn btn-secondary btn-sm"
-                title="Back to Landing Page"
+                title={t('app.topbar.backToHome')}
               >
-                ← Home
+                {t('app.topbar.home')}
               </button>
 
               <span className="topbar-title" id="topbar-title" style={{ margin: 0 }}>
                 {activePage === 'reputation'
-                  ? 'Reputation Lookup'
+                  ? t('app.topbar.title.reputation')
                   : activePage === 'commitments'
-                    ? 'Commitments'
+                    ? t('app.topbar.title.commitments')
                     : activePage === 'create'
-                      ? 'Create Commitment'
+                      ? t('app.topbar.title.create')
                       : activePage === 'attest'
-                        ? 'Attest'
+                        ? t('app.topbar.title.attest')
                         : activePage === 'dispute'
-                          ? 'Raise Dispute'
+                          ? t('app.topbar.title.dispute')
                           : activePage === 'resolve'
-                            ? 'Resolve Dispute'
+                            ? t('app.topbar.title.resolve')
                             : activePage === 'lookup'
-                              ? 'Get Commitment'
+                              ? t('app.topbar.title.lookup')
                               : activePage === 'mesh'
-                                ? 'BFT Mesh Network'
+                                ? t('app.topbar.title.mesh')
                                 : activePage === 'initialize'
-                                  ? 'Initialize'
-                                  : 'Dashboard'}
+                                  ? t('app.topbar.title.initialize')
+                                  : t('app.topbar.title.dashboard')}
               </span>
             </div>
             <div
@@ -656,6 +660,7 @@ export default function App() {
               style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
             >
               <ThemeSelector />
+              <LanguageSwitcher />
               <div className="search-bar">
                 <svg
                   viewBox="0 0 16 16"
@@ -667,7 +672,7 @@ export default function App() {
                   <circle cx="6.5" cy="6.5" r="4.5" />
                   <path d="M14 14l-3-3" />
                 </svg>
-                <input type="text" placeholder="Search commitments..." id="global-search" />
+                <input type="text" placeholder={t('app.topbar.searchPlaceholder')} id="global-search" />
               </div>
 
               {/* Topbar Wallet Connect Component */}
@@ -683,7 +688,7 @@ export default function App() {
                 >
                   <path d="M8 2v12M2 8h12" />
                 </svg>
-                <span className="btn-text">New</span>
+                <span className="btn-text">{t('app.topbar.new')}</span>
               </button>
             </div>
           </header>
@@ -703,8 +708,8 @@ export default function App() {
           >
             <div className="section-header">
               <div>
-                <div className="section-title">Overview</div>
-                <div className="section-sub">Your commitment registry at a glance</div>
+                <div className="section-title">{t('app.nav.overview')}</div>
+                <div className="section-sub">{t('reputation.atAGlance')}</div>
               </div>
               <button className="btn btn-secondary btn-sm" onClick={() => {}}>
                 <svg
@@ -724,32 +729,32 @@ export default function App() {
 
             <div className="stats-grid">
               <div className="stat-card">
-                <div className="stat-label">Total Commitments</div>
+                <div className="stat-label">{t('reputation.totalCommitments')}</div>
                 <div className="stat-value" id="stat-total">
                   4
                 </div>
-                <div className="stat-change">On Stellar Testnet</div>
+                <div className="stat-change">{t('docs.deployment.stellar')}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-label">Fulfilled</div>
+                <div className="stat-label">{t('app.commitment.status.fulfilled')}</div>
                 <div className="stat-value green" id="stat-fulfilled">
                   2
                 </div>
-                <div className="stat-change">Kept on time</div>
+                <div className="stat-change">{t('docs.states.fulfilled')}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-label">Pending</div>
+                <div className="stat-label">{t('app.commitment.status.pending')}</div>
                 <div className="stat-value" id="stat-pending" style={{ color: 'var(--gray)' }}>
                   1
                 </div>
-                <div className="stat-change">Awaiting attestation</div>
+                <div className="stat-change">{t('docs.states.pending')}</div>
               </div>
               <div className="stat-card">
-                <div className="stat-label">Breached</div>
+                <div className="stat-label">{t('app.commitment.status.breached')}</div>
                 <div className="stat-value red" id="stat-breached">
                   1
                 </div>
-                <div className="stat-change">Not fulfilled</div>
+                <div className="stat-change">{t('docs.states.breached')}</div>
               </div>
             </div>
 
@@ -757,7 +762,7 @@ export default function App() {
               {/* Recent Commitments */}
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title">Recent Commitments</div>
+                  <div className="card-title">{t('reputation.recentCommitments')}</div>
                   <button className="btn btn-ghost btn-sm" onClick={() => {}}>
                     View All
                   </button>
@@ -1016,9 +1021,9 @@ export default function App() {
           <section className={`page ${activePage === 'create' ? 'active' : ''}`} id="page-create">
             <div className="section-header">
               <div>
-                <div className="section-title">Create Commitment</div>
+                <div className="section-title">{t('app.nav.create')}</div>
                 <div className="section-sub">
-                  Register a new on-chain promise between two parties
+                  {t('docs.sampleCommitments.title')}
                 </div>
               </div>
             </div>
@@ -1042,9 +1047,9 @@ export default function App() {
           <section className={`page ${activePage === 'attest' ? 'active' : ''}`} id="page-attest">
             <div className="section-header">
               <div>
-                <div className="section-title">Attest Commitment</div>
+                <div className="section-title">{t('app.actions.attest')}</div>
                 <div className="section-sub">
-                  Record the outcome of a commitment after its due date
+                  {t('docs.states.pending')}
                 </div>
               </div>
             </div>
@@ -1052,7 +1057,7 @@ export default function App() {
             <div className="two-col">
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title">Attestation</div>
+                  <div className="card-title">{t('app.commitment.status.attested')}</div>
                 </div>
                 <div className="card-body">
                   <div className="inline-alert warning">
@@ -1079,40 +1084,40 @@ export default function App() {
                       type="text"
                       className="form-input"
                       id="attest-caller"
-                      placeholder="G..."
+                      placeholder={t('app.actions.searchPlaceholder')}
                       autoComplete="off"
                       spellCheck="false"
                     />
                     <div className="form-hint">
-                      Must be the issuer or counterparty of this commitment.
+                      {t('app.actions.canOnlyResolve')}
                     </div>
                   </div>
 
                   <div className="form-group">
                     <label className="form-label" htmlFor="attest-id">
-                      Commitment ID
+                      {t('app.actions.commitmentId')}
                     </label>
                     <input
                       type="number"
                       className="form-input"
                       id="attest-id"
-                      placeholder="1"
+                      placeholder={t('app.actions.idPlaceholder')}
                       min="1"
                     />
                   </div>
 
                   <div className="form-group">
                     <label className="form-label" htmlFor="attest-outcome">
-                      Outcome
+                      {t('common.details')}
                     </label>
                     <select className="form-select" id="attest-outcome">
-                      <option value="">Select outcome...</option>
-                      <option value="Fulfilled">Fulfilled — Delivered on time</option>
-                      <option value="Late">Late — Delivered after due date</option>
-                      <option value="Breached">Breached — Not delivered</option>
+                      <option value="">{t('app.commitment.selectOutcome')}</option>
+                      <option value="Fulfilled">{t('app.commitment.fulfilledOnTime')}</option>
+                      <option value="Late">{t('app.commitment.lateAfterDue')}</option>
+                      <option value="Breached">{t('app.commitment.breachedNotDelivered')}</option>
                     </select>
                     <div className="form-hint">
-                      This is permanent and cannot be changed unless disputed.
+                      {t('docs.outcomes.finality')}
                     </div>
                   </div>
 
@@ -1137,7 +1142,7 @@ export default function App() {
                   >
                     {isSubmitting && <div className="spinner"></div>}
                     <span className="btn-text">
-                      {isSubmitting ? 'Submitting...' : 'Submit Attestation'}
+                      {isSubmitting ? t('app.actions.submitToSoroban') : t('app.actions.attest')}
                     </span>
                   </button>
                 </div>
@@ -1146,43 +1151,41 @@ export default function App() {
               {/* Outcome Guide */}
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title">Outcome Guide</div>
+                  <div className="card-title">{t('docs.outcomes.title')}</div>
                 </div>
                 <div className="card-body" style={{ paddingTop: '14px' }}>
                   <div className="detail-panel">
                     <div className="detail-row" style={{ flexDirection: 'column', gap: '6px' }}>
                       <span className="badge fulfilled" style={{ alignSelf: 'flex-start' }}>
-                        <span className="badge-dot"></span>Fulfilled
+                        <span className="badge-dot"></span>{t('app.commitment.status.fulfilled')}
                       </span>
                       <span
                         className="detail-val"
                         style={{ fontSize: '13px', color: 'var(--text-secondary)' }}
                       >
-                        The commitment was completed successfully and on time. Boosts the issuer's
-                        reputation score.
+                        {t('docs.outcomes.fulfilledDesc')}
                       </span>
                     </div>
                     <div className="detail-row" style={{ flexDirection: 'column', gap: '6px' }}>
                       <span className="badge late" style={{ alignSelf: 'flex-start' }}>
-                        <span className="badge-dot"></span>Late
+                        <span className="badge-dot"></span>{t('app.commitment.status.late')}
                       </span>
                       <span
                         className="detail-val"
                         style={{ fontSize: '13px', color: 'var(--text-secondary)' }}
                       >
-                        The commitment was eventually completed, but after the agreed due date.
+                        {t('docs.outcomes.lateDesc')}
                       </span>
                     </div>
                     <div className="detail-row" style={{ flexDirection: 'column', gap: '6px' }}>
                       <span className="badge breached" style={{ alignSelf: 'flex-start' }}>
-                        <span className="badge-dot"></span>Breached
+                        <span className="badge-dot"></span>{t('app.commitment.status.breached')}
                       </span>
                       <span
                         className="detail-val"
                         style={{ fontSize: '13px', color: 'var(--text-secondary)' }}
                       >
-                        The commitment was not fulfilled. Negatively impacts the issuer's reputation
-                        score.
+                        {t('docs.outcomes.breachedDesc')}
                       </span>
                     </div>
                   </div>
@@ -1197,9 +1200,9 @@ export default function App() {
           <section className={`page ${activePage === 'dispute' ? 'active' : ''}`} id="page-dispute">
             <div className="section-header">
               <div>
-                <div className="section-title">Raise Dispute</div>
+                <div className="section-title">{t('app.nav.raiseDispute')}</div>
                 <div className="section-sub">
-                  Contest an attested outcome within the 7-day dispute window
+                  {t('docs.dispute.raised')}
                 </div>
               </div>
             </div>
@@ -1207,7 +1210,7 @@ export default function App() {
             <div className="two-col">
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title">Dispute Details</div>
+                  <div className="card-title">{t('docs.dispute.title')}</div>
                 </div>
                 <div className="card-body">
                   <div className="inline-alert warning">
@@ -1222,13 +1225,12 @@ export default function App() {
                       <path d="M8 2L1 14h14L8 2z" />
                       <path d="M8 6v4M8 11.5v.5" />
                     </svg>
-                    Disputes must be raised within 7 days of the attestation. Once flagged as
-                    Disputed, an arbitrator must resolve it.
+                    {t('docs.dispute.arbitratorReview')}
                   </div>
 
                   <div className="form-group">
                     <label className="form-label" htmlFor="dispute-caller">
-                      Your Address (Caller)
+                      {t('app.actions.issuer')}
                     </label>
                     <input
                       type="text"
@@ -1362,15 +1364,15 @@ export default function App() {
           <section className={`page ${activePage === 'resolve' ? 'active' : ''}`} id="page-resolve">
             <div className="section-header">
               <div>
-                <div className="section-title">Resolve Dispute</div>
-                <div className="section-sub">Arbitrator-only — settle a contested commitment</div>
+                <div className="section-title">{t('app.nav.resolveDispute')}</div>
+                <div className="section-sub">{t('app.actions.arbitratorOnly')}</div>
               </div>
             </div>
 
             <div className="two-col">
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title">Arbitrator Decision</div>
+                  <div className="card-title">{t('docs.dispute.arbitratorSettles')}</div>
                 </div>
                 <div className="card-body">
                   <div className="inline-alert info">
@@ -1385,13 +1387,12 @@ export default function App() {
                       <circle cx="8" cy="8" r="6" />
                       <path d="M8 6v4M8 11.5v.5" />
                     </svg>
-                    Only the designated arbitrator address (set at contract initialization) can call
-                    this function.
+                    {t('app.actions.arbitratorOnly')}
                   </div>
 
                   <div className="form-group">
                     <label className="form-label" htmlFor="resolve-arbitrator">
-                      Arbitrator Address
+                      {t('common.role')}
                     </label>
                     <input
                       type="text"
@@ -1405,26 +1406,26 @@ export default function App() {
 
                   <div className="form-group">
                     <label className="form-label" htmlFor="resolve-id">
-                      Commitment ID
+                      {t('app.actions.commitmentId')}
                     </label>
                     <input
                       type="number"
                       className="form-input"
                       id="resolve-id"
-                      placeholder="1"
+                      placeholder={t('app.actions.idPlaceholder')}
                       min="1"
                     />
                   </div>
 
                   <div className="form-group">
                     <label className="form-label" htmlFor="resolve-outcome">
-                      Final Outcome
+                      {t('docs.outcomes.title')}
                     </label>
                     <select className="form-select" id="resolve-outcome">
-                      <option value="">Select final outcome...</option>
-                      <option value="Fulfilled">Fulfilled</option>
-                      <option value="Late">Late</option>
-                      <option value="Breached">Breached</option>
+                      <option value="">{t('app.commitment.selectFinalOutcome')}</option>
+                      <option value="Fulfilled">{t('app.commitment.fulfilled')}</option>
+                      <option value="Late">{t('app.commitment.late')}</option>
+                      <option value="Breached">{t('app.commitment.breached')}</option>
                     </select>
                   </div>
 
@@ -1449,7 +1450,7 @@ export default function App() {
                   >
                     {isSubmitting && <div className="spinner"></div>}
                     <span className="btn-text">
-                      {isSubmitting ? 'Submitting...' : 'Submit Resolution'}
+                      {isSubmitting ? t('app.actions.submitToSoroban') : 'Submit Resolution'}
                     </span>
                   </button>
                 </div>
@@ -1457,26 +1458,26 @@ export default function App() {
 
               <div className="card">
                 <div className="card-header">
-                  <div className="card-title">Arbitrator Info</div>
+                  <div className="card-title">{t('docs.dispute.title')}</div>
                 </div>
                 <div className="card-body" style={{ paddingTop: '14px' }}>
                   <div className="detail-panel">
                     <div className="detail-row">
-                      <span className="detail-key">Role</span>
-                      <span className="detail-val">Designated Arbitrator</span>
+                      <span className="detail-key">{t('common.role')}</span>
+                      <span className="detail-val">{t('docs.dispute.arbitratorReview')}</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-key">Set At</span>
-                      <span className="detail-val">Contract initialization</span>
+                      <span className="detail-key">{t('common.setAt')}</span>
+                      <span className="detail-val">{t('app.actions.oneTimeSetup')}</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-key">Authority</span>
-                      <span className="detail-val">Can only resolve Disputed commitments</span>
+                      <span className="detail-key">{t('common.authority')}</span>
+                      <span className="detail-val">{t('app.actions.canOnlyResolve')}</span>
                     </div>
                     <div className="detail-row">
-                      <span className="detail-key">Finality</span>
+                      <span className="detail-key">{t('docs.outcomes.finality')}</span>
                       <span className="detail-val">
-                        Resolution is permanent and cannot be overridden
+                        {t('docs.outcomes.finality')}
                       </span>
                     </div>
                   </div>

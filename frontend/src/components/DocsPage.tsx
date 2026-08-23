@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import './DocsPage.css';
 
 interface DocsPageProps {
@@ -8,6 +9,7 @@ interface DocsPageProps {
 const CONTRACT_ID = 'CBADTVTJ6IN332HIKZ7LWUYMYTLPZYCEBV3X2HS47VHR5UDBHQ3GAA7E';
 
 export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
+  const { t } = useTranslation();
   return (
     <div className="docs-shell">
       {/* ── Sidebar ── */}
@@ -31,62 +33,62 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                 <path d="M10 2L3 6v8l7 4 7-4V6l-7-4zm0 2.2l5 2.8v5.6L10 15.4 5 12.6V7l5-2.8z" />
               </svg>
             </div>
-            <span>Pactum Docs</span>
+            <span>{t('docs.title')}</span>
           </div>
         </div>
         <nav className="docs-nav">
           <div className="docs-nav-group">
-            <div className="docs-nav-label">Overview</div>
+            <div className="docs-nav-label">{t('common.overview')}</div>
             <a href="#intro" className="docs-nav-link">
-              Introduction
+              {t('docs.introduction')}
             </a>
             <a href="#architecture" className="docs-nav-link">
-              Architecture
+              {t('docs.architecture')}
             </a>
             <a href="#lifecycle" className="docs-nav-link">
-              Commitment Lifecycle
+              {t('docs.lifecycleOverview')}
             </a>
           </div>
           <div className="docs-nav-group">
-            <div className="docs-nav-label">Contract</div>
+            <div className="docs-nav-label">{t('common.contract')}</div>
             <a href="#contract-interface" className="docs-nav-link">
-              Interface
+              {t('docs.contract.interface')}
             </a>
             <a href="#contract-deployment" className="docs-nav-link">
-              Deployment
+              {t('docs.deployment.title')}
             </a>
             <a href="#dispute" className="docs-nav-link">
-              Dispute & Arbitration
+              {t('docs.dispute.title')}
             </a>
             <a href="#reputation" className="docs-nav-link">
-              Reputation Scoring
+              {t('docs.reputation.title')}
             </a>
           </div>
           <div className="docs-nav-group">
-            <div className="docs-nav-label">Integration</div>
+            <div className="docs-nav-label">{t('common.integration')}</div>
             <a href="#api" className="docs-nav-link">
-              REST API
+              {t('docs.api.title')}
             </a>
             <a href="#sdk" className="docs-nav-link">
-              JS/TS SDK
+              {t('docs.sdk.title')}
             </a>
             <a href="#localdev" className="docs-nav-link">
-              Local Dev Setup
+              {t('docs.deployment.localDev')}
             </a>
           </div>
           <div className="docs-nav-group">
-            <div className="docs-nav-label">Contributing</div>
+            <div className="docs-nav-label">{t('common.contribute')}</div>
             <a href="#roadmap" className="docs-nav-link">
-              Roadmap
+              {t('docs.roadmap.title')}
             </a>
             <a href="#contributing" className="docs-nav-link">
-              How to Contribute
+              {t('docs.deployment.howToContribute')}
             </a>
           </div>
         </nav>
         <div className="docs-sidebar-footer">
           <button className="docs-launch-btn" onClick={onLaunchApp}>
-            Open Dashboard →
+            {t('landing.nav.launchApp')} →
           </button>
         </div>
       </aside>
@@ -96,8 +98,8 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
         <div className="docs-page">
           {/* ── Introduction ── */}
           <section id="intro" className="docs-section">
-            <div className="docs-eyebrow">Overview</div>
-            <h1 className="docs-h1">Introduction to Pactum</h1>
+            <div className="docs-eyebrow">{t('common.overview')}</div>
+            <h1 className="docs-h1">{t('docs.introduction')}</h1>
             <p className="docs-lead">
               Pactum is an on-chain commitment registry built on Soroban, Stellar's smart contract
               platform. It records real-world promises between two parties and builds a public,
@@ -110,7 +112,7 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                 tamper-proof record of who promised what to whom, and what happened.
               </div>
             </div>
-            <h2 className="docs-h2">What problem does it solve?</h2>
+            <h2 className="docs-h2">{t('docs.whatProblem')}</h2>
             <p>Many real-world commitments aren't one-time payments. They're recurring promises:</p>
             <ul className="docs-list">
               <li>A landlord promising to return a deposit within 30 days</li>
@@ -128,42 +130,40 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
 
           {/* ── Architecture ── */}
           <section id="architecture" className="docs-section">
-            <div className="docs-eyebrow">Overview</div>
-            <h2 className="docs-h1">Architecture</h2>
-            <p>Pactum is composed of four layers:</p>
+            <div className="docs-eyebrow">{t('common.overview')}</div>
+            <h2 className="docs-h1">{t('docs.architecture')}</h2>
+            <p>{t('docs.architectureDesc')}</p>
 
             <div className="docs-arch-diagram">
               <div className="docs-arch-layer">
-                <div className="docs-arch-name">Registry Contract</div>
-                <div className="docs-arch-tech">Rust + Soroban</div>
+                <div className="docs-arch-name">{t('docs.arch.registry')}</div>
+                <div className="docs-arch-tech">{t('docs.deployment.soroban')}</div>
                 <div className="docs-arch-desc">
-                  On-chain source of truth. Handles create, attest, dispute, resolve. Emits events
-                  for every state change.
+                  {t('docs.arch.registryDesc')}
                 </div>
               </div>
               <div className="docs-arch-arrow">↓</div>
               <div className="docs-arch-layer">
-                <div className="docs-arch-name">Event Indexer</div>
-                <div className="docs-arch-tech">Node.js + Soroban RPC</div>
+                <div className="docs-arch-name">{t('docs.arch.indexer')}</div>
+                <div className="docs-arch-tech">{t('docs.deployment.node')}</div>
                 <div className="docs-arch-desc">
-                  Listens to Soroban events. Aggregates per-address commitment history into
-                  PostgreSQL.
+                  {t('docs.arch.indexerDesc')}
                 </div>
               </div>
               <div className="docs-arch-arrow">↓</div>
               <div className="docs-arch-layer">
-                <div className="docs-arch-name">REST API</div>
-                <div className="docs-arch-tech">Express + TypeScript</div>
+                <div className="docs-arch-name">{t('docs.arch.restApi')}</div>
+                <div className="docs-arch-tech">{t('docs.deployment.backend')}</div>
                 <div className="docs-arch-desc">
-                  GET /reputation/:address · GET /commitments/:id. Queryable by any platform.
+                  {t('docs.arch.restApiDesc')}
                 </div>
               </div>
               <div className="docs-arch-arrow">↓</div>
               <div className="docs-arch-layer">
-                <div className="docs-arch-name">Dashboard + SDK</div>
-                <div className="docs-arch-tech">React · @pactum/sdk</div>
+                <div className="docs-arch-name">{t('docs.arch.dashboard')}</div>
+                <div className="docs-arch-tech">{t('docs.sdk.title')}</div>
                 <div className="docs-arch-desc">
-                  Visual interface for creating and managing commitments. SDK for dApp integration.
+                  {t('docs.arch.dashboardDesc')}
                 </div>
               </div>
             </div>
@@ -182,45 +182,45 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
 
           {/* ── Lifecycle ── */}
           <section id="lifecycle" className="docs-section">
-            <div className="docs-eyebrow">Overview</div>
-            <h2 className="docs-h1">Commitment Lifecycle</h2>
-            <p>Every commitment moves through a defined set of states:</p>
+            <div className="docs-eyebrow">{t('common.overview')}</div>
+            <h2 className="docs-h1">{t('docs.lifecycleOverview')}</h2>
+            <p>{t('docs.lifecycleDesc')}</p>
 
             <div className="docs-lifecycle">
               <div className="docs-lifecycle-step">
                 <div className="docs-lifecycle-badge docs-badge-neutral">Pending</div>
-                <div className="docs-lifecycle-label">Created — awaiting due date</div>
+                <div className="docs-lifecycle-label">{t('docs.states.pending')}</div>
               </div>
               <div className="docs-lifecycle-arrow">→</div>
               <div className="docs-lifecycle-step">
                 <div className="docs-lifecycle-badge docs-badge-blue">Attested</div>
-                <div className="docs-lifecycle-label">Outcome submitted by party</div>
+                <div className="docs-lifecycle-label">{t('docs.states.attestedDesc')}</div>
               </div>
               <div className="docs-lifecycle-arrow">→</div>
               <div className="docs-lifecycle-step">
                 <div className="docs-lifecycle-badge docs-badge-orange">Disputed</div>
-                <div className="docs-lifecycle-label">Contested within 7 days</div>
+                <div className="docs-lifecycle-label">{t('docs.states.disputedDesc')}</div>
               </div>
               <div className="docs-lifecycle-arrow">→</div>
               <div className="docs-lifecycle-step">
                 <div className="docs-lifecycle-badge docs-badge-green">Resolved</div>
-                <div className="docs-lifecycle-label">Final outcome recorded</div>
+                <div className="docs-lifecycle-label">{t('docs.states.resolvedDesc')}</div>
               </div>
             </div>
 
-            <p>Possible final outcomes:</p>
+            <p>{t('docs.outcomes.possible')}</p>
             <div className="docs-outcomes">
               <div className="docs-outcome">
-                <span className="docs-badge docs-badge-green">Fulfilled</span>
-                <span>Delivered on time. Boosts reputation score.</span>
+                <span className="docs-badge docs-badge-green">{t('app.commitment.status.fulfilled')}</span>
+                <span>{t('docs.outcomes.fulfilledDesc')}</span>
               </div>
               <div className="docs-outcome">
-                <span className="docs-badge docs-badge-orange">Late</span>
-                <span>Delivered after due date. Neutral reputation impact.</span>
+                <span className="docs-badge docs-badge-orange">{t('app.commitment.status.late')}</span>
+                <span>{t('docs.outcomes.lateDesc')}</span>
               </div>
               <div className="docs-outcome">
-                <span className="docs-badge docs-badge-red">Breached</span>
-                <span>Not delivered. Negatively impacts reputation score.</span>
+                <span className="docs-badge docs-badge-red">{t('app.commitment.status.breached')}</span>
+                <span>{t('docs.outcomes.breachedDesc')}</span>
               </div>
             </div>
           </section>
@@ -229,17 +229,17 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
 
           {/* ── Contract Interface ── */}
           <section id="contract-interface" className="docs-section">
-            <div className="docs-eyebrow">Contract</div>
-            <h2 className="docs-h1">Contract Interface</h2>
-            <p>The Soroban registry contract exposes six public methods:</p>
+            <div className="docs-eyebrow">{t('common.contract')}</div>
+            <h2 className="docs-h1">{t('docs.contract.title')}</h2>
+            <p>{t('docs.contract.description')}</p>
 
             <div className="docs-table-wrap">
               <table className="docs-table">
                 <thead>
                   <tr>
-                    <th>Method</th>
-                    <th>Kind</th>
-                    <th>Description</th>
+                    <th>{t('common.method')}</th>
+                    <th>{t('common.kind')}</th>
+                    <th>{t('common.description')}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -250,7 +250,7 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                     <td>
                       <span className="docs-badge docs-badge-blue">write</span>
                     </td>
-                    <td>Register a new commitment between two addresses</td>
+                    <td>{t('docs.contract.registerDesc')}</td>
                   </tr>
                   <tr>
                     <td>
@@ -259,7 +259,7 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                     <td>
                       <span className="docs-badge docs-badge-blue">write</span>
                     </td>
-                    <td>Mark a commitment fulfilled, late, or breached</td>
+                    <td>{t('docs.contract.attestDesc')}</td>
                   </tr>
                   <tr>
                     <td>
@@ -268,7 +268,7 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                     <td>
                       <span className="docs-badge docs-badge-blue">write</span>
                     </td>
-                    <td>Flag a commitment as contested rather than resolved</td>
+                    <td>{t('docs.contract.disputeDesc')}</td>
                   </tr>
                   <tr>
                     <td>
@@ -277,7 +277,7 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                     <td>
                       <span className="docs-badge docs-badge-blue">write</span>
                     </td>
-                    <td>Designated arbitrator settles a disputed commitment</td>
+                    <td>{t('docs.contract.resolveDesc')}</td>
                   </tr>
                   <tr>
                     <td>
@@ -286,7 +286,7 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                     <td>
                       <span className="docs-badge docs-badge-neutral">read</span>
                     </td>
-                    <td>Fetch a single commitment's details and status</td>
+                    <td>{t('docs.contract.getCommitmentDesc')}</td>
                   </tr>
                   <tr>
                     <td>
@@ -295,7 +295,7 @@ export default function DocsPage({ onBack, onLaunchApp }: DocsPageProps) {
                     <td>
                       <span className="docs-badge docs-badge-neutral">read</span>
                     </td>
-                    <td>Aggregate fulfilled / late / breached counts for an address</td>
+                    <td>{t('docs.contract.getReputationDesc')}</td>
                   </tr>
                 </tbody>
               </table>
@@ -314,20 +314,20 @@ pub enum Outcome {
 
           {/* ── Deployment ── */}
           <section id="contract-deployment" className="docs-section">
-            <div className="docs-eyebrow">Contract</div>
-            <h2 className="docs-h1">Deployment</h2>
+            <div className="docs-eyebrow">{t('common.contract')}</div>
+            <h2 className="docs-h1">{t('docs.deployment.title')}</h2>
             <div className="docs-table-wrap">
               <table className="docs-table">
                 <thead>
                   <tr>
-                    <th>Network</th>
-                    <th>Contract ID</th>
-                    <th>Explorer</th>
+                    <th>{t('common.network')}</th>
+                    <th>{t('common.contractId')}</th>
+                    <th>{t('landing.nav.explorer')}</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td>Stellar Testnet</td>
+                    <td>{t('app.nav.network')}</td>
                     <td>
                       <code className="docs-code-inline">{CONTRACT_ID}</code>
                     </td>
@@ -338,7 +338,7 @@ pub enum Outcome {
                         rel="noopener noreferrer"
                         className="docs-link"
                       >
-                        Stellar Expert ↗
+                        {t('docs.stellarExpert')} ↗
                       </a>
                     </td>
                   </tr>
@@ -381,24 +381,17 @@ pub enum Outcome {
 
           {/* ── Dispute ── */}
           <section id="dispute" className="docs-section">
-            <div className="docs-eyebrow">Contract</div>
-            <h2 className="docs-h1">Dispute & Arbitration</h2>
-            <p>
-              When the issuer and counterparty disagree on an outcome, either party may call{' '}
-              <code>dispute()</code> within 7 days of attestation. The commitment moves to{' '}
-              <strong>Disputed</strong> status.
-            </p>
+            <div className="docs-eyebrow">{t('common.contract')}</div>
+            <h2 className="docs-h1">{t('docs.dispute.title')}</h2>
+            <p>{t('docs.dispute.description')}</p>
             <div className="docs-callout docs-callout-warning">
               <div className="docs-callout-icon">⚠</div>
               <div>
-                Disputes must be raised within <strong>7 days</strong> of the attestation timestamp.
-                After this window closes, the attested outcome is final.
+                {t('docs.disputeWarning')}
               </div>
             </div>
             <p>
-              The designated arbitrator (set at contract initialization) calls{' '}
-              <code>resolve_dispute()</code> to record the final outcome. This outcome — not the
-              original attestation — is what gets applied to the reputation score.
+              {t('docs.arbitratorSettles')}
             </p>
             <h2 className="docs-h2">Edge case: overturned disputes</h2>
             <p>
@@ -412,12 +405,9 @@ pub enum Outcome {
 
           {/* ── Reputation ── */}
           <section id="reputation" className="docs-section">
-            <div className="docs-eyebrow">Contract</div>
-            <h2 className="docs-h1">Reputation Scoring</h2>
-            <p>
-              Every resolved commitment contributes to the issuer's reputation record. The score is
-              a simple aggregate:
-            </p>
+            <div className="docs-eyebrow">{t('common.contract')}</div>
+            <h2 className="docs-h1">{t('docs.reputation.title')}</h2>
+            <p>{t('docs.reputation.description')}</p>
             <pre className="docs-code">{`{
   "address": "GCJUKU...",
   "fulfilled": 14,
@@ -435,9 +425,9 @@ pub enum Outcome {
 
           {/* ── REST API ── */}
           <section id="api" className="docs-section">
-            <div className="docs-eyebrow">Integration</div>
-            <h2 className="docs-h1">REST API</h2>
-            <p>The backend indexer exposes a REST API over the indexed commitment data:</p>
+            <div className="docs-eyebrow">{t('common.integration')}</div>
+            <h2 className="docs-h1">{t('docs.api.title')}</h2>
+            <p>{t('docs.backend.description')}</p>
 
             <div className="docs-endpoint">
               <div className="docs-endpoint-header">
@@ -484,8 +474,8 @@ GET /commitments/4
 
           {/* ── SDK ── */}
           <section id="sdk" className="docs-section">
-            <div className="docs-eyebrow">Integration</div>
-            <h2 className="docs-h1">JS/TS SDK</h2>
+            <div className="docs-eyebrow">{t('common.integration')}</div>
+            <h2 className="docs-h1">{t('docs.sdk.title')}</h2>
             <div className="docs-callout docs-callout-info">
               <div className="docs-callout-icon">ℹ</div>
               <div>
@@ -518,12 +508,9 @@ const id = await client.createCommitment({
 
           {/* ── Local Dev ── */}
           <section id="localdev" className="docs-section">
-            <div className="docs-eyebrow">Integration</div>
-            <h2 className="docs-h1">Local Dev Setup</h2>
-            <p>
-              <strong>Prerequisites:</strong> Rust + Cargo, <code>soroban-cli</code>, Node.js 18+,
-              PostgreSQL
-            </p>
+            <div className="docs-eyebrow">{t('common.integration')}</div>
+            <h2 className="docs-h1">{t('docs.deployment.localDev')}</h2>
+            <p>{t('docs.deployment.prerequisites')}</p>
             <pre className="docs-code">{`# 1. Clone
 git clone https://github.com/amankoli09/Pactum.git
 cd Pactum
@@ -548,8 +535,8 @@ npm run dev`}</pre>
 
           {/* ── Roadmap ── */}
           <section id="roadmap" className="docs-section">
-            <div className="docs-eyebrow">Contributing</div>
-            <h2 className="docs-h1">Roadmap</h2>
+            <div className="docs-eyebrow">{t('common.contribute')}</div>
+            <h2 className="docs-h1">{t('docs.roadmap.title')}</h2>
             <div className="docs-roadmap">
               {[
                 {
@@ -620,7 +607,7 @@ npm run dev`}</pre>
 
             <div className="docs-cta-bar">
               <button className="docs-cta-btn" onClick={onLaunchApp}>
-                Open Dashboard →
+                {t('landing.nav.launchApp')} →
               </button>
               <a
                 href="https://github.com/amankoli09/Pactum"
@@ -628,7 +615,7 @@ npm run dev`}</pre>
                 rel="noopener noreferrer"
                 className="docs-cta-link"
               >
-                View on GitHub ↗
+                {t('docs.viewOnGitHub')} ↗
               </a>
             </div>
           </section>

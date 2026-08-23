@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { resolveIdentity, truncateAddress, type StellarIdentity } from '../lib/identity';
 import { Copy, Check } from 'lucide-react';
 
@@ -19,6 +20,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   className,
   avatarSize = 28,
 }) => {
+  const { t } = useTranslation();
   const [identity, setIdentity] = useState<StellarIdentity | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [copied, setCopied] = useState(false);
@@ -60,7 +62,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
   return (
     <div
       className={className}
-      title={`Full Stellar Address: ${address}`}
+      title={t('wallet.fullAddress', { address })}
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -150,7 +152,7 @@ export const UserProfile: React.FC<UserProfileProps> = ({
             justifyContent: 'center',
             transition: 'color 0.15s ease',
           }}
-          title={copied ? 'Copied address!' : 'Copy full address'}
+          title={copied ? t('wallet.copied') : t('wallet.copyAddress')}
         >
           {copied ? <Check size={13} color="#16a34a" /> : <Copy size={13} />}
         </button>

@@ -1,4 +1,5 @@
 import { useState, type FC, type ErrorInfo } from "react"
+import { useTranslation } from "react-i18next"
 import { AlertTriangle, RotateCcw, Home, ChevronDown, ChevronUp, Copy, Check } from "lucide-react"
 
 export interface ErrorFallbackProps {
@@ -12,6 +13,7 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
   errorInfo,
   resetErrorBoundary,
 }) => {
+  const { t } = useTranslation()
   const [showDetails, setShowDetails] = useState(false)
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle")
 
@@ -80,17 +82,17 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
             <AlertTriangle className="w-8 h-8" />
           </div>
           <h1 className="text-2xl font-bold tracking-tight text-foreground">
-            Something went wrong
+            {t('error.title')}
           </h1>
           <p className="text-sm text-muted-foreground max-w-sm">
-            An unexpected error occurred in the application. You can reload the app or try again.
+            {t('error.description')}
           </p>
         </div>
 
         {error && (
           <div className="p-3.5 rounded-lg bg-muted/60 border border-border/60 text-xs font-mono text-muted-foreground break-words">
-            <span className="font-semibold text-destructive">{error.name || "Error"}: </span>
-            {error.message || "An unexpected error occurred"}
+            <span className="font-semibold text-destructive">{error.name || t('error.title')}: </span>
+            {error.message || t('error.description')}
           </div>
         )}
 
@@ -101,7 +103,7 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
             className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity focus:outline-none focus:ring-2 focus:ring-ring"
           >
             <RotateCcw className="w-4 h-4" />
-            Reload App
+            {t('common.reload')}
           </button>
 
           {resetErrorBoundary && (
@@ -110,7 +112,7 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
               onClick={resetErrorBoundary}
               className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg bg-secondary text-secondary-foreground font-medium text-sm hover:bg-secondary/80 border border-border transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
             >
-              Try Again
+              {t('error.retry')}
             </button>
           )}
 
@@ -118,7 +120,7 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
             type="button"
             onClick={handleGoHome}
             className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-lg bg-muted text-muted-foreground font-medium text-sm hover:bg-muted/80 border border-border transition-colors focus:outline-none focus:ring-2 focus:ring-ring"
-            title="Go to Home"
+            title={t('error.goHome')}
           >
             <Home className="w-4 h-4" />
           </button>
@@ -131,7 +133,7 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
               onClick={() => setShowDetails(!showDetails)}
               className="w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
             >
-              <span>{showDetails ? "Hide technical details" : "Show technical details"}</span>
+              <span>{showDetails ? t('error.hideDetails') : t('error.showDetails')}</span>
               {showDetails ? (
                 <ChevronUp className="w-4 h-4 ml-1" />
               ) : (
@@ -142,7 +144,7 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
             {showDetails && (
               <div className="mt-3 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs text-muted-foreground font-medium">Stack Trace</span>
+                  <span className="text-xs text-muted-foreground font-medium">{t('error.stackTrace')}</span>
                   <button
                     type="button"
                     onClick={handleCopyError}
@@ -151,17 +153,17 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
                     {copyStatus === "copied" ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-500" />
-                        <span className="text-emerald-500">Copied</span>
+                        <span className="text-emerald-500">{t('error.copied')}</span>
                       </>
                     ) : copyStatus === "failed" ? (
                       <>
                         <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
-                        <span className="text-destructive">Copy failed</span>
+                        <span className="text-destructive">{t('error.copyFailed')}</span>
                       </>
                     ) : (
                       <>
                         <Copy className="w-3.5 h-3.5" />
-                        <span>Copy trace</span>
+                        <span>{t('error.copyTrace')}</span>
                       </>
                     )}
                   </button>

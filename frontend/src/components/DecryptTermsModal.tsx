@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Lock, Unlock, ShieldCheck, Loader2, X, AlertTriangle, Eye } from 'lucide-react';
 import { decryptCommitmentTerms } from '../lib/crypto';
 
@@ -26,6 +27,7 @@ export default function DecryptTermsModal({
   isFreighter,
   onClose,
 }: DecryptTermsModalProps) {
+  const { t } = useTranslation();
   const [state, setState] = useState<DecryptState>('idle');
   const [decryptedText, setDecryptedText] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -122,7 +124,7 @@ export default function DecryptTermsModal({
             type="button"
             onClick={onClose}
             disabled={state === 'signing' || state === 'decrypting'}
-            aria-label="Close decrypt modal"
+            aria-label={t('wallet.closeDecrypt')}
             style={{
               position: 'absolute',
               top: '16px',
@@ -166,12 +168,12 @@ export default function DecryptTermsModal({
             id="decrypt-modal-title"
             style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#ffffff' }}
           >
-            {state === 'revealed' ? 'Terms Decrypted' : 'Encrypted Commitment Terms'}
+            {state === 'revealed' ? t('decrypt.decrypted') : t('decrypt.title')}
           </h2>
           <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>
             {state === 'revealed'
-              ? 'Decrypted locally in your browser — the server never saw plaintext.'
-              : `Commitment #${commitmentId} — sign with Freighter to decrypt locally.`}
+              ? t('wizard.encryption.decryptedLocally')
+              : t('decrypt.signPrompt', { id: commitmentId })}
           </p>
         </div>
 
@@ -195,11 +197,11 @@ export default function DecryptTermsModal({
               <AlertTriangle size={18} color="#dc2626" style={{ flexShrink: 0, marginTop: '1px' }} />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#991b1b' }}>
-                  Access Denied
+                  {t('decrypt.accessDenied')}
                 </div>
                 <div style={{ fontSize: '12px', color: '#7f1d1d', marginTop: '4px' }}>
-                  Your connected wallet ({truncate(viewerAddress)}) is not a party to this
-                  commitment. Only the issuer or counterparty can decrypt the terms.
+                  {t('decrypt.notParty', { address: truncate(viewerAddress) })}
+                </div>
                 </div>
               </div>
             </div>
@@ -222,11 +224,11 @@ export default function DecryptTermsModal({
               <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: '1px' }} />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#92400e' }}>
-                  Freighter Required
+                  {t('decrypt.freighterRequired')}
                 </div>
                 <div style={{ fontSize: '12px', color: '#78350f', marginTop: '4px' }}>
-                  Decryption requires Freighter's message signing API. Please reconnect with
-                  Freighter to view the terms.
+                  {t('decrypt.needsFreighter')}
+                </div>
                 </div>
               </div>
             </div>
@@ -249,15 +251,15 @@ export default function DecryptTermsModal({
               }}
             >
               <div>
-                <span style={{ fontWeight: '600', color: '#334155' }}>Issuer: </span>
+                <span style={{ fontWeight: '600', color: '#334155' }}>{t('decrypt.issuer')} </span>
                 <span style={{ fontFamily: 'monospace' }}>{truncate(issuerAddress)}</span>
               </div>
               <div>
-                <span style={{ fontWeight: '600', color: '#334155' }}>Counterparty: </span>
+                <span style={{ fontWeight: '600', color: '#334155' }}>{t('decrypt.counterparty')} </span>
                 <span style={{ fontFamily: 'monospace' }}>{truncate(counterpartyAddress)}</span>
               </div>
               <div>
-                <span style={{ fontWeight: '600', color: '#334155' }}>Your wallet: </span>
+                <span style={{ fontWeight: '600', color: '#334155' }}>{t('decrypt.yourWallet')} </span>
                 <span style={{ fontFamily: 'monospace' }}>{truncate(viewerAddress)}</span>
                 <span
                   style={{
@@ -270,7 +272,7 @@ export default function DecryptTermsModal({
                     borderRadius: '100px',
                   }}
                 >
-                  ✓ authorized
+                  {t('decrypt.authorized')}
                 </span>
               </div>
             </div>
@@ -294,8 +296,7 @@ export default function DecryptTermsModal({
             >
               <ShieldCheck size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
               <span>
-                Freighter will sign a non-transaction message to re-derive the shared encryption key.
-                No XLM is spent. Decryption happens entirely in your browser.
+                {t('decrypt.howItWorks')}
               </span>
             </div>
           )}
@@ -365,7 +366,7 @@ export default function DecryptTermsModal({
                 }}
               >
                 <Eye size={13} />
-                Decrypted Terms
+                {t('decrypt.decryptedTerms')}
               </div>
               <p
                 id="decrypted-terms-text"
@@ -402,7 +403,7 @@ export default function DecryptTermsModal({
                   cursor: 'pointer',
                 }}
               >
-                Close
+                {t('decrypt.close')}
               </button>
             ) : (
               <>
@@ -424,7 +425,7 @@ export default function DecryptTermsModal({
                     opacity: state === 'signing' || state === 'decrypting' ? 0.5 : 1,
                   }}
                 >
-                  Cancel
+                  {t('decrypt.cancel')}
                 </button>
 
                 {isParty && isFreighter && (
@@ -457,14 +458,14 @@ export default function DecryptTermsModal({
                     {state === 'signing' || state === 'decrypting' ? (
                       <>
                         <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />
-                        {state === 'signing' ? 'Waiting for signature…' : 'Decrypting…'}
+                        {state === 'signing' ? t('decrypt.waitingSignature') : t('decrypt.decrypting')}
                       </>
                     ) : state === 'error' ? (
-                      <>Retry Decryption</>
+                      <>{t('decrypt.retryDecrypt')}</>
                     ) : (
                       <>
                         <Unlock size={14} />
-                        Sign to Decrypt
+                        {t('decrypt.signToDecrypt')}
                       </>
                     )}
                   </button>

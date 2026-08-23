@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Lock, ShieldCheck, KeyRound, AlertTriangle, Loader2, X } from 'lucide-react';
 
 export type EncryptionConsentState = 'idle' | 'signing' | 'encrypting' | 'done' | 'error';
@@ -21,6 +22,7 @@ export default function EncryptionConsentModal({
   counterpartyAddress,
   isFreighter,
 }: EncryptionConsentModalProps) {
+  const { t } = useTranslation();
   const [state, setState] = useState<EncryptionConsentState>('idle');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -85,7 +87,7 @@ export default function EncryptionConsentModal({
             type="button"
             onClick={onCancel}
             disabled={state === 'signing' || state === 'encrypting'}
-            aria-label="Cancel encryption"
+            aria-label={t('wallet.cancelEncryption')}
             style={{
               position: 'absolute',
               top: '16px',
@@ -125,10 +127,10 @@ export default function EncryptionConsentModal({
             id="encrypt-modal-title"
             style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#ffffff' }}
           >
-            Encrypt Commitment Terms
+            {t('encryption.title')}
           </h2>
           <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'rgba(255,255,255,0.75)' }}>
-            End-to-end encrypted — only you and the counterparty can read the terms.
+            {t('encryption.description')}
           </p>
         </div>
 
@@ -150,11 +152,11 @@ export default function EncryptionConsentModal({
               <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: '1px' }} />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#92400e' }}>
-                  Freighter Required for Encryption
+                  {t('encryption.freighterRequired')}
                 </div>
                 <div style={{ fontSize: '12px', color: '#78350f', marginTop: '4px' }}>
-                  Albedo does not currently support the raw message signing API needed for
-                  key derivation. Please switch to Freighter to use encrypted commitments.
+                  {t('encryption.albedoWarning')}
+                </div>
                 </div>
               </div>
             </div>
@@ -165,18 +167,18 @@ export default function EncryptionConsentModal({
                 {[
                   {
                     icon: <KeyRound size={15} color="#6366f1" />,
-                    title: 'Wallet signature → encryption key',
-                    desc: 'Freighter will sign a non-transaction message to deterministically derive an AES-256 key. No XLM is spent.',
+                    title: t('encryption.step1Title'),
+                    desc: t('encryption.step1Desc'),
                   },
                   {
                     icon: <Lock size={15} color="#6366f1" />,
-                    title: 'Encrypted locally in your browser',
-                    desc: 'The terms are encrypted before leaving your device. The backend stores only an opaque blob — never plaintext.',
+                    title: t('encryption.step2Title'),
+                    desc: t('encryption.step2Desc'),
                   },
                   {
                     icon: <ShieldCheck size={15} color="#6366f1" />,
-                    title: 'Counterparty decrypts with their key',
-                    desc: `Only ${truncate(counterpartyAddress)} can decrypt — they derive the same key from their Freighter wallet.`,
+                    title: t('encryption.step3Title'),
+                    desc: t('encryption.step3Desc', { address: truncate(counterpartyAddress) }),
                   },
                 ].map(({ icon, title, desc }) => (
                   <div
@@ -231,11 +233,11 @@ export default function EncryptionConsentModal({
                 }}
               >
                 <div>
-                  <span style={{ fontWeight: '600', color: '#334155' }}>Issuer (you): </span>
+                  <span style={{ fontWeight: '600', color: '#334155' }}>{t('app.actions.issuer')} </span>
                   <span style={{ fontFamily: 'monospace' }}>{truncate(issuerAddress)}</span>
                 </div>
                 <div>
-                  <span style={{ fontWeight: '600', color: '#334155' }}>Counterparty: </span>
+                  <span style={{ fontWeight: '600', color: '#334155' }}>{t('encryption.counterpartyLabel')} </span>
                   <span style={{ fontFamily: 'monospace' }}>{truncate(counterpartyAddress)}</span>
                 </div>
               </div>
@@ -258,7 +260,7 @@ export default function EncryptionConsentModal({
                   }}
                 >
                   <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />
-                  Awaiting signature in Freighter…
+                  {t('encryption.awaitingSignature')}
                 </div>
               )}
 
@@ -279,7 +281,7 @@ export default function EncryptionConsentModal({
                   }}
                 >
                   <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />
-                  Encrypting terms locally…
+                  {t('encryption.encryptingTerms')}
                 </div>
               )}
 
@@ -330,7 +332,7 @@ export default function EncryptionConsentModal({
                 opacity: state === 'signing' || state === 'encrypting' ? 0.5 : 1,
               }}
             >
-              Cancel
+              {t('encryption.cancel')}
             </button>
 
             <button
@@ -367,16 +369,16 @@ export default function EncryptionConsentModal({
               {state === 'signing' || state === 'encrypting' ? (
                 <>
                   <Loader2 size={15} style={{ animation: 'spin 1s linear infinite' }} />
-                  {state === 'signing' ? 'Waiting for signature…' : 'Encrypting…'}
-                </>
+                  {state === 'signing' ? t('encryption.awaitingSignature') : t('encryption.encryptingTerms')}
+                  </>
               ) : state === 'done' ? (
-                <>✓ Encrypted</>
+                <>{t('encryption.encrypted')}</>
               ) : state === 'error' ? (
-                <>Retry</>
+                <>{t('error.retry')}</>
               ) : (
                 <>
                   <Lock size={14} />
-                  Sign to Encrypt
+                  {t('encryption.signToEncrypt')}
                 </>
               )}
             </button>

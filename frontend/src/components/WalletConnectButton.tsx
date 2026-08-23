@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Wallet, CheckCircle2 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { truncateAddress } from '../lib/wallet';
@@ -65,6 +66,7 @@ export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
   variant = 'dark',
   className,
 }) => {
+  const { t } = useTranslation();
   const { address, isConnected, isConnecting } = useWallet();
   const [isOpen, setIsOpen] = useState(false);
 
@@ -78,7 +80,7 @@ export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
           onClick={toggle}
           className={className}
           style={connectedStyles}
-          title="Click to view wallet details"
+          title={t('wallet.viewDetails')}
         >
           <CheckCircle2 size={14} color="#22c55e" />
           <span
@@ -94,7 +96,7 @@ export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
               border: 0,
             }}
           >
-            Connected
+            {t('wallet.connected')}
           </span>
           {truncateAddress(address)}
         </button>
@@ -104,10 +106,10 @@ export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
           disabled={isConnecting}
           className={className}
           style={{ ...variantStyles[variant], cursor: isConnecting ? 'wait' : 'pointer' }}
-          title="Connect your Stellar wallet"
+          title={t('wallet.connectStellar')}
         >
           <Wallet size={variant === 'dark' ? 15 : 14} />
-          {isConnecting ? 'Connecting...' : 'Connect Wallet'}
+          {isConnecting ? t('wallet.connecting') : t('wallet.connect')}
         </button>
       )}
     </div>

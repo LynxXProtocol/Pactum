@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -109,6 +110,7 @@ export default function CreateCommitmentWizard({
   onSubmit,
   onSuccess,
 }: CreateCommitmentWizardProps) {
+  const { t } = useTranslation();
   const { address: connectedAddress, isConnected, connectWallet, provider } = useWallet();
   const { validateCommitmentWithWasm } = useWasmValidation();
 
@@ -615,7 +617,7 @@ export default function CreateCommitmentWizard({
                     htmlFor="wizard-counterparty"
                     style={{ display: 'flex', alignItems: 'center', gap: '6px' }}
                   >
-                    <UserCheck size={14} color="#6366f1" /> Counterparty Address
+                    <UserCheck size={14} color="#6366f1" /> {t('wizard.details.counterparty')}
                   </label>
                   <input
                     type="text"
@@ -660,7 +662,7 @@ export default function CreateCommitmentWizard({
                 <textarea
                   className={`form-textarea ${errors.terms ? 'has-error' : ''}`}
                   id="wizard-terms"
-                  placeholder="Describe the commitment terms in plain language. This will be hashed (SHA-256) before being stored on-chain."
+                  placeholder={t('wizard.details.termsPlaceholder')}
                   disabled={submitting}
                   {...register('terms')}
                 ></textarea>
@@ -703,13 +705,13 @@ export default function CreateCommitmentWizard({
                           color: encryptEnabled ? '#312e81' : '#475569',
                         }}
                       >
-                        {encryptEnabled ? 'E2E Encrypted' : 'Encryption Off'}
+                        {encryptEnabled ? t('app.commitment.e2eEncrypted') : t('wizard.encryption.encryptionOff')}
                       </div>
                       <div style={{ fontSize: '11px', color: encryptEnabled ? '#4338ca' : '#94a3b8' }}>
                         {encryptEnabled
                           ? 'Only you & counterparty can read the terms'
                           : isFreighter
-                          ? 'Enable to encrypt terms with your wallet key'
+                          ? t('wizard.encryption.enableEncryption')
                           : 'Requires Freighter wallet'}
                       </div>
                     </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import UserProfile from './UserProfile';
 import { fetchCommitments, type CommitmentFilters, type CommitmentStatus, type Reputation } from '../lib/api';

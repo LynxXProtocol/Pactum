@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { Buffer } from 'buffer';
 import './index.css';
+import './i18n';
 
 if (typeof window !== 'undefined') {
   (window as any).Buffer = Buffer;

@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Wallet, ShieldCheck, Download, X, Key, Lock } from 'lucide-react';
 
 export interface FreighterInstallModalProps {
@@ -10,6 +11,7 @@ export const FreighterInstallModal: React.FC<FreighterInstallModalProps> = ({
   error,
   onDismiss,
 }) => {
+  const { t } = useTranslation();
   const [isHovered, setIsHovered] = useState(false);
 
   if (!error) return null;
@@ -93,13 +95,12 @@ export const FreighterInstallModal: React.FC<FreighterInstallModalProps> = ({
             letterSpacing: '-0.02em',
           }}
         >
-          Freighter Extension Needed
+          {t('freighter.title')}
         </h3>
         <p
           style={{ fontSize: '13.5px', color: '#64748b', margin: '0 0 22px 0', lineHeight: '1.5' }}
         >
-          To sign Soroban transactions on Pactum, please install the official Stellar Freighter
-          browser extension.
+          {t('freighter.description')}
         </p>
 
         {/* Simple Features Checklist */}
@@ -127,7 +128,7 @@ export const FreighterInstallModal: React.FC<FreighterInstallModalProps> = ({
             }}
           >
             <ShieldCheck size={16} color="#16a34a" style={{ flexShrink: 0 }} />
-            <span>100% Non-custodial browser wallet</span>
+            <span>{t('wallet.nonCustodial')}</span>
           </div>
           <div
             style={{
@@ -140,7 +141,7 @@ export const FreighterInstallModal: React.FC<FreighterInstallModalProps> = ({
             }}
           >
             <Key size={16} color="#4f46e5" style={{ flexShrink: 0 }} />
-            <span>Sign Soroban smart contract commitments</span>
+            <span>{t('wallet.signSoroban')}</span>
           </div>
           <div
             style={{
@@ -153,7 +154,7 @@ export const FreighterInstallModal: React.FC<FreighterInstallModalProps> = ({
             }}
           >
             <Lock size={16} color="#0284c7" style={{ flexShrink: 0 }} />
-            <span>Free extension for Chrome, Brave & Firefox</span>
+            <span>{t('wallet.freighterDesc')}</span>
           </div>
         </div>
 
@@ -185,7 +186,7 @@ export const FreighterInstallModal: React.FC<FreighterInstallModalProps> = ({
           }}
         >
           <Download size={16} />
-          Install Freighter Wallet
+          {t('wallet.installFreighter')}
         </a>
 
         {/* Secondary Dismiss Button */}
@@ -202,7 +203,7 @@ export const FreighterInstallModal: React.FC<FreighterInstallModalProps> = ({
             padding: '6px 12px',
           }}
         >
-          Dismiss
+          {t('wallet.dismiss')}
         </button>
       </div>
     </div>

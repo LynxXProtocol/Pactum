@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import type { QueryKey } from '@tanstack/react-query'
 import { AlertTriangle, X } from 'lucide-react'
 import { useStateConflict } from '../hooks/useStateConflict'
@@ -9,6 +10,7 @@ export interface StateConflictBannerProps {
 
 /** Warns that a concurrent on-chain change overrode this view's optimistic assumption. */
 export function StateConflictBanner({ queryKey, className }: StateConflictBannerProps) {
+  const { t } = useTranslation()
   const { conflict, clearConflict } = useStateConflict(queryKey)
   if (!conflict) return null
 
@@ -19,13 +21,13 @@ export function StateConflictBanner({ queryKey, className }: StateConflictBanner
     >
       <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
       <div className="flex-1">
-        <p className="font-medium">State Conflict</p>
+        <p className="font-medium">{t('stateConflict.title')}</p>
         <p>{conflict.message}</p>
       </div>
       <button
         type="button"
         onClick={clearConflict}
-        aria-label="Dismiss"
+        aria-label={t('wallet.dismiss')}
         className="shrink-0 opacity-70 hover:opacity-100"
       >
         <X className="h-4 w-4" />

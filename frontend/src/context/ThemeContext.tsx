@@ -1,6 +1,7 @@
 /* eslint-disable react-refresh/only-export-components */
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 
 export type ThemePreference = 'light' | 'dark' | 'system';
 export type ResolvedTheme = 'light' | 'dark';
@@ -85,14 +86,15 @@ export function useTheme() {
 }
 
 export function ThemeSelector() {
+  const { t } = useTranslation();
   const { preference, setPreference } = useTheme();
   return (
     <label className="theme-selector">
-      <span className="sr-only">Theme</span>
+      <span className="sr-only">{t("app.language.label")}</span>
       <select value={preference} onChange={(event) => setPreference(event.target.value as ThemePreference)}>
-        <option value="system">System theme</option>
-        <option value="light">Light theme</option>
-        <option value="dark">Dark theme</option>
+        <option value="system">{t("common.system")}</option>
+        <option value="light">{t("common.light")}</option>
+        <option value="dark">{t("common.dark")}</option>
       </select>
     </label>
   );

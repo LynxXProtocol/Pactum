@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { useWallet } from '../context/WalletContext';
 import { Wallet, X, Check, Copy, Shield, LogOut, AlertTriangle, ExternalLink, Usb } from 'lucide-react';
 import { truncateAddress, FREIGHTER_HOMEPAGE } from '../lib/wallet';
@@ -9,6 +10,7 @@ export interface WalletConnectModalProps {
 }
 
 export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, onClose }) => {
+  const { t } = useTranslation();
   const {
     address,
     provider,
@@ -97,7 +99,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
           }}
         >
           <Wallet size={13} />
-          Stellar Wallet
+          {t('wallet.stellarWallet')}
         </div>
 
         <button
@@ -114,7 +116,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
             color: '#64748b',
             cursor: 'pointer',
           }}
-          title="Close"
+          title={t('wallet.close')}
         >
           <X size={14} />
         </button>
@@ -140,7 +142,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
           <AlertTriangle size={14} style={{ flexShrink: 0, marginTop: '1px' }} />
           <div>
             <div style={{ fontWeight: '800', marginBottom: '2px' }}>
-              {errorCode === 'NETWORK_MISMATCH' ? 'Wrong network detected' : 'Connection failed'}
+              {errorCode === 'NETWORK_MISMATCH' ? t('wallet.wrongNetwork') : t('error.connectionFailed')}
             </div>
             <div>{error}</div>
             {errorCode === 'NETWORK_MISMATCH' && (
@@ -158,7 +160,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
                   textDecoration: 'underline',
                 }}
               >
-                Switch Freighter to Testnet <ExternalLink size={11} />
+                {t('wallet.switchToTestnet')} <ExternalLink size={11} />
               </a>
             )}
           </div>
@@ -207,7 +209,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
                     background: '#22c55e',
                   }}
                 ></span>
-                {providerLabel} · Stellar Testnet
+                {providerLabel} · {t('app.nav.network')}
               </span>
               <button
                 onClick={handleCopy}
@@ -226,7 +228,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
                 }}
               >
                 {copied ? <Check size={11} color="#16a34a" /> : <Copy size={11} />}
-                {copied ? 'Copied' : 'Copy'}
+                {copied ? t('wallet.copied') : t('wallet.copy')}
               </button>
             </div>
 
@@ -265,7 +267,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
             }}
           >
             <LogOut size={13} />
-            Disconnect Wallet
+            {t('wallet.disconnect')}
           </button>
         </div>
       ) : (
@@ -306,10 +308,10 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
               </div>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>
-                  Freighter Wallet
+                  {t('wallet.freighterWallet')}
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '1px' }}>
-                  Official Stellar Extension
+                  {t('wallet.officialStellarExtension')}
                 </div>
               </div>
             </div>
@@ -353,10 +355,10 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
               </div>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>
-                  Albedo Wallet
+                  {t('wallet.albedoWallet')}
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '1px' }}>
-                  Web-based Stellar wallet (no extension)
+                  {t('wallet.albedoDescription')}
                 </div>
               </div>
             </div>
@@ -400,10 +402,10 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
               </div>
               <div>
                 <div style={{ fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>
-                  Ledger Nano
+                  {t('wallet.ledgerNano')}
                 </div>
                 <div style={{ fontSize: '11.5px', color: '#64748b', marginTop: '1px' }}>
-                  Hardware wallet via WebUSB/WebBluetooth — no extension
+                  {t('wallet.ledgerDescription')}
                 </div>
               </div>
             </div>
@@ -433,7 +435,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
               }}
             >
               <ExternalLink size={13} />
-              Install Freighter Wallet
+              {t('wallet.installFreighter')}
             </a>
           )}
 
@@ -449,7 +451,7 @@ export const WalletConnectModal: React.FC<WalletConnectModalProps> = ({ isOpen, 
             }}
           >
             <Shield size={11} />
-            100% Non-Custodial Browser Security
+            {t('wallet.nonCustodialSecurity')}
           </div>
         </div>
       )}
