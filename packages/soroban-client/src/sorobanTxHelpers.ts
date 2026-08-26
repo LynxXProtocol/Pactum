@@ -11,6 +11,7 @@ import {
   getOrCreatePool,
 } from './soroban';
 import { decodeSimulationError } from './xdrDecode';
+import { RpcPoolExhaustedError } from './sorobanRpcPool';
 
 const BASE_FEE = '100000';
 
@@ -61,6 +62,7 @@ export async function submitGenericSorobanTx({
   try {
     preparedTx = await pool.prepareTransaction(tx);
   } catch (prepareErr: unknown) {
+    if (prepareErr instanceof RpcPoolExhaustedError) throw prepareErr;
     const errMsg = prepareErr instanceof Error ? prepareErr.message : String(prepareErr);
     const diagBlobs = extractDiagnosticEventBlobs({ error: errMsg });
     const decoded = decodeSimulationError(errMsg, diagBlobs, methodName);
@@ -101,7 +103,13 @@ export async function submitGenericSorobanTx({
   const signedTx = TransactionBuilder.fromXDR(signedXdr, networkPassphrase);
   const sendResult = await pool.sendTransaction(signedTx);
   if (sendResult.status === 'ERROR' || sendResult.errorResult) {
-    throw new Error(`RPC submission error: ${sendResult.errorResult || sendResult.status}`);
+    let formattedErr = sendResult.errorResult;
+    if (formattedErr && typeof (formattedErr as any).toXDR === 'function') {
+      formattedErr = (formattedErr as any).toXDR('base64');
+    }
+    throw new Error(
+      `RPC submission error: ${formattedErr || sendResult.errorResultXdr || sendResult.status}`,
+    );
   }
 
   const txHash = sendResult.hash;
@@ -113,7 +121,12 @@ export async function submitGenericSorobanTx({
   while (attempts < 25) {
     attempts++;
     await new Promise((resolve) => setTimeout(resolve, 1200));
-    txResult = await pool.getTransaction(txHash);
+    try {
+      txResult = await pool.getTransaction(txHash);
+    } catch (err) {
+      if (err instanceof RpcPoolExhaustedError) continue;
+      throw err;
+    }
     txStatus = txResult.status;
     if (txStatus === rpc.Api.GetTransactionStatus.SUCCESS) break;
     else if (txStatus === rpc.Api.GetTransactionStatus.FAILED) {

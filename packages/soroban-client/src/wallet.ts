@@ -37,10 +37,14 @@ export interface WalletConnectionResult {
 
 export { freighterGetAddress as getFreighterAddress, freighterGetNetwork as getFreighterNetwork };
 
-export function isFreighterInstalled(): boolean {
-  return Boolean(
-    typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).freighter,
-  );
+export async function isFreighterInstalled(): Promise<boolean> {
+  try {
+    const res = await freighterIsConnected();
+    return Boolean(res && res.isConnected);
+  } catch (err) {
+    console.warn('[wallet] freighter isInstalled check failed:', err);
+    return false;
+  }
 }
 
 export async function isFreighterConnected(): Promise<boolean> {
@@ -49,7 +53,7 @@ export async function isFreighterConnected(): Promise<boolean> {
     return Boolean(res && res.isConnected);
   } catch (err) {
     console.warn('[wallet] freighter isConnected check failed:', err);
-    return isFreighterInstalled();
+    return await isFreighterInstalled();
   }
 }
 
@@ -85,7 +89,8 @@ function assertTestnetNetwork(network: string | undefined, passphrase: string | 
  * 4. Verifies the wallet is on Stellar Testnet
  */
 export async function connectWithFreighter(): Promise<WalletConnectionResult> {
-  if (!isFreighterInstalled()) {
+  const installed = await isFreighterInstalled();
+  if (!installed) {
     throw new WalletConnectionError(
       'NOT_INSTALLED',
       'Freighter browser extension was not detected. Please install Freighter from freighter.app.',

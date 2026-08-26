@@ -150,7 +150,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return;
       }
 
-      const installed = isFreighterInstalled();
+      const installed = await isFreighterInstalled();
       setIsInstalled(installed);
       if (!installed) return;
 
@@ -183,7 +183,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       try {
         if (walletProvider === 'freighter') {
-          setIsInstalled(isFreighterInstalled());
+          setIsInstalled(await isFreighterInstalled());
         }
 
         const result = await connectWithProvider(walletProvider);

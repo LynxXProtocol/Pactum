@@ -9,13 +9,9 @@ import { queryClient } from 'host/queryClient';
 
 import { sha256Hex } from './lib/hash';
 import { encryptCommitmentTerms, type EncryptResult } from './lib/crypto';
-import { stellarAddressSchema } from '@pactum/soroban-client';
-import { decodeRegistryContractError } from '@pactum/soroban-client';
-import { createAstResolver, composeResolvers } from './lib/ast';
-import { useValidationRules } from './hooks/useValidationRules';
-import { useWallet } from 'host/WalletContext';
-import { useWasmValidation } from './hooks/useWasmValidation';
 import {
+  stellarAddressSchema,
+  decodeRegistryContractError,
   submitCreateCommitment,
   fundTestnetAccount,
   preflightSimulate,
@@ -24,12 +20,16 @@ import {
   type CreateCommitmentResult,
   type SimulationPreview,
   SorobanSimulationError,
+  decodeSimulationError,
 } from '@pactum/soroban-client';
-import { decodeSimulationError } from '@pactum/soroban-client';
+import { createAstResolver, composeResolvers } from './lib/ast';
+import { useValidationRules } from './hooks/useValidationRules';
+import { useWallet } from 'host/WalletContext';
+import { useWasmValidation } from './hooks/useWasmValidation';
 import { postEncryptedTerms, createCommitment } from './lib/api';
 import UserProfile from './components/UserProfile';
 import EncryptionConsentModal from './components/EncryptionConsentModal';
-import { SorobanErrorModal } from './components/SorobanErrorModal';
+import { SorobanErrorModal } from 'host/SorobanErrorModal';
 import SimulationPreviewModal from './components/SimulationPreviewModal';
 import {
   CheckCircle2,

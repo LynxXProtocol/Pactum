@@ -44,6 +44,7 @@ export default defineConfig(({ mode }) => {
         exposes: {
           './WalletContext': './src/context/WalletContext.tsx',
           './queryClient': './src/lib/queryClient.ts',
+          './SorobanErrorModal': './src/components/SorobanErrorModal.tsx',
         },
         remotes: {
           dashboard: {

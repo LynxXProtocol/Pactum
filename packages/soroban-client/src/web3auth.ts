@@ -64,7 +64,7 @@ async function ensureClient(): Promise<Web3Auth> {
     config: { chainConfig: stellarChainConfig },
   });
 
-  web3auth = new Web3Auth({
+  const client = new Web3Auth({
     clientId: CLIENT_ID,
     web3AuthNetwork: WEB3AUTH_NETWORK_NAME,
     privateKeyProvider,
@@ -76,7 +76,8 @@ async function ensureClient(): Promise<Web3Auth> {
     },
   });
 
-  await web3auth.init();
+  await client.init();
+  web3auth = client;
   return web3auth;
 }
 
