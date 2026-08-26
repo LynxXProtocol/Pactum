@@ -108,7 +108,7 @@ export async function submitGenericSorobanTx({
       formattedErr = (formattedErr as any).toXDR('base64');
     }
     throw new Error(
-      `RPC submission error: ${formattedErr || sendResult.errorResultXdr || sendResult.status}`,
+      `RPC submission error: ${formattedErr || sendResult.errorResult || sendResult.status}`,
     );
   }
 

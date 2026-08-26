@@ -136,7 +136,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       if (persisted.provider === 'web3auth') {
         try {
-          const { restoreWeb3AuthSession } = await import('../lib/web3auth');
+          const { restoreWeb3AuthSession } = await import('@pactum/soroban-client');
           const restored = await restoreWeb3AuthSession(persisted.address);
           if (isMounted && restored) {
             setAddress(restored.address);
@@ -207,7 +207,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setProvider(null);
     clearPersistedState();
     if (wasSocial) {
-      void import('../lib/web3auth').then(({ logoutWeb3Auth }) => logoutWeb3Auth());
+      void import('@pactum/soroban-client').then(({ logoutWeb3Auth }) => logoutWeb3Auth());
     }
   }, [provider]);
 

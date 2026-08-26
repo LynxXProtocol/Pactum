@@ -20,7 +20,7 @@ import {
   submitDispute,
   submitResolve,
   submitInitRegistry,
-} from './lib/sorobanTxHelpers';
+} from '@pactum/soroban-client';
 import { ThemeToggle } from './components/ThemeToggle';
 import { IndexerModeToggle, useIndexerMode } from './context/IndexerModeContext';
 import { Menu, X, User, Lock } from 'lucide-react';
