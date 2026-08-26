@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -163,6 +163,17 @@ export default function CreateCommitmentWizard({
 
   const [simulationPreview, setSimulationPreview] = useState<SimulationPreview | null>(null);
   const [showSimModal, setShowSimModal] = useState(false);
+  const simModalRef = useRef<{ resolve: () => void; reject: (e: Error) => void } | null>(null);
+
+  // Clean up preflight modal promise on unmount
+  useEffect(() => {
+    return () => {
+      if (simModalRef.current) {
+        simModalRef.current.reject(new Error('Component unmounted during preflight.'));
+        simModalRef.current = null;
+      }
+    };
+  }, []);
 
   // ── XDR Error Modal state ─────────────────────────────────────────────────
   const [xdrError, setXdrError] = useState<SorobanSimulationError | null>(null);
@@ -379,17 +390,8 @@ export default function CreateCommitmentWizard({
 
         // Wait for user to confirm in modal
         await new Promise<void>((resolve, reject) => {
-          const confirmHandler = () => {
-            setShowSimModal(false);
-            resolve();
-          };
-          const cancelHandler = () => {
-            setShowSimModal(false);
-            reject(new Error('User cancelled preflight.'));
-          };
-          // Store handlers on window temporarily for modal callbacks
-          (window as any).__simConfirm = confirmHandler;
-          (window as any).__simCancel = cancelHandler;
+          simModalRef.current = { resolve, reject };
+          setShowSimModal(true);
         });
       } catch (simErr: unknown) {
         if ((simErr as Error).message?.includes('cancelled')) {
@@ -1131,10 +1133,14 @@ export default function CreateCommitmentWizard({
         isOpen={showSimModal}
         preview={simulationPreview}
         onConfirm={() => {
-          if ((window as any).__simConfirm) (window as any).__simConfirm();
+          setShowSimModal(false);
+          simModalRef.current?.resolve();
+          simModalRef.current = null;
         }}
         onCancel={() => {
-          if ((window as any).__simCancel) (window as any).__simCancel();
+          setShowSimModal(false);
+          simModalRef.current?.reject(new Error('User cancelled preflight.'));
+          simModalRef.current = null;
         }}
       />
 
