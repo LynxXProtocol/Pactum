@@ -9,8 +9,8 @@ import { queryClient } from 'host/queryClient';
 
 import { sha256Hex } from './lib/hash';
 import { encryptCommitmentTerms, type EncryptResult } from './lib/crypto';
-import { stellarAddressSchema } from './lib/stellar';
-import { decodeRegistryContractError } from './lib/errors';
+import { stellarAddressSchema } from '@pactum/soroban-client';
+import { decodeRegistryContractError } from '@pactum/soroban-client';
 import { createAstResolver, composeResolvers } from './lib/ast';
 import { useValidationRules } from './hooks/useValidationRules';
 import { useWallet } from 'host/WalletContext';
@@ -24,8 +24,8 @@ import {
   type CreateCommitmentResult,
   type SimulationPreview,
   SorobanSimulationError,
-} from './lib/soroban';
-import { decodeSimulationError } from './lib/xdrDecode';
+} from '@pactum/soroban-client';
+import { decodeSimulationError } from '@pactum/soroban-client';
 import { postEncryptedTerms, createCommitment } from './lib/api';
 import UserProfile from './components/UserProfile';
 import EncryptionConsentModal from './components/EncryptionConsentModal';
@@ -365,7 +365,11 @@ export default function CreateCommitmentWizard({
           // rejection and a submit-time rejection look identical to the user.
           setShowSimModal(false);
           const diagBlobs = extractDiagnosticEventBlobs(preview.rawSimulation);
-          const decoded = decodeSimulationError(preview.error ?? '', diagBlobs, 'create_commitment');
+          const decoded = decodeSimulationError(
+            preview.error ?? '',
+            diagBlobs,
+            'create_commitment',
+          );
           setXdrError(
             new SorobanSimulationError(
               decoded.message ?? `Transaction simulation failed: ${preview.error}`,

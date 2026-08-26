@@ -7,7 +7,7 @@ import {
   DEFAULT_CONTRACT_ID,
   DEFAULT_NETWORK_PASSPHRASE,
   DEFAULT_SOROBAN_RPC_URL,
-} from '../lib/soroban';
+} from '@pactum/soroban-client';
 import type { IndexerWorkerStatus } from '../workers/indexer.worker.ts';
 
 export type IndexerMode = 'cloud' | 'local';

@@ -14,7 +14,7 @@ import { fetchEncryptedTerms } from './lib/api';
 import type { Commitment, CommitmentStatus } from './lib/api';
 import { useWallet } from './context/WalletContext';
 import { wsClient } from './lib/wsClient';
-import type { WalletProvider } from './lib/wallet';
+import type { WalletProvider } from '@pactum/soroban-client';
 import {
   submitAttest,
   submitDispute,

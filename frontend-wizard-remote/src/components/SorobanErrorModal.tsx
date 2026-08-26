@@ -9,8 +9,8 @@ import {
   Terminal,
   Bug,
 } from 'lucide-react';
-import type { DecodedXdrError, DecodedDiagnosticEvent } from '../lib/errors';
-import { decodeSorobanError, sanitizeErrorMessage } from '../lib/errors';
+import type { DecodedXdrError, DecodedDiagnosticEvent } from '@pactum/soroban-client';
+import { decodeSorobanError, sanitizeErrorMessage } from '@pactum/soroban-client';
 
 // ---------------------------------------------------------------------------
 // Types

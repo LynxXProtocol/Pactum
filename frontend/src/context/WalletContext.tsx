@@ -14,7 +14,7 @@ import {
   WalletConnectionError,
   type WalletErrorCode,
   type WalletProvider as WalletProviderName,
-} from '../lib/wallet';
+} from '@pactum/soroban-client';
 
 export interface WalletContextType {
   address: string | null;
