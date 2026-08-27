@@ -11,9 +11,9 @@ vi.mock('@pactum/sdk', () => {
     PactumClient: vi.fn().mockImplementation(() => {
       return {
         getReputation: vi.fn().mockResolvedValue({
-          fulfilled: 10n,
-          late: 2n,
-          breached: 1n,
+          fulfilledCount: 10n,
+          lateCount: 2n,
+          breachedCount: 1n,
         }),
       };
     }),
