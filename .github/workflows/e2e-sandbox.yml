@@ -16,7 +16,7 @@ jobs:
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       # deploy-test-contract.sh runs `stellar contract build` which compiles
       # to the wasm32v1-none target. GitHub's ubuntu-latest runner ships Rust

@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Rust stable toolchain
         uses: dtolnay/rust-toolchain@stable
@@ -51,7 +51,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Node 22.18+ runs the package's TypeScript sources directly, so there is no
       # build step to keep in sync with the tests.
@@ -133,7 +133,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js 22.x (LTS)
         uses: actions/setup-node@v4
@@ -187,7 +187,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Temporary check until the backend phase begins: skip gracefully if package.json does not exist or is empty
       - name: Check if backend package.json exists and is non-empty
@@ -253,7 +253,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js 22.x (LTS)
         uses: actions/setup-node@v4
@@ -318,7 +318,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js 22.x (LTS)
         uses: actions/setup-node@v4
@@ -356,7 +356,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js 22.x (LTS)
         uses: actions/setup-node@v4
