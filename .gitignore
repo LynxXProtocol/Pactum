@@ -10,6 +10,7 @@ dist-indexer-test/
 dist-integration-test/
 dist-middleware-test/
 dist-relayer-test/
+dist-crypto-test/
 .env
 .env.e2e
 .env.local

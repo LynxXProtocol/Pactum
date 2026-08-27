@@ -88,9 +88,9 @@ export function createReputationCommand(): Command {
           });
 
           const reputation = await client.getReputation(address);
-          const fulfilled = Number(reputation.fulfilled);
-          const late = Number(reputation.late);
-          const breached = Number(reputation.breached);
+          const fulfilled = Number(reputation.fulfilledCount);
+          const late = Number(reputation.lateCount);
+          const breached = Number(reputation.breachedCount);
           const total = fulfilled + late + breached;
           const score = calculateTrustScore(fulfilled, late, breached);
 

@@ -361,6 +361,54 @@ jobs:
         working-directory: sdk/js
         run: npm test
 
+  cli-tests:
+    name: CLI Tests (@pactum/cli)
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 22.x (LTS)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Cache npm dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-cli-node-${{ hashFiles('package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-cli-node-
+
+      # @pactum/cli has no package-lock.json of its own -- it's a root npm
+      # workspace member (like @pactum/sdk, which it depends on via
+      # `file:../../sdk/js`), so it's installed from the repo root, not in
+      # isolation the way sdk/js and evm are.
+      - name: Install workspace dependencies
+        run: npm ci
+
+      # The CLI imports @pactum/sdk's built output (main/module/exports all
+      # point at ./dist), not its TypeScript sources -- without this step the
+      # workspace symlink resolves to a package with no dist/ yet, and every
+      # downstream typecheck/test/build fails to resolve the import.
+      - name: Build SDK dependency
+        working-directory: sdk/js
+        run: npm run build
+
+      - name: Typecheck CLI
+        working-directory: packages/cli
+        run: npm run typecheck
+
+      - name: Run CLI tests
+        working-directory: packages/cli
+        run: npm test
+
+      - name: Build CLI
+        working-directory: packages/cli
+        run: npm run build
+
   frontend-tests:
     name: Frontend Tests (Module Federation)
     runs-on: ubuntu-latest

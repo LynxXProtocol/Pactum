@@ -127,6 +127,22 @@ export async function fetchCommitments(
 }
 
 /**
+ * Fetches a single commitment by its on-chain id. Returns `null` if no commitment with that
+ * id has been indexed (a 404 from the backend), rather than throwing -- callers treat "not
+ * found" as a normal, expected outcome of a user-entered id, not an error state.
+ */
+export async function fetchCommitmentById(id: number): Promise<Commitment | null> {
+  const res = await fetch(`${API_BASE_URL}/commitments/${encodeURIComponent(String(id))}`);
+  if (res.status === 404) {
+    return null;
+  }
+  if (!res.ok) {
+    throw new Error(`Request failed: ${res.status} ${res.statusText}`);
+  }
+  return res.json() as Promise<Commitment>;
+}
+
+/**
  * Creates a commitment record on the backend (optimistic, before on-chain confirmation).
  */
 export function createCommitment(payload: {
