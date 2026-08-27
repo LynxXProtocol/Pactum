@@ -164,15 +164,47 @@ export default function CreateCommitmentWizard({
   const [simulationPreview, setSimulationPreview] = useState<SimulationPreview | null>(null);
   const [showSimModal, setShowSimModal] = useState(false);
 
-  // Ref for modal promise resolvers (replaces window.__simConfirm/__simCancel)
+  /**
+   * Ref for storing promise resolvers for the simulation preview modal.
+   * This replaces the previous window.__simConfirm/__simCancel global
+   * handlers with a component-local approach.
+   *
+   * The ref stores resolve/reject functions that are called when the user
+   * confirms or cancels the simulation preview modal. This allows the
+   * submission flow to pause and wait for user confirmation without
+   * using global state.
+   *
+   * @remarks
+   * - The ref is cleared after the modal is dismissed
+   * - On unmount, pending promises are rejected to prevent memory leaks
+   * - Each component instance has its own ref, preventing race conditions
+   */
   const modalResolverRef = useRef<{
     resolve: () => void;
     reject: (error: Error) => void;
   } | null>(null);
 
-  // Clean up on unmount - prevents memory leaks
+  /**
+   * Ref to track whether the component is still mounted.
+   * Used to prevent submission flow from continuing after unmount.
+   */
+  const isMountedRef = useRef(true);
+
+  /**
+   * Cleanup effect for the modal resolver ref.
+   *
+   * Rejects any pending confirmation promise if the component unmounts
+   * while waiting for user input. This prevents:
+   * - Memory leaks from stale closures
+   * - The submission flow continuing after component unmount
+   * - Unexpected commitment creation when the wizard is closed mid-flow
+   *
+   * The cleanup runs once on component unmount and clears the ref
+   * after rejecting the promise.
+   */
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
       if (modalResolverRef.current) {
         modalResolverRef.current.reject(
           new Error('Component unmounted while waiting for confirmation'),
@@ -362,7 +394,7 @@ export default function CreateCommitmentWizard({
               'create_commitment',
               Address.fromString(connectedAddress).toScVal(),
               Address.fromString(data.counterparty).toScVal(),
-              xdr.ScVal.scvBytes(termsHashBytes),
+              xdr.ScVal.scvBytes(termsHashBytes as any),
               xdr.ScVal.scvU64(xdr.Uint64.fromString(dueAtSeconds.toString())),
               Address.fromString(arbitratorAddress).toScVal(),
               xdr.ScVal.scvVoid(),
@@ -404,6 +436,15 @@ export default function CreateCommitmentWizard({
           // Store resolvers in ref for modal callbacks
           modalResolverRef.current = { resolve, reject };
         });
+
+        // Check if component is still mounted after confirmation
+        // Prevents submission from continuing if wizard was unmounted during confirmation
+        if (!isMountedRef.current) {
+          console.log(
+            '[CreateCommitmentWizard] Component unmounted during confirmation, aborting submission',
+          );
+          return;
+        }
       } catch (simErr: unknown) {
         if ((simErr as Error).message?.includes('cancelled')) {
           setShowSimModal(false);
