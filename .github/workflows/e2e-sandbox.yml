@@ -61,7 +61,7 @@ jobs:
       - name: Start backend, indexer, postgres, redis
         run: docker compose -f docker-compose.yml -f docker-compose.e2e.yml up -d backend indexer
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with:
           node-version: '22.x'
           cache: 'npm'
