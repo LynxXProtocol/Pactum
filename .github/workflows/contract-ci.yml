@@ -140,7 +140,7 @@ jobs:
           cat wasm-size.md
 
       - name: Upload Wasm contract and size report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: soroban-contract-wasm
           path: |
