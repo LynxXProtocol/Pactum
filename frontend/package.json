@@ -63,7 +63,7 @@
     "oxlint": "^1.75.0",
     "postcss": "^8.5.25",
     "tailwindcss": "^4.3.3",
-    "typescript": "~6.0.2",
+    "typescript": "~7.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.11"
   }
