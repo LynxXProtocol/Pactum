@@ -1,61 +1,108 @@
 version: 2
 updates:
   # Frontend npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/frontend"
+  - package-ecosystem: 'npm'
+    directory: '/frontend'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     labels:
-      - "dependencies"
-      - "npm"
+      - 'dependencies'
+      - 'npm'
     commit-message:
-      prefix: "chore(deps):"
+      prefix: 'chore(deps):'
 
   # Backend npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/backend"
+  - package-ecosystem: 'npm'
+    directory: '/backend'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     labels:
-      - "dependencies"
-      - "npm"
+      - 'dependencies'
+      - 'npm'
     commit-message:
-      prefix: "chore(deps):"
+      prefix: 'chore(deps):'
 
   # SDK npm dependencies
-  - package-ecosystem: "npm"
-    directory: "/sdk/js"
+  - package-ecosystem: 'npm'
+    directory: '/sdk/js'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     labels:
-      - "dependencies"
-      - "npm"
+      - 'dependencies'
+      - 'npm'
     commit-message:
-      prefix: "chore(deps):"
+      prefix: 'chore(deps):'
 
   # Soroban smart contracts (Cargo)
-  - package-ecosystem: "cargo"
-    directory: "/contracts"
+  - package-ecosystem: 'cargo'
+    directory: '/contracts'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 10
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    # soroban-sdk and the ark-* crypto crates are exactly the dependencies a silent major
+    # bump would be most dangerous for -- always ignored here regardless of the wildcard
+    # rule above, so removing/narrowing the wildcard later can't accidentally start
+    # auto-proposing a soroban-sdk major again.
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
+      - dependency-name: 'soroban-sdk'
+      - dependency-name: 'ark-ff'
+      - dependency-name: 'ark-bn254'
     labels:
-      - "dependencies"
-      - "cargo"
+      - 'dependencies'
+      - 'cargo'
     commit-message:
-      prefix: "chore(deps):"
+      prefix: 'chore(deps):'
 
   # GitHub Actions
-  - package-ecosystem: "github-actions"
-    directory: "/"
+  - package-ecosystem: 'github-actions'
+    directory: '/'
     schedule:
-      interval: "weekly"
-    open-pull-requests-limit: 5
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    groups:
+      minor-and-patch:
+        update-types:
+          - 'minor'
+          - 'patch'
+    ignore:
+      - dependency-name: '*'
+        update-types: ['version-update:semver-major']
     labels:
-      - "dependencies"
-      - "ci"
+      - 'dependencies'
+      - 'ci'
     commit-message:
-      prefix: "chore(ci):"
+      prefix: 'chore(ci):'
