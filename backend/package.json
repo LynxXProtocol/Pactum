@@ -27,7 +27,7 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "@stellar/stellar-sdk": "^16.2.0",
+    "@stellar/stellar-sdk": "^17.0.0",
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "ethers": "^6.13.0",
