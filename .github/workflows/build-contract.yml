@@ -19,7 +19,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo registry and build target
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry

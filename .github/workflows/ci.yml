@@ -21,7 +21,7 @@ jobs:
           targets: wasm32-unknown-unknown
 
       - name: Cache Cargo registry and build target
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.cargo/registry
@@ -67,7 +67,7 @@ jobs:
       # circuit tests skip without it, and a skipped circuit test proves nothing.
       - name: Cache circom binary
         id: cache_circom
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/bin/circom
           key: ${{ runner.os }}-circom-2.2.3
@@ -77,7 +77,7 @@ jobs:
         run: cargo install --locked --git https://github.com/iden3/circom.git --tag v2.2.3 circom
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-zk-${{ hashFiles('zk/package-lock.json', 'zk/package.json') }}
@@ -141,7 +141,7 @@ jobs:
           node-version: '22.x'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('backend/package-lock.json', 'backend/package.json') }}
@@ -208,7 +208,7 @@ jobs:
 
       - name: Cache npm dependencies
         if: steps.check_backend.outputs.ready == 'true'
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('backend/package-lock.json', 'backend/package.json') }}
@@ -261,7 +261,7 @@ jobs:
           node-version: '22.x'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             ~/.npm
@@ -326,7 +326,7 @@ jobs:
           node-version: '22.x'
 
       - name: Cache npm dependencies
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-sdk-node-${{ hashFiles('sdk/js/package-lock.json', 'sdk/js/package.json') }}
