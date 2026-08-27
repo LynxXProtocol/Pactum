@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -163,6 +163,24 @@ export default function CreateCommitmentWizard({
 
   const [simulationPreview, setSimulationPreview] = useState<SimulationPreview | null>(null);
   const [showSimModal, setShowSimModal] = useState(false);
+
+  // Ref for modal promise resolvers (replaces window.__simConfirm/__simCancel)
+  const modalResolverRef = useRef<{
+    resolve: () => void;
+    reject: (error: Error) => void;
+  } | null>(null);
+
+  // Clean up on unmount - prevents memory leaks
+  useEffect(() => {
+    return () => {
+      if (modalResolverRef.current) {
+        modalResolverRef.current.reject(
+          new Error('Component unmounted while waiting for confirmation'),
+        );
+        modalResolverRef.current = null;
+      }
+    };
+  }, []);
 
   // ── XDR Error Modal state ─────────────────────────────────────────────────
   const [xdrError, setXdrError] = useState<SorobanSimulationError | null>(null);
@@ -344,7 +362,7 @@ export default function CreateCommitmentWizard({
               'create_commitment',
               Address.fromString(connectedAddress).toScVal(),
               Address.fromString(data.counterparty).toScVal(),
-              xdr.ScVal.scvBytes(termsHashBytes as any),
+              xdr.ScVal.scvBytes(termsHashBytes),
               xdr.ScVal.scvU64(xdr.Uint64.fromString(dueAtSeconds.toString())),
               Address.fromString(arbitratorAddress).toScVal(),
               xdr.ScVal.scvVoid(),
@@ -365,7 +383,11 @@ export default function CreateCommitmentWizard({
           // rejection and a submit-time rejection look identical to the user.
           setShowSimModal(false);
           const diagBlobs = extractDiagnosticEventBlobs(preview.rawSimulation);
-          const decoded = decodeSimulationError(preview.error ?? '', diagBlobs, 'create_commitment');
+          const decoded = decodeSimulationError(
+            preview.error ?? '',
+            diagBlobs,
+            'create_commitment',
+          );
           setXdrError(
             new SorobanSimulationError(
               decoded.message ?? `Transaction simulation failed: ${preview.error}`,
@@ -379,17 +401,8 @@ export default function CreateCommitmentWizard({
 
         // Wait for user to confirm in modal
         await new Promise<void>((resolve, reject) => {
-          const confirmHandler = () => {
-            setShowSimModal(false);
-            resolve();
-          };
-          const cancelHandler = () => {
-            setShowSimModal(false);
-            reject(new Error('User cancelled preflight.'));
-          };
-          // Store handlers on window temporarily for modal callbacks
-          (window as any).__simConfirm = confirmHandler;
-          (window as any).__simCancel = cancelHandler;
+          // Store resolvers in ref for modal callbacks
+          modalResolverRef.current = { resolve, reject };
         });
       } catch (simErr: unknown) {
         if ((simErr as Error).message?.includes('cancelled')) {
@@ -1131,10 +1144,18 @@ export default function CreateCommitmentWizard({
         isOpen={showSimModal}
         preview={simulationPreview}
         onConfirm={() => {
-          if ((window as any).__simConfirm) (window as any).__simConfirm();
+          if (modalResolverRef.current) {
+            modalResolverRef.current.resolve();
+            modalResolverRef.current = null;
+          }
+          setShowSimModal(false);
         }}
         onCancel={() => {
-          if ((window as any).__simCancel) (window as any).__simCancel();
+          if (modalResolverRef.current) {
+            modalResolverRef.current.reject(new Error('User cancelled preflight.'));
+            modalResolverRef.current = null;
+          }
+          setShowSimModal(false);
         }}
       />
 
