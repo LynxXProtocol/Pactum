@@ -52,7 +52,7 @@
     "autocannon": "^8.0.0",
     "nodemon": "^3.1.14",
     "ts-node": "^10.9.2",
-    "typescript": "^5.9.2"
+    "typescript": "^7.0.2"
   },
   "engines": {
     "node": ">=22.0.0"
