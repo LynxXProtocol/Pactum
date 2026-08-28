@@ -14,13 +14,13 @@ import { fetchEncryptedTerms } from './lib/api';
 import type { Commitment, CommitmentStatus } from './lib/api';
 import { useWallet } from './context/WalletContext';
 import { wsClient } from './lib/wsClient';
-import type { WalletProvider } from './lib/wallet';
+import type { WalletProvider } from '@pactum/soroban-client';
 import {
   submitAttest,
   submitDispute,
   submitResolve,
   submitInitRegistry,
-} from './lib/sorobanTxHelpers';
+} from '@pactum/soroban-client';
 import { ThemeToggle } from './components/ThemeToggle';
 import { IndexerModeToggle, useIndexerMode } from './context/IndexerModeContext';
 import { Menu, X, User, Lock } from 'lucide-react';

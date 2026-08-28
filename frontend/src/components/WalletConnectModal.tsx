@@ -12,7 +12,7 @@ import {
   Usb,
   Mail,
 } from 'lucide-react';
-import { truncateAddress, FREIGHTER_HOMEPAGE, type WalletProvider } from '../lib/wallet';
+import { truncateAddress, FREIGHTER_HOMEPAGE, type WalletProvider } from '@pactum/soroban-client';
 
 export interface WalletConnectModalProps {
   isOpen: boolean;

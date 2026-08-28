@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Wallet, CheckCircle2 } from 'lucide-react';
 import { useWallet } from '../context/WalletContext';
 import { useTheme } from '../context/ThemeContext';
-import { truncateAddress } from '../lib/wallet';
+import { truncateAddress } from '@pactum/soroban-client';
 import WalletConnectModal from './WalletConnectModal';
 
 export interface WalletConnectButtonProps {

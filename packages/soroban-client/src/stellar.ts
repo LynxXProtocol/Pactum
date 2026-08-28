@@ -1,9 +1,8 @@
 import { z } from 'zod';
-
-const STELLAR_ADDRESS_RE = /^G[A-Z2-7]{55}$/;
+import { StrKey } from '@stellar/stellar-sdk';
 
 export function isStellarAddress(value: string): boolean {
-  return STELLAR_ADDRESS_RE.test(value);
+  return StrKey.isValidEd25519PublicKey(value);
 }
 
 export const stellarAddressSchema = z

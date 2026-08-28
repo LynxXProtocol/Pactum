@@ -1,4 +1,9 @@
-import { StrKey, TransactionBuilder, type Transaction, type FeeBumpTransaction } from '@stellar/stellar-sdk';
+import {
+  StrKey,
+  TransactionBuilder,
+  type Transaction,
+  type FeeBumpTransaction,
+} from '@stellar/stellar-sdk';
 
 interface WalletAdapter {
   name: string;
@@ -112,8 +117,7 @@ export async function signTransactionWithLedger(
   const publicKey = StrKey.encodeEd25519PublicKey(rawPublicKey);
 
   const tx = TransactionBuilder.fromXDR(unsignedXdr, networkPassphrase) as
-    | Transaction
-    | FeeBumpTransaction;
+    Transaction | FeeBumpTransaction;
 
   const { signature } = await app.signTransaction(LEDGER_STELLAR_PATH, tx.signatureBase());
   tx.addSignature(publicKey, signature.toString('base64'));

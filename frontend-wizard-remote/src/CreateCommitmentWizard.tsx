@@ -9,13 +9,9 @@ import { queryClient } from 'host/queryClient';
 
 import { sha256Hex } from './lib/hash';
 import { encryptCommitmentTerms, type EncryptResult } from './lib/crypto';
-import { stellarAddressSchema } from './lib/stellar';
-import { decodeRegistryContractError } from './lib/errors';
-import { createAstResolver, composeResolvers } from './lib/ast';
-import { useValidationRules } from './hooks/useValidationRules';
-import { useWallet } from 'host/WalletContext';
-import { useWasmValidation } from './hooks/useWasmValidation';
 import {
+  stellarAddressSchema,
+  decodeRegistryContractError,
   submitCreateCommitment,
   fundTestnetAccount,
   preflightSimulate,
@@ -24,12 +20,17 @@ import {
   type CreateCommitmentResult,
   type SimulationPreview,
   SorobanSimulationError,
-} from './lib/soroban';
-import { decodeSimulationError } from './lib/xdrDecode';
+  decodeSimulationError,
+  hexToBytes,
+} from '@pactum/soroban-client';
+import { createAstResolver, composeResolvers } from './lib/ast';
+import { useValidationRules } from './hooks/useValidationRules';
+import { useWallet } from 'host/WalletContext';
+import { useWasmValidation } from './hooks/useWasmValidation';
 import { postEncryptedTerms, createCommitment } from './lib/api';
 import UserProfile from './components/UserProfile';
 import EncryptionConsentModal from './components/EncryptionConsentModal';
-import { SorobanErrorModal } from './components/SorobanErrorModal';
+import { SorobanErrorModal } from 'host/SorobanErrorModal';
 import SimulationPreviewModal from './components/SimulationPreviewModal';
 import {
   CheckCircle2,
@@ -331,7 +332,6 @@ export default function CreateCommitmentWizard({
         const contract = new Contract(contractId);
         const networkPassphrase =
           import.meta.env.VITE_STELLAR_NETWORK_PASSPHRASE || Networks.TESTNET;
-        const { hexToBytes } = await import('./lib/soroban');
         const termsHashBytes = hexToBytes(termsHashHex);
         // Mirror submitCreateCommitment's own argument list exactly (see soroban.ts) --
         // create_commitment takes 9 parameters, and a preflight built with only the first
@@ -365,7 +365,11 @@ export default function CreateCommitmentWizard({
           // rejection and a submit-time rejection look identical to the user.
           setShowSimModal(false);
           const diagBlobs = extractDiagnosticEventBlobs(preview.rawSimulation);
-          const decoded = decodeSimulationError(preview.error ?? '', diagBlobs, 'create_commitment');
+          const decoded = decodeSimulationError(
+            preview.error ?? '',
+            diagBlobs,
+            'create_commitment',
+          );
           setXdrError(
             new SorobanSimulationError(
               decoded.message ?? `Transaction simulation failed: ${preview.error}`,

@@ -51,6 +51,8 @@ export function isWeb3AuthConfigured(): boolean {
   return CLIENT_ID.length > 0;
 }
 
+let web3authInitPromise: Promise<Web3Auth> | null = null;
+
 async function ensureClient(): Promise<Web3Auth> {
   if (!isWeb3AuthConfigured()) {
     throw new WalletConnectionError(
@@ -60,24 +62,36 @@ async function ensureClient(): Promise<Web3Auth> {
   }
   if (web3auth) return web3auth;
 
-  const privateKeyProvider = new CommonPrivateKeyProvider({
-    config: { chainConfig: stellarChainConfig },
-  });
+  if (!web3authInitPromise) {
+    web3authInitPromise = (async () => {
+      const privateKeyProvider = new CommonPrivateKeyProvider({
+        config: { chainConfig: stellarChainConfig },
+      });
 
-  web3auth = new Web3Auth({
-    clientId: CLIENT_ID,
-    web3AuthNetwork: WEB3AUTH_NETWORK_NAME,
-    privateKeyProvider,
-    uiConfig: {
-      appName: 'Pactum',
-      mode: 'light',
-      loginGridCol: 3,
-      primaryButton: 'socialLogin',
-    },
-  });
+      const client = new Web3Auth({
+        clientId: CLIENT_ID,
+        web3AuthNetwork: WEB3AUTH_NETWORK_NAME,
+        privateKeyProvider,
+        uiConfig: {
+          appName: 'Pactum',
+          mode: 'light',
+          loginGridCol: 3,
+          primaryButton: 'socialLogin',
+        },
+      });
 
-  await web3auth.init();
-  return web3auth;
+      await client.init();
+      web3auth = client;
+      return web3auth;
+    })();
+  }
+
+  try {
+    return await web3authInitPromise;
+  } catch (err) {
+    web3authInitPromise = null;
+    throw err;
+  }
 }
 
 async function keypairFromProvider(provider: IProvider): Promise<Keypair> {
@@ -184,4 +198,5 @@ export function signTransactionWithWeb3Auth(
 export function __resetWeb3AuthForTests(): void {
   activeKeypair = null;
   web3auth = null;
+  web3authInitPromise = null;
 }

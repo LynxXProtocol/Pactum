@@ -9,7 +9,10 @@
     "sdk/js",
     "packages/cli",
     "evm",
-    "zk"
+    "zk",
+    "packages/soroban-client",
+    "frontend-wizard-remote",
+    "frontend-dashboard-remote"
   ],
   "scripts": {
     "lint": "eslint \"**/*.{ts,tsx,js,jsx}\" --ignore-path .eslintignore",

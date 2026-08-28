@@ -65,7 +65,7 @@ export interface AttemptedOperation {
  * When decoding the invocation footprint, we can label each arg.
  */
 const KNOWN_FUNCTION_ARGS: Record<string, string[]> = {
-  create_commitment: ['issuer', 'counterparty', 'termsHash', 'dueAt'],
+  create_commitment: ['issuer', 'counterparty', 'termsHash', 'dueAt', 'resolver'],
   attest: ['commitmentId', 'outcome'],
   dispute: ['commitmentId', 'reason'],
   resolve_dispute: ['commitmentId', 'outcome'],
@@ -249,7 +249,7 @@ function summarizeDiagnosticEvent(event: xdr.DiagnosticEvent): {
     // Extract data value
     let data: unknown = null;
     try {
-      const dataVal = contractEvent.body?.()?.v0?.()?.data;
+      const dataVal = contractEvent.body?.()?.v0?.()?.data?.();
       if (dataVal) {
         data = safeScValToNative(dataVal);
       }
@@ -316,7 +316,7 @@ function extractAttemptedOperation(events: xdr.DiagnosticEvent[]): AttemptedOper
 
       // Known Soroban functions often emit their name as the first topic
       if (functionName in KNOWN_FUNCTION_ARGS) {
-        const dataVal = contractEvent.body?.()?.v0?.()?.data;
+        const dataVal = contractEvent.body?.()?.v0?.()?.data?.();
         invocationTopics.set(functionName, {
           topics: nativeTopics.slice(1), // remaining topics after function name
           data: dataVal ? safeScValToNative(dataVal) : null,

@@ -11,7 +11,7 @@ import {
   nativeToScVal,
   scValToNative,
 } from '@stellar/stellar-sdk';
-import type { Reputation } from './api';
+import type { Reputation } from './types';
 import { Buffer } from 'buffer';
 import { signTransaction } from '@stellar/freighter-api';
 import { signTransactionWithLedger } from './wallet-adapters/ledger-adapter';
@@ -377,7 +377,9 @@ export async function preflightSimulate(
         const credentials = decoded.credentials();
         if (credentials.switch().name === 'sorobanCredentialsAddress') {
           const addrCreds = credentials.address();
-          requiredAuths.push(addrCreds.address().accountId().ed25519().toString('hex').slice(0, 8) + '...');
+          requiredAuths.push(
+            addrCreds.address().accountId().ed25519().toString('hex').slice(0, 8) + '...',
+          );
         } else {
           requiredAuths.push('Source account authorization');
         }

@@ -14,7 +14,7 @@ import {
   WalletConnectionError,
   type WalletErrorCode,
   type WalletProvider as WalletProviderName,
-} from '../lib/wallet';
+} from '@pactum/soroban-client';
 
 export interface WalletContextType {
   address: string | null;
@@ -136,7 +136,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       if (persisted.provider === 'web3auth') {
         try {
-          const { restoreWeb3AuthSession } = await import('../lib/web3auth');
+          const { restoreWeb3AuthSession } = await import('@pactum/soroban-client');
           const restored = await restoreWeb3AuthSession(persisted.address);
           if (isMounted && restored) {
             setAddress(restored.address);
@@ -150,7 +150,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
         return;
       }
 
-      const installed = isFreighterInstalled();
+      const installed = await isFreighterInstalled();
       setIsInstalled(installed);
       if (!installed) return;
 
@@ -183,7 +183,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
 
       try {
         if (walletProvider === 'freighter') {
-          setIsInstalled(isFreighterInstalled());
+          setIsInstalled(await isFreighterInstalled());
         }
 
         const result = await connectWithProvider(walletProvider);
@@ -207,7 +207,7 @@ export const WalletProvider: React.FC<{ children: ReactNode }> = ({ children }) 
     setProvider(null);
     clearPersistedState();
     if (wasSocial) {
-      void import('../lib/web3auth').then(({ logoutWeb3Auth }) => logoutWeb3Auth());
+      void import('@pactum/soroban-client').then(({ logoutWeb3Auth }) => logoutWeb3Auth());
     }
   }, [provider]);
 

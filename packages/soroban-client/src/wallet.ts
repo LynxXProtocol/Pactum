@@ -9,9 +9,11 @@ import albedo from '@albedo-link/intent';
 import { isStellarAddress } from './stellar';
 import { LedgerAdapter } from './wallet-adapters/ledger-adapter';
 
-export type WalletProvider = 'freighter' | 'albedo' | 'ledger';
+export type WalletProvider = 'freighter' | 'albedo' | 'ledger' | 'web3auth';
 
-export const PACTUM_NETWORK_PASSPHRASE = Networks.TESTNET;
+export const PACTUM_NETWORK_PASSPHRASE =
+  (typeof import.meta !== 'undefined' && import.meta.env?.VITE_STELLAR_NETWORK_PASSPHRASE) ||
+  Networks.TESTNET;
 export const PACTUM_NETWORK_NAME = 'TESTNET';
 export const FREIGHTER_HOMEPAGE = 'https://www.freighter.app/';
 
@@ -35,10 +37,14 @@ export interface WalletConnectionResult {
 
 export { freighterGetAddress as getFreighterAddress, freighterGetNetwork as getFreighterNetwork };
 
-export function isFreighterInstalled(): boolean {
-  return Boolean(
-    typeof window !== 'undefined' && (window as unknown as Record<string, unknown>).freighter,
-  );
+export async function isFreighterInstalled(): Promise<boolean> {
+  try {
+    const res = await freighterIsConnected();
+    return Boolean(res && res.isConnected);
+  } catch (err) {
+    console.warn('[wallet] freighter isInstalled check failed:', err);
+    return false;
+  }
 }
 
 export async function isFreighterConnected(): Promise<boolean> {
@@ -47,22 +53,29 @@ export async function isFreighterConnected(): Promise<boolean> {
     return Boolean(res && res.isConnected);
   } catch (err) {
     console.warn('[wallet] freighter isConnected check failed:', err);
-    return isFreighterInstalled();
+    return await isFreighterInstalled();
   }
 }
 
 function assertTestnetNetwork(network: string | undefined, passphrase: string | undefined): void {
   if (!network) return;
   const normalized = network.toUpperCase();
-  const onTestnet =
-    normalized === PACTUM_NETWORK_NAME ||
+  const allowedPassphrase = PACTUM_NETWORK_PASSPHRASE;
+  const onAllowedNetwork =
+    normalized === 'TESTNET' ||
     normalized === 'TEST' ||
-    (passphrase != null && passphrase === PACTUM_NETWORK_PASSPHRASE);
+    normalized === 'STANDALONE' ||
+    normalized === 'LOCAL' ||
+    (passphrase != null &&
+      (passphrase === allowedPassphrase ||
+        passphrase === Networks.TESTNET ||
+        passphrase === Networks.STANDALONE ||
+        passphrase === 'Standalone Network ; February 2017'));
 
-  if (!onTestnet) {
+  if (!onAllowedNetwork) {
     throw new WalletConnectionError(
       'NETWORK_MISMATCH',
-      `Freighter is connected to ${network}. Pactum requires Stellar Testnet. ` +
+      `Freighter is connected to ${network}. Pactum requires Stellar Testnet or Standalone sandbox. ` +
         'Please switch your wallet network to Testnet (Settings → Network) and try again.',
     );
   }
@@ -76,7 +89,8 @@ function assertTestnetNetwork(network: string | undefined, passphrase: string | 
  * 4. Verifies the wallet is on Stellar Testnet
  */
 export async function connectWithFreighter(): Promise<WalletConnectionResult> {
-  if (!isFreighterInstalled()) {
+  const installed = await isFreighterInstalled();
+  if (!installed) {
     throw new WalletConnectionError(
       'NOT_INSTALLED',
       'Freighter browser extension was not detected. Please install Freighter from freighter.app.',
@@ -196,9 +210,13 @@ export async function connectWithLedger(): Promise<WalletConnectionResult> {
   }
 }
 
-export function connectWallet(provider: WalletProvider): Promise<WalletConnectionResult> {
+export async function connectWallet(provider: WalletProvider): Promise<WalletConnectionResult> {
   if (provider === 'albedo') return connectWithAlbedo();
   if (provider === 'ledger') return connectWithLedger();
+  if (provider === 'web3auth') {
+    const { connectWithWeb3Auth } = await import('./web3auth');
+    return connectWithWeb3Auth();
+  }
   return connectWithFreighter();
 }
 

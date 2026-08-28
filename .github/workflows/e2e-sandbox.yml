@@ -74,26 +74,14 @@ jobs:
       # the Frontend Checks job and fall back to `npm install`, which resolves
       # workspace packages from the repo and succeeds.
       - name: Install frontend dependencies
-        working-directory: frontend
         run: |
-          rm -rf node_modules
           npm ci --include=optional
 
       # playwright.config.ts's webServer also builds+previews the dashboard/wizard Module
       # Federation remotes (see docs/module-federation.md) since the host now lazy-loads them
       # instead of bundling them directly -- each is an independent npm project needing its own
       # install (mirrors ci.yml's frontend-checks job, which builds the same three apps).
-      - name: Install dashboard remote dependencies
-        working-directory: frontend-dashboard-remote
-        run: |
-          rm -rf node_modules
-          npm ci --include=optional
 
-      - name: Install wizard remote dependencies
-        working-directory: frontend-wizard-remote
-        run: |
-          rm -rf node_modules
-          npm ci --include=optional
 
       - name: Install Playwright browsers
         working-directory: frontend

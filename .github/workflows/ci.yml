@@ -270,9 +270,7 @@ jobs:
             ${{ runner.os }}-frontend-node-
 
       - name: Install frontend dependencies
-        working-directory: frontend
         run: |
-          rm -rf node_modules
           npm ci --include=optional
 
       - name: Run frontend linter
@@ -296,17 +294,7 @@ jobs:
       # Federation remotes (see docs/module-federation.md) since the host now lazy-loads them
       # instead of bundling them directly -- each is an independent npm project needing its own
       # install.
-      - name: Install dashboard remote dependencies
-        working-directory: frontend-dashboard-remote
-        run: |
-          rm -rf node_modules
-          npm ci --include=optional
 
-      - name: Install wizard remote dependencies
-        working-directory: frontend-wizard-remote
-        run: |
-          rm -rf node_modules
-          npm ci --include=optional
 
       - name: Run frontend e2e tests
         working-directory: frontend
@@ -365,23 +353,11 @@ jobs:
 
       # The host and the two Module Federation remotes it loads at runtime (see
       # docs/module-federation.md) are independent npm projects, each installed separately.
-      - name: Install host dependencies
-        working-directory: frontend
+      - name: Install monorepo dependencies
         run: |
-          rm -rf node_modules
           npm ci --include=optional
 
-      - name: Install dashboard remote dependencies
-        working-directory: frontend-dashboard-remote
-        run: |
-          rm -rf node_modules
-          npm ci --include=optional
 
-      - name: Install wizard remote dependencies
-        working-directory: frontend-wizard-remote
-        run: |
-          rm -rf node_modules
-          npm ci --include=optional
 
       - name: Typecheck and build dashboard remote
         working-directory: frontend-dashboard-remote
