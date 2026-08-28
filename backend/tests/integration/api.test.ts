@@ -48,8 +48,8 @@ describe('Commitments API Integration', () => {
 
   it('POST /commitments should insert an optimistic commitment into commitment_outcomes', async () => {
     const payload = {
-      issuer: 'GBLDEY4S2X2WFTX6FYX4M4YZ276M2E4N5J5QO2E3B5Z5O5N5P5R5S',
-      counterparty: 'GCLDEY4S2X2WFTX6FYX4M4YZ276M2E4N5J5QO2E3B5Z5O5N5P5R5S',
+      issuer: 'GBLDEY4S2X2WFTX6FYX4M4YZ276M2E4N5J5QO2E3B5Z5O5N5P5R5SAAA',
+      counterparty: 'GCLDEY4S2X2WFTX6FYX4M4YZ276M2E4N5J5QO2E3B5Z5O5N5P5R5SBBB',
       terms_hash: 'abc123def456',
       due_at: Math.floor(Date.now() / 1000) + 86400, // tomorrow
     };
