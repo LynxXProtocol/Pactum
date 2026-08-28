@@ -21,7 +21,7 @@ describe('Commitments API Integration', () => {
 
   before(async () => {
     db = await startIntegrationDatabase();
-    
+
     // Override the pool.query used by the router with our integration DB pool
     originalQuery = pool.query;
     pool.query = db.pool.query.bind(db.pool);
@@ -48,8 +48,8 @@ describe('Commitments API Integration', () => {
 
   it('POST /commitments should insert an optimistic commitment into commitment_outcomes', async () => {
     const payload = {
-      issuer: 'GBLDEY4S2X2WFTX6FYX4M4YZ276M2E4N5J5QO2E3B5Z5O5N5P5R5SAAA',
-      counterparty: 'GCLDEY4S2X2WFTX6FYX4M4YZ276M2E4N5J5QO2E3B5Z5O5N5P5R5SBBB',
+      issuer: 'GCFIRY65OQE7DFP5KLNS2PF2LVZMUZYJX4OZIEQ36N2IQANUB5XVYOJR',
+      counterparty: 'GCATS5YOVB6ROX2WUNKGNQ2MP3GMXDMKSG2O4N5CLX3A6W4PZGZZI55U',
       terms_hash: 'abc123def456',
       due_at: Math.floor(Date.now() / 1000) + 86400, // tomorrow
     };
@@ -57,19 +57,22 @@ describe('Commitments API Integration', () => {
     const res = await fetch(`http://localhost:${port}/commitments`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(payload),
     });
 
     assert.equal(res.status, 201);
-    const body = await res.json() as { id: number; status: string };
+    const body = (await res.json()) as { id: number; status: string };
     assert.ok(typeof body.id === 'number');
     assert.equal(body.status, 'Pending');
 
     // Assert a row landed in commitment_outcomes
-    const { rows } = await db.pool.query('SELECT * FROM commitment_outcomes WHERE commitment_id = $1', [body.id.toString()]);
+    const { rows } = await db.pool.query(
+      'SELECT * FROM commitment_outcomes WHERE commitment_id = $1',
+      [body.id.toString()],
+    );
     assert.equal(rows.length, 1);
     const row = rows[0];
-    
+
     assert.equal(row.party_a, payload.issuer);
     assert.equal(row.party_b, payload.counterparty);
     assert.equal(row.status, 'pending');

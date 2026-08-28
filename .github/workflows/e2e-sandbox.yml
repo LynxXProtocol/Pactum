@@ -76,11 +76,8 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci || npm install
-          else
-            npm install
-          fi
+          rm -rf node_modules
+          npm ci --include=optional
 
       # playwright.config.ts's webServer also builds+previews the dashboard/wizard Module
       # Federation remotes (see docs/module-federation.md) since the host now lazy-loads them
@@ -88,11 +85,15 @@ jobs:
       # install (mirrors ci.yml's frontend-checks job, which builds the same three apps).
       - name: Install dashboard remote dependencies
         working-directory: frontend-dashboard-remote
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Install wizard remote dependencies
         working-directory: frontend-wizard-remote
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Install Playwright browsers
         working-directory: frontend
