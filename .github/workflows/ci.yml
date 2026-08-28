@@ -165,7 +165,6 @@ jobs:
         working-directory: backend
         run: node dist/db/migrate-dry-run.js
 
-
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
@@ -273,11 +272,8 @@ jobs:
       - name: Install frontend dependencies
         working-directory: frontend
         run: |
-          if [ -f package-lock.json ]; then
-            npm ci || npm install
-          else
-            npm install
-          fi
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Run frontend linter
         working-directory: frontend
@@ -302,11 +298,15 @@ jobs:
       # install.
       - name: Install dashboard remote dependencies
         working-directory: frontend-dashboard-remote
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Install wizard remote dependencies
         working-directory: frontend-wizard-remote
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Run frontend e2e tests
         working-directory: frontend
@@ -367,15 +367,21 @@ jobs:
       # docs/module-federation.md) are independent npm projects, each installed separately.
       - name: Install host dependencies
         working-directory: frontend
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Install dashboard remote dependencies
         working-directory: frontend-dashboard-remote
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Install wizard remote dependencies
         working-directory: frontend-wizard-remote
-        run: npm ci
+        run: |
+          rm -rf node_modules
+          npm ci --include=optional
 
       - name: Typecheck and build dashboard remote
         working-directory: frontend-dashboard-remote

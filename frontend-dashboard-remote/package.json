@@ -22,7 +22,8 @@
     "@tanstack/react-virtual": "^3.14.10",
     "lucide-react": "^1.32.0",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "zod": "^4.4.3"
   },
   "devDependencies": {
     "@module-federation/vite": "^1.20.7",
@@ -32,5 +33,9 @@
     "@vitejs/plugin-react": "^6.0.4",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-linux-x64-gnu": "^1.2.4",
+    "@rolldown/binding-wasm32-wasi": "^1.2.4"
   }
 }

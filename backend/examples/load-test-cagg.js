@@ -1,3 +1,4 @@
+/* global __ENV */
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 
@@ -7,10 +8,10 @@ import { check, sleep } from 'k6';
 export const options = {
   stages: [
     { duration: '30s', target: 5000 }, // Ramp up to 5k users
-    { duration: '1m', target: 5000 },  // Sustain 5k users
+    { duration: '1m', target: 5000 }, // Sustain 5k users
     { duration: '30s', target: 10000 }, // Ramp up to 10k users
-    { duration: '1m', target: 10000 },  // Sustain 10k users
-    { duration: '30s', target: 0 },    // Ramp down to 0
+    { duration: '1m', target: 10000 }, // Sustain 10k users
+    { duration: '30s', target: 0 }, // Ramp down to 0
   ],
   thresholds: {
     http_req_duration: ['p(99)<15'], // 99% of requests must complete below 15ms

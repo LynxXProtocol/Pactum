@@ -284,7 +284,10 @@ function assertSafeRegexPattern(pattern: string, path: string): void {
     if (j >= n || pattern[j] !== '}') return null; // not a valid quantifier
     const min = Number(minStr);
     const max = hasComma ? (maxStr === '' ? Infinity : Number(maxStr)) : min;
-    if (min > LIMITS.MAX_REGEX_QUANTIFIER || (Number.isFinite(max) && max > LIMITS.MAX_REGEX_QUANTIFIER)) {
+    if (
+      min > LIMITS.MAX_REGEX_QUANTIFIER ||
+      (Number.isFinite(max) && max > LIMITS.MAX_REGEX_QUANTIFIER)
+    ) {
       throw new AstValidationError('regex repetition bound is too large', path);
     }
     i = j + 1; // consume through `}`
@@ -394,7 +397,6 @@ function assertSafeRegexPattern(pattern: string, path: string): void {
   }
 }
 
-
 // ─────────────────────────────────────────────────────────────────────────────
 // Expression compiler (validate + compile-to-closures)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -413,7 +415,12 @@ function compileField(name: string, path: string): CompiledExpr {
   };
 }
 
-function compileOperandList(nodes: unknown, path: string, depth: number, budget: Budget): CompiledExpr[] {
+function compileOperandList(
+  nodes: unknown,
+  path: string,
+  depth: number,
+  budget: Budget,
+): CompiledExpr[] {
   if (!Array.isArray(nodes)) {
     throw new AstValidationError('expected an array of operands', path);
   }
@@ -541,7 +548,7 @@ function compileExpr(node: unknown, path: string, depth: number, budget: Budget)
       }
       let regex: RegExp;
       try {
-        regex = new RegExp(pattern, flags ?? '');
+        regex = new RegExp(pattern, typeof flags === 'string' ? flags : '');
       } catch (err) {
         throw new AstValidationError(
           `invalid regular expression: ${(err as Error).message}`,
@@ -620,15 +627,15 @@ function compileRule(rule: unknown, path: string): CompiledRule {
   // assert and when share one node budget so a single rule can never blow up.
   const budget: Budget = { nodes: 0 };
   const assertFn = compileExpr(rule.assert, `${path}.assert`, 0, budget);
-  const whenFn =
-    rule.when === undefined ? null : compileExpr(rule.when, `${path}.when`, 0, budget);
+  const whenFn = rule.when === undefined ? null : compileExpr(rule.when, `${path}.when`, 0, budget);
 
   const test = whenFn
-    ? (ctx: Parameters<CompiledExpr>[0]): boolean =>
-        !truthy(whenFn(ctx)) || truthy(assertFn(ctx))
+    ? (ctx: Parameters<CompiledExpr>[0]): boolean => !truthy(whenFn(ctx)) || truthy(assertFn(ctx))
     : (ctx: Parameters<CompiledExpr>[0]): boolean => truthy(assertFn(ctx));
 
-  return id === undefined ? { field, message, test } : { field, message, id, test };
+  return id === undefined
+    ? { field: field as string, message, test }
+    : { field: field as string, message, id: id as string, test };
 }
 
 /**

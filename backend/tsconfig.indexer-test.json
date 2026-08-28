@@ -6,5 +6,12 @@
     "outDir": "./dist-indexer-test",
     "rootDir": "."
   },
-  "include": ["src/indexer/**/*.ts", "src/cache/**/*.ts", "src/reputation/**/*.ts"]
+  "include": [
+    "src/indexer/**/*.ts",
+    "src/cache/**/*.ts",
+    "src/reputation/**/*.ts",
+    "src/services/botNotificationService.ts",
+    "src/workers/discordBot.ts",
+    "src/workers/discordBot.test.ts"
+  ]
 }
