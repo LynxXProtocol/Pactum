@@ -71,8 +71,8 @@ describe('Attestor repository (integration)', () => {
   });
 
   it('projects assignments, votes and outcomes into a reliability score', async () => {
-    await repository.insertAssignments('1', [A, B]);
-    await repository.insertAssignments('2', [A, B]);
+    await repository.insertAssignments('1', [A]);
+    await repository.insertAssignments('2', [A]);
     await repository.insertAttestorVote({ commitmentId: '1', attestor: A, outcome: 'fulfilled', ledgerSequence: 10 });
     await repository.insertAttestorVote({ commitmentId: '2', attestor: A, outcome: 'breached', ledgerSequence: 11 });
     // A voted fulfilled on #1, but #1 resolved to breached => A overturned once.
