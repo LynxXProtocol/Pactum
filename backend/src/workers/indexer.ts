@@ -16,6 +16,8 @@ import { ReputationCacheProjector } from '../indexer/reputation-projector';
 import { createSorobanRpcLedgerClient, SorobanLedgerSource } from '../indexer/rpc-source';
 import { PostgresIndexerStore } from '../indexer/store';
 import { PostgresReputationRepository } from '../reputation/repository';
+import { PostgresAttestorRepository } from '../attestor/repository';
+import { AttestorCache } from '../attestor/cache';
 import { insertCommitmentOutcome, updateCommitmentOutcome } from './timescaleSnapshot';
 
 const finalityDepth = Number(process.env.INDEXER_FINALITY_DEPTH ?? 2);
@@ -105,6 +107,92 @@ async function projectCommitmentOutcome(
   }
 }
 
+/**
+ * Reads a disputed commitment's attestor panel straight from the contract via
+ * `get_commitment`, the same read-only technique as `fetchDueAt`. The
+ * `disputed` event only carries the commitment id, but the panel membership
+ * lives in `Commitment.attestors` storage -- we need it to attribute
+ * "assigned" (and therefore uptime) to each attestor.
+ */
+async function fetchPanel(commitmentId: string): Promise<string[] | null> {
+  if (!contractId || !networkPassphrase) return null;
+  try {
+    const contract = new Contract(contractId);
+    const stub = new Account(Keypair.random().publicKey(), '0');
+    const transaction = new TransactionBuilder(stub, { fee: BASE_FEE, networkPassphrase })
+      .addOperation(
+        contract.call('get_commitment', nativeToScVal(BigInt(commitmentId), { type: 'u64' })),
+      )
+      .setTimeout(30)
+      .build();
+
+    const simulation = await server.simulateTransaction(transaction);
+    if (rpc.Api.isSimulationError(simulation) || !simulation.result) return null;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const raw: any = scValToNative(simulation.result.retval);
+    const panel = raw?.attestors;
+    if (!Array.isArray(panel)) return null;
+    return panel.filter((a: unknown): a is string => typeof a === 'string');
+  } catch (error) {
+    console.error(`Failed to fetch panel for commitment ${commitmentId}`, error);
+    return null;
+  }
+}
+
+/**
+ * Projects attestor-voting events into the reliability tables and keeps the
+ * attestor cache coherent. Mirrors `projectCommitmentOutcome` but targets the
+ * issue #63 schema (assignments, votes, dispute outcomes, registry stake).
+ */
+async function projectAttestorEvent(
+  event: ContractEvent,
+  ledgerClosedAt: string,
+  ledgerSequence: number,
+  repo: PostgresAttestorRepository,
+  cache: AttestorCache,
+): Promise<void> {
+  switch (event.type) {
+    case 'disputed': {
+      const panel = await fetchPanel(event.commitmentId);
+      if (panel && panel.length > 0) {
+        await repo.insertAssignments(event.commitmentId, panel);
+        await Promise.all(panel.map((a) => cache.invalidate(a)));
+      }
+      return;
+    }
+    case 'votecast': {
+      await repo.insertAttestorVote({
+        commitmentId: event.commitmentId,
+        attestor: event.attestor,
+        outcome: event.outcome,
+        ledgerSequence,
+      });
+      await cache.invalidate(event.attestor);
+      return;
+    }
+    case 'voteres':
+    case 'votefall': {
+      await repo.insertDisputeOutcome({
+        commitmentId: event.commitmentId,
+        finalOutcome: event.finalOutcome,
+        resolutionType: event.type,
+      });
+      // Every attestor who voted on this commitment may have been overturned.
+      const affected = await repo.attestorsForCommitment(event.commitmentId);
+      await Promise.all(affected.map((a) => cache.invalidate(a)));
+      return;
+    }
+    case 'staked':
+    case 'unstaked': {
+      const delta = event.type === 'staked' ? event.amount : `-${event.amount}`;
+      await repo.upsertRegistryStake(event.attestor, delta);
+      await cache.invalidate(event.attestor);
+      return;
+    }
+  }
+}
+
 async function run(): Promise<void> {
   const checkpoint = await new PostgresIndexerStore(pool).getCheckpoint();
   const latest = await source.getLatestLedger();
@@ -115,6 +203,8 @@ async function run(): Promise<void> {
   );
   const cache = new ReputationCache(redis, new PostgresReputationRepository(pool));
   const projector = new ReputationCacheProjector(cache);
+  const attestorRepo = new PostgresAttestorRepository(pool);
+  const attestorCache = new AttestorCache(redis, attestorRepo);
   const indexer = new FinalityIndexer({
     source,
     store: new PostgresIndexerStore(pool),
@@ -129,6 +219,17 @@ async function run(): Promise<void> {
           await projectCommitmentOutcome(event, ledger.closedAt);
         } catch (error) {
           console.error('Failed to project commitment_outcomes for event', event, error);
+        }
+        try {
+          await projectAttestorEvent(
+            event,
+            ledger.closedAt,
+            Number(ledger.sequence),
+            attestorRepo,
+            attestorCache,
+          );
+        } catch (error) {
+          console.error('Failed to project attestor reliability for event', event, error);
         }
       }
     },

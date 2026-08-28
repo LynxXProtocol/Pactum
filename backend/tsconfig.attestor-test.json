@@ -1,0 +1,16 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "Node16",
+    "moduleResolution": "Node16",
+    "outDir": "./dist-attestor-test",
+    "rootDir": "."
+  },
+  "include": [
+    "src/attestor/**/*.ts",
+    "src/db/**/*.ts",
+    "tests/setup.ts",
+    "tests/attestor.test.ts"
+  ],
+  "exclude": ["node_modules", "dist", "dist-attestor-test"]
+}
