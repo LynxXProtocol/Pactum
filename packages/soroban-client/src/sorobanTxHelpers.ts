@@ -117,14 +117,19 @@ export async function submitGenericSorobanTx({
 
   let txStatus: rpc.Api.GetTransactionStatus = rpc.Api.GetTransactionStatus.NOT_FOUND;
   let txResult: rpc.Api.GetTransactionResponse | null = null;
+  let lastPollError: RpcPoolExhaustedError | null = null;
   let attempts = 0;
   while (attempts < 25) {
     attempts++;
     await new Promise((resolve) => setTimeout(resolve, 1200));
     try {
       txResult = await pool.getTransaction(txHash);
+      lastPollError = null;
     } catch (err) {
-      if (err instanceof RpcPoolExhaustedError) continue;
+      if (err instanceof RpcPoolExhaustedError) {
+        lastPollError = err;
+        continue;
+      }
       throw err;
     }
     txStatus = txResult.status;
@@ -153,6 +158,7 @@ export async function submitGenericSorobanTx({
   }
 
   if (txStatus !== rpc.Api.GetTransactionStatus.SUCCESS) {
+    if (lastPollError) throw lastPollError;
     throw new Error(`Transaction confirmation timed out. Hash: ${txHash}`);
   }
 
