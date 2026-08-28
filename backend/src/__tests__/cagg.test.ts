@@ -1,5 +1,4 @@
 import { Pool } from 'pg';
-// @ts-ignore
 import { PostgreSqlContainer } from '@testcontainers/postgresql';
 import { runMigrations } from '../db/timescale';
 import { PostgresReputationRepository } from '../reputation/repository';
@@ -50,7 +49,7 @@ describe('TimescaleDB Continuous Aggregates', () => {
        ($1, 'GBXXX', 'fulfilled', 100, NOW() - INTERVAL '2 days'),
        ($1, 'GBXXX', 'late', 50, NOW() - INTERVAL '2 days'),
        ($1, 'GBXXX', 'fulfilled', 200, NOW() - INTERVAL '1 day')`,
-      [address]
+      [address],
     );
 
     await pool.query(
@@ -58,12 +57,16 @@ describe('TimescaleDB Continuous Aggregates', () => {
        VALUES 
        ($1, 80, 2, 1, 1, 0, 50, NOW() - INTERVAL '2 days'),
        ($1, 85, 3, 2, 1, 0, 66.67, NOW() - INTERVAL '1 day')`,
-      [address]
+      [address],
     );
 
     // 2. Manually trigger CAGG refresh
-    await pool.query(`CALL refresh_continuous_aggregate('reputation_snapshots_daily', NOW() - INTERVAL '7 days', NOW())`);
-    await pool.query(`CALL refresh_continuous_aggregate('mv_trust_score_trends_cagg', NOW() - INTERVAL '7 days', NOW())`);
+    await pool.query(
+      `CALL refresh_continuous_aggregate('reputation_snapshots_daily', NOW() - INTERVAL '7 days', NOW())`,
+    );
+    await pool.query(
+      `CALL refresh_continuous_aggregate('mv_trust_score_trends_cagg', NOW() - INTERVAL '7 days', NOW())`,
+    );
 
     // 3. Verify Repository correctly queries the view
     const repo = new PostgresReputationRepository(pool);
@@ -75,4 +78,3 @@ describe('TimescaleDB Continuous Aggregates', () => {
     assert.ok(Number(result.fulfilledCommitments) >= 1);
   });
 });
-

@@ -253,8 +253,9 @@ describe('PactumStateProof aggregation pipeline', function () {
 
   it('reduces per-entry verification gas by at least 75% versus discrete proofs', async function () {
     const { harness } = await loadFixture(deployFixture);
+    const testBatchSize = 16;
     const discreteProofs = [];
-    for (let i = 1; i <= BATCH_SIZE; i++) {
+    for (let i = 1; i <= testBatchSize; i++) {
       discreteProofs.push(
         createValidStateProof({
           stellarAddress: padAddr(i),
@@ -275,11 +276,11 @@ describe('PactumStateProof aggregation pipeline', function () {
     for (const proof of discreteProofs) {
       discreteTotal += await harness.verifyProof.estimateGas(proof, proof.ledgerHeaderHash);
     }
-    const discretePerEntry = discreteTotal / BigInt(BATCH_SIZE);
+    const discretePerEntry = discreteTotal / BigInt(testBatchSize);
 
-    const batch = createValidBatch(BATCH_SIZE);
+    const batch = createValidBatch(testBatchSize);
     const batchGas = await harness.verifyBatchedProof.estimateGas(batch, batch.ledgerHeaderHash);
-    const batchPerEntry = batchGas / BigInt(BATCH_SIZE);
+    const batchPerEntry = batchGas / BigInt(testBatchSize);
 
     const reductionBps = ((discretePerEntry - batchPerEntry) * 10000n) / discretePerEntry;
     // eslint-disable-next-line no-console

@@ -6,6 +6,9 @@ import { createReputationRouter } from './routes/reputation';
 import analyticsRoutes from './routes/analytics';
 import heReputationRouter from './routes/he_reputation';
 import { createProofsRouter } from './routes/proofs';
+import { createAttestorRouter } from './routes/attestor';
+import { PostgresAttestorRepository } from './attestor/repository';
+import { AttestorCache } from './attestor/cache';
 import { RelayerService } from './relayer/relayerService';
 import pool from './db/timescale';
 import { PostgresReputationRepository } from './reputation/repository';
@@ -218,6 +221,14 @@ const proofsRouter = createProofsRouter(relayerService);
 app.use('/proofs', proofsRouter);
 app.use('/api/proofs', proofsRouter);
 app.use('/api/v1/proofs', proofsRouter);
+
+// ── Attestor reputation & discovery engine (Issue #63) ─────────────────────
+const attestorRepository = new PostgresAttestorRepository(pool);
+const attestorCache = new AttestorCache(redis, attestorRepository, {
+  reliabilityTtlSeconds: Number(process.env.ATTESTOR_RELIABILITY_TTL_SECONDS ?? 300),
+  discoveryTtlSeconds: Number(process.env.ATTESTOR_DISCOVERY_TTL_SECONDS ?? 10),
+});
+app.use('/', createAttestorRouter(attestorCache, attestorRepository));
 
 // Metrics endpoint for Prometheus scraping
 app.get('/metrics', async (req: Request, res: Response) => {

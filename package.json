@@ -38,5 +38,8 @@
     "*.{json,md,yml,yaml}": [
       "prettier --write"
     ]
+  },
+  "overrides": {
+    "lodash": "^4.18.1"
   }
 }

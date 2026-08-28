@@ -29,11 +29,40 @@ export interface CommitmentResolvedEvent {
   outcome: CommitmentOutcomeName;
 }
 
+/** An attestor cast a vote on a disputed commitment (`votecast` on-chain). */
+export interface AttestorVotedEvent {
+  type: 'votecast';
+  commitmentId: string;
+  attestor: string;
+  outcome: CommitmentOutcomeName;
+}
+
+/**
+ * A disputed commitment reached a final outcome via panel vote (`voteres`) or
+ * fell back after the voting window elapsed (`votefall`). The gap between this
+ * final outcome and an attestor's earlier `votecast` is the "overturned" signal.
+ */
+export interface AttestorResolvedEvent {
+  type: 'voteres' | 'votefall';
+  commitmentId: string;
+  finalOutcome: CommitmentOutcomeName;
+}
+
+/** An attestor staked (`staked`) or withdrew (`unstaked`) funds. */
+export interface AttestorStakeEvent {
+  type: 'staked' | 'unstaked';
+  attestor: string;
+  amount: string;
+}
+
 export type ContractEvent =
   | CommitmentCreatedEvent
   | CommitmentAttestedEvent
   | CommitmentDisputedEvent
-  | CommitmentResolvedEvent;
+  | CommitmentResolvedEvent
+  | AttestorVotedEvent
+  | AttestorResolvedEvent
+  | AttestorStakeEvent;
 
 interface ScValDecoder {
   scValToNative: typeof ScValToNative;
@@ -152,6 +181,29 @@ export const parseContractEvent = async (event: LedgerEvent): Promise<ContractEv
       const outcome = toOutcome(value);
       if (commitmentId === null || outcome === null) return null;
       return { type: 'resolved', commitmentId, outcome };
+    }
+    case 'votecast': {
+      const commitmentId = toCommitmentId(topicValues[0]);
+      const attestor = topicValues[1];
+      const outcome = toOutcome(value);
+      if (commitmentId === null || typeof attestor !== 'string' || outcome === null) return null;
+      return { type: 'votecast', commitmentId, attestor, outcome };
+    }
+    case 'voteres':
+    case 'votefall': {
+      const commitmentId = toCommitmentId(topicValues[0]);
+      const finalOutcome = toOutcome(value);
+      if (commitmentId === null || finalOutcome === null) return null;
+      return { type: symbol as 'voteres' | 'votefall', commitmentId, finalOutcome };
+    }
+    case 'staked':
+    case 'unstaked': {
+      const attestor = topicValues[0];
+      if (typeof attestor !== 'string') return null;
+      if (typeof value !== 'bigint' && typeof value !== 'number' && typeof value !== 'string') {
+        return null;
+      }
+      return { type: symbol as 'staked' | 'unstaked', attestor, amount: String(value) };
     }
     default:
       return null;
