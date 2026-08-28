@@ -68,5 +68,15 @@
     "typescript": "~6.0.2",
     "vite": "^8.2.0",
     "vitest": "^4.1.11"
+  },
+  "optionalDependencies": {
+    "@oxlint/binding-linux-x64-gnu": "^1.75.0",
+    "@rolldown/binding-linux-x64-gnu": "^1.2.4",
+    "@rolldown/binding-wasm32-wasi": "^1.2.4",
+    "@rollup/rollup-linux-x64-gnu": "^4.63.1",
+    "@swc/core-linux-x64-gnu": "^1.16.1",
+    "@tailwindcss/oxide-linux-x64-gnu": "^4.3.3",
+    "@tailwindcss/oxide-wasm32-wasi": "^4.3.3",
+    "lightningcss-linux-x64-gnu": "^1.33.0"
   }
 }

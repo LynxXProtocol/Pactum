@@ -234,8 +234,20 @@ The frontend is built to call the API on its own origin, and nginx proxies `/api
 - [ ] Marketplace integration example (check a counterparty's history before a deal)
 - [ ] Rate limiting & spam-commitment protections
 - [x] Dashboard endpoint (commitments created/fulfilled over time)
+- [x] Discord & Slack commitment tracker bot ([`docs/discord-bot.md`](./docs/discord-bot.md))
 - [x] Verifiable reputation export — prove `Trust Score > threshold` in zero knowledge
       ([`docs/zk-reputation-proofs.md`](./docs/zk-reputation-proofs.md))
+
+### Discord & Slack Notification Bot (`pactum-bot`)
+
+DAOs and organizations can receive real-time updates directly in Discord and Slack when commitments are created, fulfilled, late, breached, or disputed:
+
+```bash
+cd backend
+npm run pactum-bot
+```
+
+See the complete [Discord & Slack Bot Setup Guide](./docs/discord-bot.md) for instructions on inviting the bot to your Discord server or configuring incoming webhooks.
 
 Open an issue if you'd like to pick up any of these — contributions welcome.
 

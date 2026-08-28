@@ -35,5 +35,9 @@
     "@vitejs/plugin-react": "^6.0.4",
     "typescript": "~6.0.2",
     "vite": "^8.2.0"
+  },
+  "optionalDependencies": {
+    "@rolldown/binding-linux-x64-gnu": "^1.2.4",
+    "@rolldown/binding-wasm32-wasi": "^1.2.4"
   }
 }

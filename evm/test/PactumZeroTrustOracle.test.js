@@ -1,18 +1,19 @@
-const { expect } = require("chai");
-const { ethers } = require("hardhat");
-const { loadFixture, time } = require("@nomicfoundation/hardhat-network-helpers");
-const crypto = require("crypto");
+/* eslint-disable @typescript-eslint/no-unused-expressions */
+const { expect } = require('chai');
+const { ethers } = require('hardhat');
+const { loadFixture, time } = require('@nomicfoundation/hardhat-network-helpers');
+const crypto = require('crypto');
 
 function sha256(buf) {
-  return crypto.createHash("sha256").update(buf).digest();
+  return crypto.createHash('sha256').update(buf).digest();
 }
 
 function hexToBuf(hex) {
-  return Buffer.from(hex.replace(/^0x/, ""), "hex");
+  return Buffer.from(hex.replace(/^0x/, ''), 'hex');
 }
 
 function bufToHex(buf) {
-  return "0x" + buf.toString("hex");
+  return '0x' + buf.toString('hex');
 }
 
 function computeLeafHash(contractId, stellarAddress, scoreData) {
@@ -51,8 +52,8 @@ function computeHeaderHash(ledgerSeq, headerProof) {
   return bufToHex(sha256(buf));
 }
 
-describe("PactumZeroTrustOracle", function () {
-  const REGISTRY_CONTRACT_ID = ethers.id("soroban-registry-pactum");
+describe('PactumZeroTrustOracle', function () {
+  const REGISTRY_CONTRACT_ID = ethers.id('soroban-registry-pactum');
   const STELLAR_ADDRESS = ethers.zeroPadValue(ethers.toBeHex(0x1234), 32);
 
   function createValidStateProof(overrides = {}) {
@@ -66,14 +67,16 @@ describe("PactumZeroTrustOracle", function () {
       ...(overrides.scoreData || {}),
     };
 
-    const contractId = overrides.contractId !== undefined ? overrides.contractId : REGISTRY_CONTRACT_ID;
-    const stellarAddress = overrides.stellarAddress !== undefined ? overrides.stellarAddress : STELLAR_ADDRESS;
+    const contractId =
+      overrides.contractId !== undefined ? overrides.contractId : REGISTRY_CONTRACT_ID;
+    const stellarAddress =
+      overrides.stellarAddress !== undefined ? overrides.stellarAddress : STELLAR_ADDRESS;
     const ledgerSeq = overrides.ledgerSeq !== undefined ? overrides.ledgerSeq : 5050;
 
     const leafHash = computeLeafHash(contractId, stellarAddress, scoreData);
 
-    const sibling1 = "0x" + "aa".repeat(32);
-    const sibling2 = "0x" + "bb".repeat(32);
+    const sibling1 = '0x' + 'aa'.repeat(32);
+    const sibling2 = '0x' + 'bb'.repeat(32);
     const merkleProof = overrides.merkleProof || [
       { sibling: sibling1, isRight: true },
       { sibling: sibling2, isRight: false },
@@ -82,8 +85,8 @@ describe("PactumZeroTrustOracle", function () {
     const stateRootHash = computeMerkleRoot(leafHash, merkleProof);
 
     const headerProof = {
-      previousLedgerHash: "0x" + "11".repeat(32),
-      txSetResultHash: "0x" + "22".repeat(32),
+      previousLedgerHash: '0x' + '11'.repeat(32),
+      txSetResultHash: '0x' + '22'.repeat(32),
       bucketListHash: stateRootHash,
       ledgerVersion: 21,
       ...(overrides.headerProof || {}),
@@ -102,8 +105,8 @@ describe("PactumZeroTrustOracle", function () {
     } = overrides;
 
     return {
-      version: "1.0.0",
-      networkPassphrase: "Test SDF Network ; September 2015",
+      version: '1.0.0',
+      networkPassphrase: 'Test SDF Network ; September 2015',
       ledgerSeq,
       ledgerHeaderHash,
       stateRootHash,
@@ -120,14 +123,14 @@ describe("PactumZeroTrustOracle", function () {
   async function deployFixture() {
     const [owner, relayer, user] = await ethers.getSigners();
 
-    const Oracle = await ethers.getContractFactory("PactumZeroTrustOracle");
+    const Oracle = await ethers.getContractFactory('PactumZeroTrustOracle');
     const oracle = await Oracle.deploy(owner.address, REGISTRY_CONTRACT_ID);
 
     return { oracle, owner, relayer, user };
   }
 
-  describe("Zero-Trust State Proof Verification", function () {
-    it("successfully verifies proof and caches trust score when header is trusted", async function () {
+  describe('Zero-Trust State Proof Verification', function () {
+    it('successfully verifies proof and caches trust score when header is trusted', async function () {
       const { oracle, owner, relayer } = await loadFixture(deployFixture);
 
       const proof = createValidStateProof();
@@ -139,8 +142,14 @@ describe("PactumZeroTrustOracle", function () {
       // An untrusted relayer submits the proof
       const tx = await oracle.connect(relayer).submitStateProof(proof);
       await expect(tx)
-        .to.emit(oracle, "StateProofVerified")
-        .withArgs(proof.stellarAddress, 88, proof.ledgerSeq, proof.ledgerHeaderHash, relayer.address);
+        .to.emit(oracle, 'StateProofVerified')
+        .withArgs(
+          proof.stellarAddress,
+          88,
+          proof.ledgerSeq,
+          proof.ledgerHeaderHash,
+          relayer.address,
+        );
 
       // Verify cached score record
       const record = await oracle.getVerifiedTrustScore(proof.stellarAddress);
@@ -157,11 +166,11 @@ describe("PactumZeroTrustOracle", function () {
       expect(await oracle.isScoreStale(proof.stellarAddress, 3600)).to.be.true;
     });
 
-    it("allows batch registration of trusted ledger headers", async function () {
+    it('allows batch registration of trusted ledger headers', async function () {
       const { oracle, owner } = await loadFixture(deployFixture);
 
       const seqs = [100, 200, 300];
-      const hashes = ["0x" + "11".repeat(32), "0x" + "22".repeat(32), "0x" + "33".repeat(32)];
+      const hashes = ['0x' + '11'.repeat(32), '0x' + '22'.repeat(32), '0x' + '33'.repeat(32)];
 
       await oracle.connect(owner).setTrustedLedgerHeadersBatch(seqs, hashes);
 
@@ -170,7 +179,7 @@ describe("PactumZeroTrustOracle", function () {
       expect(await oracle.isHeaderTrusted(300, hashes[2])).to.be.true;
     });
 
-    it("rejects proof if header hash is not trusted", async function () {
+    it('rejects proof if header hash is not trusted', async function () {
       const { oracle, relayer } = await loadFixture(deployFixture);
 
       const proof = createValidStateProof();
@@ -178,37 +187,37 @@ describe("PactumZeroTrustOracle", function () {
 
       await expect(oracle.connect(relayer).submitStateProof(proof)).to.be.revertedWithCustomError(
         oracle,
-        "UntrustedHeader"
+        'UntrustedHeader',
       );
     });
 
-    it("rejects proof with mismatched contract registry id", async function () {
+    it('rejects proof with mismatched contract registry id', async function () {
       const { oracle, owner, relayer } = await loadFixture(deployFixture);
 
-      const fakeRegistryId = ethers.id("fake-registry-id");
+      const fakeRegistryId = ethers.id('fake-registry-id');
       const proof = createValidStateProof({ contractId: fakeRegistryId });
 
       await oracle.connect(owner).setTrustedLedgerHeader(proof.ledgerSeq, proof.ledgerHeaderHash);
 
       await expect(oracle.connect(relayer).submitStateProof(proof)).to.be.revertedWithCustomError(
         oracle,
-        "MismatchedRegistry"
+        'MismatchedRegistry',
       );
     });
 
-    it("rejects proof with unsupported version", async function () {
+    it('rejects proof with unsupported version', async function () {
       const { oracle, owner, relayer } = await loadFixture(deployFixture);
 
-      const proof = createValidStateProof({ version: "2.0.0" });
+      const proof = createValidStateProof({ version: '2.0.0' });
       await oracle.connect(owner).setTrustedLedgerHeader(proof.ledgerSeq, proof.ledgerHeaderHash);
 
       await expect(oracle.connect(relayer).submitStateProof(proof)).to.be.revertedWithCustomError(
         oracle,
-        "UnsupportedVersion"
+        'UnsupportedVersion',
       );
     });
 
-    it("rejects proof with tampered trust score", async function () {
+    it('rejects proof with tampered trust score', async function () {
       const { oracle, owner, relayer } = await loadFixture(deployFixture);
 
       const proof = createValidStateProof();
@@ -219,47 +228,54 @@ describe("PactumZeroTrustOracle", function () {
 
       await expect(oracle.connect(relayer).submitStateProof(proof)).to.be.revertedWithCustomError(
         oracle,
-        "LeafHashMismatch"
+        'LeafHashMismatch',
       );
     });
 
-    it("rejects proof with corrupted Merkle audit path", async function () {
+    it('rejects proof with corrupted Merkle audit path', async function () {
       const { oracle, owner, relayer } = await loadFixture(deployFixture);
 
       const proof = createValidStateProof();
       await oracle.connect(owner).setTrustedLedgerHeader(proof.ledgerSeq, proof.ledgerHeaderHash);
 
       // Corrupt sibling
-      proof.merkleProof[0].sibling = "0x" + "ff".repeat(32);
+      proof.merkleProof[0].sibling = '0x' + 'ff'.repeat(32);
 
       await expect(oracle.connect(relayer).submitStateProof(proof)).to.be.revertedWithCustomError(
         oracle,
-        "MerkleRootMismatch"
+        'MerkleRootMismatch',
       );
     });
 
-    it("rejects proof with corrupted header fields", async function () {
+    it('rejects proof with corrupted header fields', async function () {
       const { oracle, owner, relayer } = await loadFixture(deployFixture);
 
       const proof = createValidStateProof();
       await oracle.connect(owner).setTrustedLedgerHeader(proof.ledgerSeq, proof.ledgerHeaderHash);
 
       // Corrupt previousLedgerHash
-      proof.headerProof.previousLedgerHash = "0x" + "99".repeat(32);
+      proof.headerProof.previousLedgerHash = '0x' + '99'.repeat(32);
 
       await expect(oracle.connect(relayer).submitStateProof(proof)).to.be.revertedWithCustomError(
         oracle,
-        "HeaderHashMismatch"
+        'HeaderHashMismatch',
       );
     });
 
-    it("rejects resubmission of same or older sourceLedgerSeq", async function () {
+    it('rejects resubmission of same or older sourceLedgerSeq', async function () {
       const { oracle, owner, relayer } = await loadFixture(deployFixture);
 
       // First submit score at seq 6000
       const proof1 = createValidStateProof({
         ledgerSeq: 6050,
-        scoreData: { score: 90, fulfilledCount: 20, lateCount: 0, breachedCount: 0, epoch: 2, sourceLedgerSeq: 6000 },
+        scoreData: {
+          score: 90,
+          fulfilledCount: 20,
+          lateCount: 0,
+          breachedCount: 0,
+          epoch: 2,
+          sourceLedgerSeq: 6000,
+        },
       });
       await oracle.connect(owner).setTrustedLedgerHeader(proof1.ledgerSeq, proof1.ledgerHeaderHash);
       await oracle.connect(relayer).submitStateProof(proof1);
@@ -267,34 +283,41 @@ describe("PactumZeroTrustOracle", function () {
       // 1. Resubmit the exact same proof (same sourceLedgerSeq 6000)
       await expect(oracle.connect(relayer).submitStateProof(proof1)).to.be.revertedWithCustomError(
         oracle,
-        "StaleLedgerSeq"
+        'StaleLedgerSeq',
       );
 
       // 2. Attempt to submit older score at seq 4000
       const proof2 = createValidStateProof({
         ledgerSeq: 4050,
-        scoreData: { score: 70, fulfilledCount: 10, lateCount: 0, breachedCount: 0, epoch: 1, sourceLedgerSeq: 4000 },
+        scoreData: {
+          score: 70,
+          fulfilledCount: 10,
+          lateCount: 0,
+          breachedCount: 0,
+          epoch: 1,
+          sourceLedgerSeq: 4000,
+        },
       });
       await oracle.connect(owner).setTrustedLedgerHeader(proof2.ledgerSeq, proof2.ledgerHeaderHash);
 
       await expect(oracle.connect(relayer).submitStateProof(proof2)).to.be.revertedWithCustomError(
         oracle,
-        "StaleLedgerSeq"
+        'StaleLedgerSeq',
       );
     });
   });
 
-  describe("Owner Configuration & Permissions", function () {
-    it("only owner can update trusted ledger headers and registry contract ID", async function () {
+  describe('Owner Configuration & Permissions', function () {
+    it('only owner can update trusted ledger headers and registry contract ID', async function () {
       const { oracle, user } = await loadFixture(deployFixture);
 
       await expect(
-        oracle.connect(user).setTrustedLedgerHeader(100, "0x" + "11".repeat(32))
-      ).to.be.revertedWithCustomError(oracle, "OwnableUnauthorizedAccount");
+        oracle.connect(user).setTrustedLedgerHeader(100, '0x' + '11'.repeat(32)),
+      ).to.be.revertedWithCustomError(oracle, 'OwnableUnauthorizedAccount');
 
       await expect(
-        oracle.connect(user).setRegistryContractId(ethers.id("new-id"))
-      ).to.be.revertedWithCustomError(oracle, "OwnableUnauthorizedAccount");
+        oracle.connect(user).setRegistryContractId(ethers.id('new-id')),
+      ).to.be.revertedWithCustomError(oracle, 'OwnableUnauthorizedAccount');
     });
   });
 });
