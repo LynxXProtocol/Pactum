@@ -40,7 +40,7 @@
     "motion": "^13.0.0",
     "react": "^19.2.8",
     "react-dom": "^19.2.8",
-    "react-hook-form": "^7.85.0",
+    "react-hook-form": "^7.86.0",
     "tailwind-merge": "^3.6.0",
     "vite-plugin-node-polyfills": "^0.28.0",
     "y-indexeddb": "^9.0.12",
