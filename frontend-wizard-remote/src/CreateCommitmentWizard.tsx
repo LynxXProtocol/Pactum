@@ -337,7 +337,20 @@ export default function CreateCommitmentWizard({
         // create_commitment takes 9 parameters, and a preflight built with only the first
         // 4 fails simulation with a MismatchingParameterLen host error regardless of
         // whether the real submission would have succeeded.
-        const arbitratorAddress = await fetchArbitrator(rpcUrl, contractId, networkPassphrase);
+        //
+        // fetchArbitrator's signature is (rpcUrls?: string[], rpcUrl?: string, contractId, ...)
+        // since @pactum/soroban-client's extraction -- it now supports the host's multi-URL
+        // connection pool. `undefined` in the first slot skips that and falls through to the
+        // single rpcUrl below. Passing rpcUrl positionally as `rpcUrls` (a string, not an
+        // array) used to silently pass resolveSorobanRpcUrls' `rpcUrls.length > 0` truthy
+        // check and get iterated character-by-character as if it were an array of one-char
+        // RPC URLs, which is exactly why this failed against the real sandbox in CI.
+        const arbitratorAddress = await fetchArbitrator(
+          undefined,
+          rpcUrl,
+          contractId,
+          networkPassphrase,
+        );
         const simTx = new TransactionBuilder(account, { fee: BASE_FEE, networkPassphrase })
           .addOperation(
             contract.call(
