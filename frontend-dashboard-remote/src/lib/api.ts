@@ -150,3 +150,47 @@ export function fetchEncryptedTerms(
     { signal },
   );
 }
+
+// ── Export API ───────────────────────────────────────────────────────────────
+
+export type ExportFormat = 'csv' | 'pdf';
+
+/**
+ * Triggers a file download for a commitment-history export.
+ *
+ * Fetches `GET /commitments/export/:address?format=csv|pdf`, converts the
+ * response to a Blob, and programmatically clicks a temporary anchor so the
+ * browser saves the file. No library dependency — works in all modern browsers.
+ *
+ * @param address - Stellar public key to export history for.
+ * @param format  - 'csv' or 'pdf' (defaults to 'csv').
+ * @param signal  - Optional AbortSignal to cancel the request.
+ */
+export async function exportCommitments(
+  address: string,
+  format: ExportFormat = 'csv',
+  signal?: AbortSignal,
+): Promise<void> {
+  const url = `${API_BASE_URL}/commitments/export/${encodeURIComponent(address)}?format=${format}`;
+
+  const res = await fetch(url, { signal });
+
+  if (!res.ok) {
+    throw new Error(`Export failed: ${res.status} ${res.statusText}`);
+  }
+
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+
+  const anchor = document.createElement('a');
+  anchor.href = objectUrl;
+  anchor.download = `pactum-history-${address}.${format}`;
+  anchor.style.display = 'none';
+
+  document.body.appendChild(anchor);
+  anchor.click();
+  document.body.removeChild(anchor);
+
+  // Revoke the object URL after a short delay to let the download start
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 5000);
+}

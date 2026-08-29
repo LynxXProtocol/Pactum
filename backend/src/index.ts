@@ -2,6 +2,7 @@ import express, { Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
 import commitmentsRouter from './routes/commitments';
+import exportRouter from './routes/export';
 import { createReputationRouter } from './routes/reputation';
 import analyticsRoutes from './routes/analytics';
 import heReputationRouter from './routes/he_reputation';
@@ -170,6 +171,10 @@ app.get('/health', (req: Request, res: Response) => {
 
 // Mount the routers
 app.use('/commitments', commitmentsRouter);
+// Export endpoint: GET /commitments/export/:address?format=csv|pdf  (Issue #209)
+// Mounted before the commitmentsRouter so Express resolves /commitments/export/:address
+// ahead of the /:id catch-all in commitmentsRouter.
+app.use('/commitments/export', exportRouter);
 const redis = createRedisClientFromEnv();
 redis.on('error', (error) => console.error('Redis connection error', error));
 const reputationCache = new ReputationCache(redis, new PostgresReputationRepository(pool), {
