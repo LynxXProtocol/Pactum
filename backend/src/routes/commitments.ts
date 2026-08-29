@@ -36,7 +36,7 @@ export const commitmentQuerySchema = z.object({
 
 export type CommitmentQueryInput = z.infer<typeof commitmentQuerySchema>;
 
-interface CommitmentOutcomeRow {
+export interface CommitmentOutcomeRow {
   time: string | Date;
   id: string | number;
   partyA: string;

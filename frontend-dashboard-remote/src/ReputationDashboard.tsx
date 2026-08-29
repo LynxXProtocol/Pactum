@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import UserProfile from './components/UserProfile';
-import { fetchCommitments } from './lib/api';
-import type { Commitment, Reputation } from './lib/api';
+import { fetchCommitments, exportCommitments } from './lib/api';
+import type { Commitment, Reputation, ExportFormat } from './lib/api';
 import { fetchVerifiedReputation, type ReputationIntegrity } from './lib/verifiedReputation';
 import { ShieldCheck, Clock, AlertTriangle, Layers } from 'lucide-react';
 // Consumed from the host over Module Federation, not a local relative import: the host owns and
@@ -63,6 +63,8 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
   const [reputationIntegrity, setReputationIntegrity] = useState<ReputationIntegrity | null>(null);
   const [securityWarning, setSecurityWarning] = useState<string | null>(null);
   const [fetchError, setFetchError] = useState<string | null>(null);
+  const [isExporting, setIsExporting] = useState<ExportFormat | null>(null);
+  const [exportError, setExportError] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
   const isFetchingRef = useRef(false);
   const abortRef = useRef<AbortController | null>(null);
@@ -248,6 +250,20 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
     : 0;
   const fulfillmentRate = totalCount > 0 ? Math.round((fulfilledCount / totalCount) * 100) : 0;
   const strokeDashoffset = 226 - (226 * fulfillmentRate) / 100;
+
+  const handleExport = async (format: ExportFormat) => {
+    if (isExporting) return;
+    setIsExporting(format);
+    setExportError(null);
+    try {
+      await exportCommitments(activeAddress, format);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Export failed. Please try again.';
+      setExportError(message);
+    } finally {
+      setIsExporting(null);
+    }
+  };
 
   return (
     <div style={{ maxWidth: '1080px', margin: '0 auto', color: '#1e293b' }}>
@@ -605,31 +621,104 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            {['All', 'Fulfilled', 'Late', 'Breached', 'Pending'].map((tab) => (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+            {/* ── Status filter tabs ── */}
+            <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+              {['All', 'Fulfilled', 'Late', 'Breached', 'Pending'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => {
+                    setStatusFilter(tab);
+                    setPage(1);
+                  }}
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: statusFilter === tab ? '800' : '500',
+                    padding: '6px 14px',
+                    borderRadius: '7px',
+                    border: 'none',
+                    background: statusFilter === tab ? '#ffffff' : 'transparent',
+                    color: statusFilter === tab ? '#0f172a' : '#64748b',
+                    boxShadow: statusFilter === tab ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease',
+                  }}
+                >
+                  {tab}
+                </button>
+              ))}
+            </div>
+
+            {/* ── Export buttons ── */}
+            <div style={{ display: 'flex', gap: '8px' }}>
               <button
-                key={tab}
-                onClick={() => {
-                  setStatusFilter(tab);
-                  setPage(1);
-                }}
+                aria-label="Export as CSV"
+                onClick={() => handleExport('csv')}
+                disabled={isExporting !== null}
                 style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
                   fontSize: '12px',
-                  fontWeight: statusFilter === tab ? '800' : '500',
+                  fontWeight: '700',
                   padding: '6px 14px',
-                  borderRadius: '7px',
-                  border: 'none',
-                  background: statusFilter === tab ? '#ffffff' : 'transparent',
-                  color: statusFilter === tab ? '#0f172a' : '#64748b',
-                  boxShadow: statusFilter === tab ? '0 2px 6px rgba(0,0,0,0.06)' : 'none',
-                  cursor: 'pointer',
+                  borderRadius: '8px',
+                  border: '1.5px solid #6366f1',
+                  background: isExporting === 'csv' ? '#e0e7ff' : '#ffffff',
+                  color: '#4338ca',
+                  cursor: isExporting !== null ? 'not-allowed' : 'pointer',
+                  opacity: isExporting !== null && isExporting !== 'csv' ? 0.5 : 1,
                   transition: 'all 0.15s ease',
                 }}
               >
-                {tab}
+                {isExporting === 'csv' ? '⏳' : '⬇'}
+                {isExporting === 'csv' ? 'Exporting…' : 'Export CSV'}
               </button>
-            ))}
+
+              <button
+                aria-label="Export as PDF"
+                onClick={() => handleExport('pdf')}
+                disabled={isExporting !== null}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  border: '1.5px solid #dc2626',
+                  background: isExporting === 'pdf' ? '#ffe4e6' : '#ffffff',
+                  color: '#be123c',
+                  cursor: isExporting !== null ? 'not-allowed' : 'pointer',
+                  opacity: isExporting !== null && isExporting !== 'pdf' ? 0.5 : 1,
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                {isExporting === 'pdf' ? '⏳' : '⬇'}
+                {isExporting === 'pdf' ? 'Exporting…' : 'Export PDF'}
+              </button>
+            </div>
           </div>
+
+          {exportError && (
+            <div
+              role="alert"
+              style={{
+                width: '100%',
+                marginTop: '8px',
+                background: '#fff1f2',
+                color: '#be123c',
+                border: '1px solid #fecdd3',
+                borderRadius: '8px',
+                padding: '8px 12px',
+                fontSize: '12px',
+                fontWeight: '600',
+              }}
+            >
+              {exportError}
+            </div>
+          )}
         </div>
 
         {/* Live Virtualization Metrics Bar */}
