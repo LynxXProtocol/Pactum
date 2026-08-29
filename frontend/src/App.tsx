@@ -10,7 +10,7 @@ import DecryptTermsModal from './components/DecryptTermsModal';
 import RollupStatusPanel from './components/RollupStatusPanel';
 import { useCommitments } from './hooks/useCommitments';
 import { useSyncCache } from './hooks/useSyncCache';
-import { fetchEncryptedTerms } from './lib/api';
+import { fetchEncryptedTerms, fetchCommitmentById } from './lib/api';
 import type { Commitment, CommitmentStatus } from './lib/api';
 import { useWallet } from './context/WalletContext';
 import { wsClient } from './lib/wsClient';
@@ -213,6 +213,37 @@ export default function App() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState<boolean>(false);
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ── PAGE: Get Commitment (id lookup) ──────────────────────────────────────
+  const [lookupResult, setLookupResult] = useState<Commitment | null>(null);
+  const [lookupError, setLookupError] = useState<string | null>(null);
+  const [lookupLoading, setLookupLoading] = useState(false);
+
+  const handleLookup = async () => {
+    const raw = (document.getElementById('lookup-id') as HTMLInputElement)?.value;
+    const id = Number(raw);
+    if (!raw || !Number.isInteger(id) || id < 0) {
+      setLookupError('Enter a valid commitment id.');
+      setLookupResult(null);
+      return;
+    }
+
+    setLookupLoading(true);
+    setLookupError(null);
+    setLookupResult(null);
+    try {
+      const commitment = await fetchCommitmentById(id);
+      if (!commitment) {
+        setLookupError(`No commitment found with id ${id}.`);
+      } else {
+        setLookupResult(commitment);
+      }
+    } catch (err) {
+      setLookupError(err instanceof Error ? err.message : 'Lookup failed.');
+    } finally {
+      setLookupLoading(false);
+    }
+  };
 
   const handleGenericSubmit = async (actionName: string, actionFn: () => Promise<any>) => {
     if (!wallet.address || !wallet.provider) {
@@ -1592,46 +1623,86 @@ export default function App() {
                         min="1"
                       />
                     </div>
+                    {lookupError && (
+                      <div
+                        style={{ color: '#dc2626', fontSize: '13px', marginBottom: '10px' }}
+                        role="alert"
+                      >
+                        {lookupError}
+                      </div>
+                    )}
                     <div style={{ display: 'flex', gap: '10px' }}>
-                      <button className="btn btn-secondary" onClick={() => {}}>
+                      <button
+                        className="btn btn-secondary"
+                        disabled={!lookupResult}
+                        title={
+                          lookupResult
+                            ? undefined
+                            : 'Fetch a commitment first to check whether it is overdue'
+                        }
+                        onClick={() => {
+                          if (!lookupResult) return;
+                          const overdue =
+                            lookupResult.status === 'Pending' &&
+                            lookupResult.due_at * 1000 < Date.now();
+                          alert(
+                            overdue
+                              ? `Commitment #${lookupResult.id} is overdue (due ${new Date(lookupResult.due_at * 1000).toLocaleString()}).`
+                              : `Commitment #${lookupResult.id} is not overdue.`,
+                          );
+                        }}
+                      >
                         Check Overdue
                       </button>
                       <button
                         className="btn btn-primary"
                         style={{ flex: '1' }}
                         id="btn-lookup"
-                        onClick={() => {
-                          const id = (document.getElementById('lookup-id') as HTMLInputElement)
-                            ?.value;
-                          if (!id) return;
-                          alert(`Lookup for ${id} not implemented in frontend yet.`);
-                        }}
+                        disabled={lookupLoading}
+                        onClick={handleLookup}
                       >
-                        <div className="spinner"></div>
-                        <span className="btn-text">Fetch Commitment</span>
+                        {lookupLoading && <div className="spinner"></div>}
+                        <span className="btn-text">
+                          {lookupLoading ? 'Fetching...' : 'Fetch Commitment'}
+                        </span>
                       </button>
                     </div>
                   </div>
                 </div>
 
                 {/* Result */}
-                <div className="card" id="lookup-result-card" style={{ display: 'none' }}>
-                  <div className="card-header">
-                    <div className="card-title">Commitment Details</div>
-                    <span className="badge" id="lookup-status-badge"></span>
-                  </div>
-                  <div className="card-body" style={{ paddingTop: '14px' }}>
-                    <div className="detail-panel" id="lookup-details"></div>
-                    <div style={{ display: 'flex', gap: '10px', marginTop: '14px' }}>
-                      <button className="btn btn-secondary btn-sm" onClick={() => {}}>
-                        Attest This
-                      </button>
-                      <button className="btn btn-secondary btn-sm" onClick={() => {}}>
-                        Dispute This
-                      </button>
+                {lookupResult && (
+                  <div className="card" id="lookup-result-card">
+                    <div className="card-header">
+                      <div className="card-title">Commitment Details</div>
+                      <span className="badge" id="lookup-status-badge">
+                        {lookupResult.status}
+                      </span>
+                    </div>
+                    <div className="card-body" style={{ paddingTop: '14px' }}>
+                      <div className="detail-panel" id="lookup-details">
+                        <div>
+                          <strong>ID:</strong> #{lookupResult.id}
+                        </div>
+                        <div>
+                          <strong>Issuer:</strong> {lookupResult.issuer}
+                        </div>
+                        <div>
+                          <strong>Counterparty:</strong> {lookupResult.counterparty}
+                        </div>
+                        <div>
+                          <strong>Due:</strong>{' '}
+                          {new Date(lookupResult.due_at * 1000).toLocaleString()}
+                        </div>
+                        {lookupResult.outcome && (
+                          <div>
+                            <strong>Outcome:</strong> {lookupResult.outcome}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
+                )}
               </div>
 
               {/* Sample IDs */}

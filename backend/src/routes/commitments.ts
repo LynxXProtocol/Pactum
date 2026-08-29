@@ -146,7 +146,7 @@ router.post('/', strictLimiter, validateCommitment, async (req: Request, res: Re
 
   try {
     await pool.query(
-      `INSERT INTO commitment_outcomes 
+      `INSERT INTO commitment_outcomes
        (commitment_id, party_a, party_b, amount, status, outcome, due_date, time)
        VALUES ($1, $2, $3, 0, 'pending', 'pending', to_timestamp($4), NOW())`,
       [optimisticId.toString(), issuer, counterparty, due_at]
@@ -160,6 +160,52 @@ router.post('/', strictLimiter, validateCommitment, async (req: Request, res: Re
     });
   } catch (error) {
     logger.error('Failed to insert optimistic commitment', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  }
+});
+
+// GET /commitments/:id - Fetch a single commitment by its on-chain id.
+// Mounted after /export above so that path segment is never captured here.
+router.get('/:id', async (req: Request, res: Response): Promise<void> => {
+  const id = Number(req.params.id);
+  if (!Number.isInteger(id) || id < 0) {
+    res.status(400).json({ error: 'Bad Request', message: 'id must be a non-negative integer' });
+    return;
+  }
+
+  try {
+    const result = await pool.query(
+      `SELECT
+         time,
+         commitment_id as id,
+         party_a as "partyA",
+         party_b as "partyB",
+         amount,
+         currency,
+         status,
+         template,
+         outcome,
+         due_date as "dueDate",
+         completed_at as "completedAt",
+         created_at as "createdAt"
+       FROM commitment_outcomes
+       WHERE commitment_id = $1
+       ORDER BY time DESC
+       LIMIT 1`,
+      [id],
+    );
+
+    if (result.rows.length === 0) {
+      res.status(404).json({ error: 'Not Found', message: `No commitment with id ${id}` });
+      return;
+    }
+
+    // Apply the same commitment_outcomes -> Commitment shape transform GET / uses (see
+    // toApiCommitment's doc comment) -- without it, `issuer`/`counterparty`/`due_at` come back
+    // undefined and the frontend's lookup page throws rendering it.
+    res.status(200).json(toApiCommitment(result.rows[0]));
+  } catch (error) {
+    logger.error('Failed to fetch commitment by id', error, { id });
     res.status(500).json({ error: 'Internal Server Error' });
   }
 });
