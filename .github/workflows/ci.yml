@@ -165,12 +165,16 @@ jobs:
         working-directory: backend
         run: node dist/db/migrate-dry-run.js
 
-
   backend-tests:
     name: Backend Tests
     runs-on: ubuntu-latest
     env:
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/pactum_test
+      # Testcontainers environment variables for GitHub Actions
+      TESTCONTAINERS_RYUK_DISABLED: true
+      TESTCONTAINERS_RYUK_PRIVILEGED: true
+      DOCKER_HOST: unix:///var/run/docker.sock
+
     services:
       postgres:
         image: postgres:16
@@ -188,6 +192,12 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+
+      # Docker permission for Testcontainers to work properly
+      - name: Setup Docker permissions
+        run: |
+          sudo chmod 666 /var/run/docker.sock
+          docker info
 
       # Temporary check until the backend phase begins: skip gracefully if package.json does not exist or is empty
       - name: Check if backend package.json exists and is non-empty
