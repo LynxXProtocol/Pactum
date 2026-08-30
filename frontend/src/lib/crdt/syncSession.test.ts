@@ -210,30 +210,23 @@ describe('SignedPeerSession — multi-peer CRDT sync over an authenticated chann
     const docA = new Y.Doc();
     const docB = new Y.Doc();
     const [peerA, peerB] = await Promise.all([makePeer(), makePeer()]);
-    const { linkA, linkB, deliverToB } = createLinkPair();
+    const { linkA, linkB, capturedAtoB, deliverToB } = createLinkPair();
     const rejections: RejectionInfo[] = [];
 
     const sessionA = new SignedPeerSession(docA, peerA.identity, peerA.attestation, linkA);
     const sessionB = new SignedPeerSession(docB, peerB.identity, peerB.attestation, linkB);
     sessionB.onRejected((info) => rejections.push(info));
-    await wait(HANDSHAKE_MS); // let the attestation handshake complete so B trusts A
+    await waitFor(() => sessionA.isTrusted && sessionB.isTrusted && capturedAtoB.length >= 2); // let the attestation handshake complete so B trusts A
 
-    // Intercept the next legitimate frame and flip the tail byte — part of the signature.
-    const originalSend = linkA.send;
-    let tampered = false;
+    // Intercept subsequent frames and flip the tail byte — part of the signature.
     linkA.send = (bytes) => {
-      if (!tampered) {
-        tampered = true;
-        const corrupted = new Uint8Array(bytes);
-        corrupted[corrupted.length - 1] ^= 0xff;
-        deliverToB(corrupted);
-        return;
-      }
-      originalSend(bytes);
+      const corrupted = new Uint8Array(bytes);
+      corrupted[corrupted.length - 1] ^= 0xff;
+      deliverToB(corrupted);
     };
 
     docA.getMap('items').set('x', 'should-be-rejected');
-    await wait(HANDSHAKE_MS);
+    await waitFor(() => rejections.some((r) => r.reason === 'bad-signature'));
 
     expect(itemsOf(docB)).toEqual({});
     expect(rejections.some((r) => r.reason === 'bad-signature')).toBe(true);
@@ -304,21 +297,21 @@ describe('SignedPeerSession — multi-peer CRDT sync over an authenticated chann
     const sessionA = new SignedPeerSession(docA, peerA.identity, peerA.attestation, linkA);
     const sessionB = new SignedPeerSession(docB, peerB.identity, peerB.attestation, linkB);
     sessionB.onRejected((info) => rejections.push(info));
-    await wait(HANDSHAKE_MS);
+    await waitFor(() => sessionA.isTrusted && sessionB.isTrusted);
 
     docA.getMap('items').set('k1', 'v1');
-    await wait(HANDSHAKE_MS);
+    await waitFor(() => itemsOf(docB).k1 === 'v1');
     expect(itemsOf(docB).k1).toBe('v1');
 
     const capturedFrame = capturedAtoB[capturedAtoB.length - 1];
 
     docA.getMap('items').set('k2', 'v2');
-    await wait(HANDSHAKE_MS);
+    await waitFor(() => itemsOf(docB).k2 === 'v2');
     expect(itemsOf(docB).k2).toBe('v2');
 
     // Replay the earlier, already-processed frame verbatim.
     deliverToB(capturedFrame);
-    await wait(30);
+    await waitFor(() => rejections.some((r) => r.reason === 'replayed'));
 
     expect(rejections.some((r) => r.reason === 'replayed')).toBe(true);
     expect(itemsOf(docB)).toEqual({ k1: 'v1', k2: 'v2' });
