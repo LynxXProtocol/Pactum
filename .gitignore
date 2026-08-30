@@ -11,6 +11,8 @@ dist-integration-test/
 dist-middleware-test/
 dist-relayer-test/
 dist-crypto-test/
+dist-attestor-test/
+dist-*/
 .env
 .env.e2e
 .env.local
@@ -39,7 +41,6 @@ test_snapshots/
 # ZK build artifacts & ceremony files
 zk/artifacts/
 *.ptau
-.env.e2e
 
 # PR Drafts
 PR_DESCRIPTION.md
