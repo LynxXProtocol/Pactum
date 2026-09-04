@@ -3011,4 +3011,3 @@ fn test_registry_error_discriminants_unique() {
     }
     assert_eq!(count, 47);
 }
-
