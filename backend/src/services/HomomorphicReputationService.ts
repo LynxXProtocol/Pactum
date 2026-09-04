@@ -13,7 +13,7 @@
  * 4. Decrypt the aggregated `EncryptedScore` returned by `get_encrypted_trust_score`
  *    so the backend can serve a usable score to authorised callers.
  * 5. Store and retrieve encrypted aggregate state from the TimescaleDB
- *    `he_reputation_scores` table (migration `005_he_reputation.sql`).
+ *    `he_reputation_scores` table (migration `006_he_reputation.sql`).
  *
  * The service deliberately exposes no method that would reveal individual
  * plaintext ratings — only the aggregate decrypted score is ever returned.
@@ -66,7 +66,7 @@ export interface EncryptedOutcomePayload {
   outcomeKind: number;
   /** Zero-knowledge range proof. */
   proof: {
-    commitment: string;   // hex-encoded bigint for JSON transport
+    commitment: string; // hex-encoded bigint for JSON transport
     witnessA: string;
     witnessB: string;
   };
@@ -322,9 +322,7 @@ export class HomomorphicReputationService {
   // Persistence helpers
   // -------------------------------------------------------------------------
 
-  private async loadEncryptedState(
-    address: string,
-  ): Promise<EncryptedReputationState | null> {
+  private async loadEncryptedState(address: string): Promise<EncryptedReputationState | null> {
     const result = await queryTimescale(
       `SELECT enc_fulfilled, enc_late, enc_breached,
               fulfilled_count, late_count, breached_count, updated_at
