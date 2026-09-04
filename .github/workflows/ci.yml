@@ -161,6 +161,9 @@ jobs:
         working-directory: backend
         run: npm run build
 
+      - name: Verify unique numeric IDs and migration prefixes (Issue #232)
+        run: node scripts/ci/check-numeric-ids.mjs
+
       - name: Run migration dry-run against ephemeral TimescaleDB
         working-directory: backend
         run: node dist/db/migrate-dry-run.js

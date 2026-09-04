@@ -106,10 +106,7 @@ app.use((req: Request, res: Response, next: NextFunction): void => {
 // ---------------------------------------------------------------------------
 app.use((_req: Request, res: Response, next: NextFunction): void => {
   // Strict-Transport-Security: enforce HTTPS for 1 year, include subdomains
-  res.setHeader(
-    'Strict-Transport-Security',
-    'max-age=31536000; includeSubDomains',
-  );
+  res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
   // Prevent MIME-type sniffing
   res.setHeader('X-Content-Type-Options', 'nosniff');
   // Disallow framing of this page (clickjacking protection)
@@ -118,10 +115,7 @@ app.use((_req: Request, res: Response, next: NextFunction): void => {
   // to 0 prevents a known IE vulnerability)
   res.setHeader('X-XSS-Protection', '0');
   // Restrict what can be loaded by the page
-  res.setHeader(
-    'Content-Security-Policy',
-    "default-src 'none'; frame-ancestors 'none'",
-  );
+  res.setHeader('Content-Security-Policy', "default-src 'none'; frame-ancestors 'none'");
   // Hide the server implementation detail
   res.removeHeader('X-Powered-By');
   // Control referrer information leakage
@@ -244,7 +238,7 @@ app.get('/metrics', async (req: Request, res: Response) => {
 if (process.env.INDEXER_ENABLED !== 'off') {
   // NOTE: Legacy startSnapshotCron() removed — reputation snapshots are now
   // handled natively by TimescaleDB Continuous Aggregate refresh policies
-  // (see migration 007_continuous_aggregates.sql).
+  // (see migration 010_continuous_aggregates.sql).
 
   // ── Soroban State Archival / TTL Monitor (Issue #58) ──────────────────
   // Proactively bumps the TTL of high-value reputation entries before they

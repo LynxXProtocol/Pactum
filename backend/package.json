@@ -8,6 +8,8 @@
     "dev": "nodemon src/index.ts",
     "build": "tsc && npm run copy:migrations",
     "copy:migrations": "node -e \"require('fs').cpSync('src/db/migrations','dist/db/migrations',{recursive:true})\"",
+    "pretest": "node ../scripts/ci/check-numeric-ids.mjs",
+    "check:migrations": "node ../scripts/ci/check-numeric-ids.mjs --migrations-only",
     "test": "npm run test:indexer && npm run test:relayer && npm run test:crypto && npm run test:attestor",
     "test:indexer": "tsc -p tsconfig.indexer-test.json && find dist-indexer-test/src -type f -name '*.test.js' -exec node --test {} +",
     "test:relayer": "tsc -p tsconfig.relayer-test.json && node --test dist-relayer-test/tests/relayer.test.js",
