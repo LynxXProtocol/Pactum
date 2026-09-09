@@ -23,7 +23,7 @@ import {
 } from './lib/sorobanTxHelpers';
 import { ThemeToggle } from './components/ThemeToggle';
 import { IndexerModeToggle, useIndexerMode } from './context/IndexerModeContext';
-import { Menu, X, User, Lock } from 'lucide-react';
+import { Menu, X, User, Lock, Share2 } from 'lucide-react';
 import { MeshNetworkMonitor } from './components/MeshNetworkMonitor';
 import { SentryErrorBoundary } from './components/SentryErrorBoundary';
 
@@ -126,6 +126,7 @@ function CommitmentItem({ commitment, connectedAddress, provider }: CommitmentIt
               {loadingCiphertext ? 'Loading…' : 'Decrypt Terms'}
             </button>
           )}
+          {commitment.status === 'FULFILLED' && <ShareButtons commitment={commitment} />}
         </div>
       </div>
 
@@ -141,6 +142,69 @@ function CommitmentItem({ commitment, connectedAddress, provider }: CommitmentIt
         />
       )}
     </>
+  );
+}
+
+function ShareButtons({ commitment }: { commitment: Commitment }) {
+  const tweetText = encodeURIComponent(
+    `I just successfully fulfilled a commitment on @Pactum! Check it out on the explorer.`
+  );
+  const tweetUrl = `https://twitter.com/intent/tweet?text=${tweetText}`;
+
+  const farcasterText = encodeURIComponent(
+    `I just successfully fulfilled a commitment on Pactum!`
+  );
+  const farcasterUrl = `https://warpcast.com/~/compose?text=${farcasterText}`;
+
+  return (
+    <div style={{ display: 'flex', gap: '6px', marginTop: '4px' }}>
+      <a
+        href={tweetUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share on X (Twitter)"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '3px',
+          fontSize: '10px',
+          fontWeight: '700',
+          color: '#1da1f2',
+          background: '#e8f5fe',
+          border: '1px solid #1da1f2',
+          borderRadius: '6px',
+          padding: '2px 8px',
+          textDecoration: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <Share2 size={10} />
+        Share on X
+      </a>
+      <a
+        href={farcasterUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Share on Farcaster"
+        style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '3px',
+          fontSize: '10px',
+          fontWeight: '700',
+          color: '#8a63d2',
+          background: '#f3eefc',
+          border: '1px solid #8a63d2',
+          borderRadius: '6px',
+          padding: '2px 8px',
+          textDecoration: 'none',
+          cursor: 'pointer',
+        }}
+      >
+        <Share2 size={10} />
+        Share on Farcaster
+      </a>
+    </div>
   );
 }
 
