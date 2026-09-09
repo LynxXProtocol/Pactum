@@ -1,11 +1,11 @@
--- Inverse of 007_continuous_aggregates.sql
+-- Inverse of 010_continuous_aggregates.sql
 -- Removes continuous aggregates and restores cron-populated table and old materialized views
 --
 -- NOT auto-applied: runMigrations (backend/src/db/timescale.ts) only scans
 -- src/db/migrations/*.sql, and this file previously lived there, where it was picked up and
--- executed as the very next "migration" immediately after 007_continuous_aggregates.sql --
--- undoing it on every fresh migrate:timescale run and deadlocking against 007's own
--- freshly-scheduled continuous aggregate policies. Apply manually with `psql -f` if 007 needs
+-- executed as the very next "migration" immediately after 010_continuous_aggregates.sql --
+-- undoing it on every fresh migrate:timescale run and deadlocking against 010's own
+-- freshly-scheduled continuous aggregate policies. Apply manually with `psql -f` if 010 needs
 -- to be rolled back.
 
 -- 1. Remove refresh and retention policies

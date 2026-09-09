@@ -2947,3 +2947,67 @@ fn test_batch_create_commitments_handles_empty_batch() {
     let ids = client.batch_create_commitments(&empty_params);
     assert_eq!(ids.len(), 0);
 }
+
+#[test]
+fn test_registry_error_discriminants_unique() {
+    let errors: &[Error] = &[
+        Error::DueAtInPast,
+        Error::CommitmentNotFound,
+        Error::AlreadyResolved,
+        Error::Unauthorized,
+        Error::InvalidOutcome,
+        Error::AlreadyInitialized,
+        Error::NotArbitrator,
+        Error::DisputeWindowExpired,
+        Error::InvalidTransition,
+        Error::NotInitialized,
+        Error::NotAuthorized,
+        Error::Overflow,
+        Error::ReentrantCall,
+        Error::UpgradeAdminNotSet,
+        Error::UpgradeAdminAlreadySet,
+        Error::SchemaDowngrade,
+        Error::UnsupportedSchemaVersion,
+        Error::MigrationNotEnabled,
+        Error::BatchTooLarge,
+        Error::InvalidMilestoneCount,
+        Error::InvalidMilestoneIndex,
+        Error::MilestoneAlreadyAttested,
+        Error::MilestoneOutOfOrder,
+        Error::EmptyArbitratorSet,
+        Error::AlreadyVoted,
+        Error::InsufficientStake,
+        Error::UnbondingPending,
+        Error::UnbondingNotElapsed,
+        Error::DisputeActive,
+        Error::StakingTokenNotSet,
+        Error::ZeroAmount,
+        Error::NotAttestor,
+        Error::AttestorAlreadyVoted,
+        Error::ThresholdInvalid,
+        Error::VotingClosed,
+        Error::VotesNotMet,
+        Error::UseVotingResolution,
+        Error::ProtocolPaused,
+        Error::ReputationArchived,
+        Error::DisputeTokenNotSet,
+        Error::InvalidDisputeStakeAmount,
+        Error::RollupChallengePending,
+        Error::RollupProofInvalid,
+        Error::OracleNotInitialized,
+        Error::NotAdmin,
+        Error::AdminAlreadySet,
+        Error::InvalidRangeProof,
+    ];
+
+    let mut seen = [false; 100];
+    let mut count = 0;
+    for err in errors {
+        let code = *err as usize;
+        assert!(code > 0 && code < 100, "Error code out of range: {}", code);
+        assert!(!seen[code], "Duplicate error discriminant value: {}", code);
+        seen[code] = true;
+        count += 1;
+    }
+    assert_eq!(count, 47);
+}

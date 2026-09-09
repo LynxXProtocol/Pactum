@@ -10,8 +10,8 @@ import {
 
 /*
  * NOTE: The legacy snapshot logic (snapshotDay, runDailySnapshot) has been removed.
- * Reputation snapshots are now handled natively by TimescaleDB Continuous Aggregates 
- * (see migration 007_continuous_aggregates.sql) via `add_continuous_aggregate_policy`.
+ * Reputation snapshots are now handled natively by TimescaleDB Continuous Aggregates
+ * (see migration 010_continuous_aggregates.sql) via `add_continuous_aggregate_policy`.
  */
 
 export type SnapshotQuery = (text: string, params?: any[]) => Promise<{ rows: any[] }>;
@@ -38,8 +38,7 @@ const TTL_MONITOR_TIMEZONE = process.env.TTL_MONITOR_TIMEZONE || 'UTC';
 const TTL_MONITOR_THRESHOLD_LEDGERS = Math.max(
   1,
   parseInt(
-    process.env.TTL_MONITOR_THRESHOLD_LEDGERS
-      ?? String(DEFAULT_TTL_REFRESH_THRESHOLD_LEDGERS),
+    process.env.TTL_MONITOR_THRESHOLD_LEDGERS ?? String(DEFAULT_TTL_REFRESH_THRESHOLD_LEDGERS),
     10,
   ),
 );
@@ -99,7 +98,7 @@ export const runTtlMonitor = async (
 
     console.log(
       `[TTL Monitor] Scanned ${result.total} addresses in ${Date.now() - startedAt}ms ` +
-      `| near-expiry: ${result.nearExpiry} | bumped: ${result.bumped} | failed: ${result.failed}`,
+        `| near-expiry: ${result.nearExpiry} | bumped: ${result.bumped} | failed: ${result.failed}`,
     );
 
     if (result.failed > 0) {
@@ -124,22 +123,15 @@ export const runTtlMonitor = async (
  * @param bumper - Soroban client with `bumpReputationTtl` (use `SorobanClient`).
  * @returns The scheduled task (call `.stop()` to cancel).
  */
-export const startTtlMonitorCron = (
-  rpc: TtlRpcClient,
-  bumper: TtlBumper,
-): ScheduledTask => {
+export const startTtlMonitorCron = (rpc: TtlRpcClient, bumper: TtlBumper): ScheduledTask => {
   console.log(
     `[TTL Monitor] Scheduling TTL monitor at "${TTL_MONITOR_CRON}" (${TTL_MONITOR_TIMEZONE}) ` +
-    `| threshold: ${TTL_MONITOR_THRESHOLD_LEDGERS} ledgers | concurrency: ${TTL_MONITOR_BUMP_CONCURRENCY}`,
+      `| threshold: ${TTL_MONITOR_THRESHOLD_LEDGERS} ledgers | concurrency: ${TTL_MONITOR_BUMP_CONCURRENCY}`,
   );
-  return schedule(
-    TTL_MONITOR_CRON,
-    () => void runTtlMonitor(rpc, bumper),
-    {
-      timezone: TTL_MONITOR_TIMEZONE,
-      noOverlap: true,
-    },
-  );
+  return schedule(TTL_MONITOR_CRON, () => void runTtlMonitor(rpc, bumper), {
+    timezone: TTL_MONITOR_TIMEZONE,
+    noOverlap: true,
+  });
 };
 
 export { createTtlRpcClient };

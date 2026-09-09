@@ -2,7 +2,7 @@ name: Contract CI
 
 on:
   pull_request:
-    branches: [ main ]
+    branches: [main]
     paths:
       - 'contracts/**'
       - '.github/workflows/contract-ci.yml'
@@ -52,6 +52,14 @@ jobs:
       - name: Run Clippy
         working-directory: contracts
         run: cargo clippy --workspace --all-targets -- -D warnings
+
+      - name: Set up Node.js for ID validation
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.x'
+
+      - name: Verify contract error code uniqueness (Issue #232)
+        run: node scripts/ci/check-numeric-ids.mjs --contracts-only
 
   test:
     name: Contract Tests

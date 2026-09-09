@@ -397,7 +397,7 @@ test(
     try {
       await pool.query(`CREATE SCHEMA "${schema}"`);
       const migration = await readFile(
-        path.join(process.cwd(), 'src/db/migrations/006_horizon_sse_cursors.sql'),
+        path.join(process.cwd(), 'src/db/migrations/008_horizon_sse_cursors.sql'),
         'utf8',
       );
       // Run migration on a dedicated client with search_path locked so the
@@ -444,7 +444,7 @@ test(
     try {
       await pool.query(`CREATE SCHEMA "${schema}"`);
       const migration = await readFile(
-        path.join(process.cwd(), 'src/db/migrations/006_horizon_sse_cursors.sql'),
+        path.join(process.cwd(), 'src/db/migrations/008_horizon_sse_cursors.sql'),
         'utf8',
       );
       // Run migration on a dedicated client with search_path locked so the

@@ -16,6 +16,8 @@
     "lint:fix": "eslint \"**/*.{ts,tsx,js,jsx}\" --fix --ignore-path .eslintignore",
     "format": "prettier --check \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
     "format:fix": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md,yml,yaml}\"",
+    "check:ids": "node scripts/ci/check-numeric-ids.mjs",
+    "test:ids": "node scripts/ci/check-numeric-ids.test.mjs",
     "prepare": "husky || true"
   },
   "devDependencies": {
