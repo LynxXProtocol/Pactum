@@ -28,7 +28,7 @@
   },
   "sideEffects": false,
   "dependencies": {
-    "@stellar/stellar-sdk": "^16.2.0"
+    "@stellar/stellar-sdk": "^16.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.19.10",
