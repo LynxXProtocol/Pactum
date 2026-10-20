@@ -1,0 +1,87 @@
+{
+  "assignees": [],
+  "body": "\n### 🏷️ Difficulty: Moderate (Frontend)\n\n### 📝 Description\nAs a global trust protocol, Pactum needs to be accessible to users who do not speak English. Currently, all text in the React frontend is hardcoded.\n\nWe need a contributor to integrate a robust internationalization framework so that the app can be easily translated into multiple languages in the future.\n\n### ✅ Acceptance Criteria\n- [ ] Install and configure `i18next` and `react-i18next` in the frontend.\n- [ ] Extract all hardcoded strings (navigation, buttons, dashboard text, error messages) into a `en.json` locale file.\n- [ ] Add a language switcher dropdown to the Topbar that allows users to toggle between English and a placeholder second language (e.g., Spanish `es.json`).\n- [ ] Ensure the selected language persists in `localStorage`.\n\n### 🛠 Required Skills\n- React.js & TypeScript\n- i18next\n\n### 📂 Probable Files to Change\n- `frontend/src/i18n.ts` (new file)\n- `frontend/src/App.tsx`\n- `frontend/public/locales/*`\n",
+  "comments": [
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQMHeXA",
+      "author": { "login": "Heazzy500" },
+      "authorAssociation": "NONE",
+      "body": "Hi, I would like to work on this issue",
+      "createdAt": "2026-08-22T16:27:01Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/207#issuecomment-5381414492",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQNWs3Q",
+      "author": { "login": "Victorjonah-prog" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "I’d like to contribute to **#207**. I have experience with **React, TypeScript, and frontend development**. I can integrate `i18next`, extract the hardcoded strings into locale files, add the language switcher, and persist the selected language with `localStorage`.",
+      "createdAt": "2026-08-22T21:33:26Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/207#issuecomment-5382712541",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQNY26A",
+      "author": { "login": "Chigybillionz" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "Hi, I’ve reviewed this issue and I’m confident I can fix it. I’d like to take it on.",
+      "createdAt": "2026-08-22T21:42:00Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/207#issuecomment-5382747880",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQNnZ6w",
+      "author": { "login": "ayomidearegbeshola29-dev" },
+      "authorAssociation": "NONE",
+      "body": "### Application\n\nI’d like to work on this issue because internationalization is an important foundation for making Pactum accessible to a global user base. Rather than adding translations on a screen-by-screen basis later, I would establish a proper i18n architecture now so future languages can be introduced without modifying application logic.\n\nI would integrate `i18next` and `react-i18next` into the existing React/TypeScript frontend and configure a clean translation structure using locale files such as `en.json` and `es.json`. I would systematically audit the frontend for hardcoded user-facing strings and move them into the translation resources, including navigation labels, buttons, dashboard content, forms, notifications, loading states, empty states, validation messages, and error messages.\n\nI would add a language selector to the Topbar with English and Spanish as the initial options. The selector would update the active i18n language without requiring a page reload, and the selected language would be persisted in `localStorage` so users retain their preference when they return to the application.\n\nThe implementation would also account for dynamic content and interpolation where necessary rather than creating fragmented strings in components. Translation keys would be organized consistently so the project remains maintainable as the application grows and additional languages are added.\n\nI would make sure the default behavior remains English and that missing translations gracefully fall back to English rather than displaying broken or empty UI text. I would also verify that switching languages works across the major frontend views and that persisted language preferences are restored correctly after refreshing the application.\n\nTesting would cover i18n initialization, language switching, `localStorage` persistence, fallback behavior, and representative translated UI components. I would also run the existing frontend lint, typecheck, and build processes to ensure the integration does not introduce regressions.\n\nThe final implementation would provide Pactum with a reusable internationalization foundation, a functional English/Spanish language switcher, complete extraction of existing user-facing strings, and a structure that makes adding languages in the future straightforward.\n\nThis is a good fit for me because it combines React, TypeScript, frontend architecture, state persistence, and user-experience considerations while delivering a foundation that directly supports Pactum's goal of becoming accessible to users globally.",
+      "createdAt": "2026-08-22T22:43:20Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/207#issuecomment-5382986219",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQO2s2w",
+      "author": { "login": "amankoli09" },
+      "authorAssociation": "MEMBER",
+      "body": "@waterWang Sorry brother, please wait until the issue is assigned to you before submitting a PR. This issue hasn’t been assigned to you yet, so please wait for the assignment first.\n\nOnce I assign it, you can continue with the contribution. Thanks for understanding! 🙏",
+      "createdAt": "2026-08-23T04:50:53Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/207#issuecomment-5384285403",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQO2zow",
+      "author": { "login": "grantfox-oss" },
+      "authorAssociation": "NONE",
+      "body": "🦊 **GrantFox** — @Heazzy500 has been assigned to this issue as part of the **Third Campaign** campaign!\n\n**Next steps:**\n1. Open a Pull Request referencing this issue (e.g., `Closes #207`)\n2. Your PR will be reviewed by the **LynxXProtocol** maintainers\n\nGood luck! Track your progress on [GrantFox](https://contribute.grantfox.xyz/).",
+      "createdAt": "2026-08-23T04:51:22Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/207#issuecomment-5384287139",
+      "viewerDidAuthor": false
+    }
+  ],
+  "labels": [],
+  "number": 207,
+  "title": "Implement Internationalization (i18n) for Global Accessibility"
+}

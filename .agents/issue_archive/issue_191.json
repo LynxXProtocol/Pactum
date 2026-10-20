@@ -1,0 +1,102 @@
+{
+  "assignees": [],
+  "body": "**Description:**\nThe Pactum Zero-Trust Oracle (#181) requires attestors to vote on cross-chain state. To eliminate the need for a centralized relayer to aggregate these votes, we must implement a Threshold Signature Scheme (TSS) like FROST. Attestors will perform distributed key generation (DKG) and collaboratively sign the final resolution transaction off-chain. Once a threshold $t-of-n$ is reached, a single, valid ECDSA signature is produced and submitted to Soroban.\n\n**Requirements & Complexity:**\n- **P2P DKG Implementation:** Build the networking layer for attestors to safely generate the shared public key without trusting each other.\n- **Fault-Tolerant Signing:** Ensure the signing protocol can recover and complete even if $n-t$ nodes drop offline mid-signature.\n- **Challenge:** Handling asynchronous network delays and malicious nodes actively trying to stall the DKG or signing phases without deadlocking the oracle.",
+  "comments": [
+    {
+      "id": "IC_kwDOT2Tmts8AAAABP2cnog",
+      "author": { "login": "reactjay" },
+      "authorAssociation": "NONE",
+      "body": "Hello maintainer, hope you’re doing well. I’d be very interested in taking on this issue when it’s assigned to me. I’ve reviewed the requirements and complexity carefully, and I’m confident I can work through the P2P DKG, threshold signing, fault tolerance, and asynchronous or potentially malicious node scenarios in a structured and reliable way. I’d be glad to take ownership of the implementation and start immediately once it’s assigned. Thank you for the opportunity.",
+      "createdAt": "2026-08-20T16:21:00Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/191#issuecomment-5358692258",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQEBJCA",
+      "author": { "login": "AbuJulaybeeb" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "Hi Maintainer, haven reviewed the description of the issue, and well experienced with Js Library,\nI would like to hop on the issue and sure to  deliver at ETA 2hrs",
+      "createdAt": "2026-08-21T17:07:16Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/191#issuecomment-5372922120",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQEvJ6Q",
+      "author": { "login": "Mona-i" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "I've reviewed the issue and understand the requirements. I'd love to work on this and submit a clean PR that meets the acceptance criteria.",
+      "createdAt": "2026-08-21T18:22:50Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/191#issuecomment-5373676009",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQKsaOQ",
+      "author": { "login": "DhruvC-2938" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "I would love to work on this issue",
+      "createdAt": "2026-08-22T11:13:44Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/191#issuecomment-5379922489",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQL69RA",
+      "author": { "login": "ajulaybeeb" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "hi maintainer, i am a Full-Stack and web3 Developer, with 4+ years of experience. I have carefully read and understand the description of this issue, and i  would like to take on this issue",
+      "createdAt": "2026-08-22T15:39:09Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/191#issuecomment-5381209412",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQL9V8w",
+      "author": { "login": "mysterio123865" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "Here is a high-converting, technical application tailored for Issue #182 (FROST TSS & P2P DKG for Pactum Zero-Trust Oracle).\n\n---\n\n### Application Proposal\n\n**Headline:**\n\n> **Implementation Proposal: FROST Threshold Signature Scheme (t-of-n) & Fault-Tolerant P2P DKG for Oracle Attestations (#182)**\n\n**Overview & Strategy:**\nTo replace centralized relayer aggregation in the Pactum Zero-Trust Oracle with a fully decentralized, non-interactive threshold signature scheme, I will implement **FROST (Flexible Round-Optimized Schnorr/ECDSA Threshold Signatures)** alongside a robust **Pedersen DKG / FROST DKG protocol** over a libp2p/gRPC peer-to-peer messaging layer.\n\nThis design guarantees that $t$-of-$n$ honest attestors can collaboratively generate a single valid cryptographic signature verifying cross-chain state on Soroban, without exposing individual secret shares or risking protocol deadlocks from offline or Byzantine nodes.\n\n---\n\n### Technical Approach\n\n```\n┌─────────────────────────────────────────────────────────────────────────┐\n│                          ATTESTOR P2P NETWORK                           │\n│                                                                         │\n│  [Attestor 1] ─── Round 1: Polynomial Commitments ───> [Attestor 2]     │\n│  [Attestor 2] ─── Round 2: Encrypted Key Shares   ───> [Attestor 3]     │\n│  [Attestor 3] ─── Round 3: Nonce & Partial Signatures ─> [Aggregator]   │\n└───────────────────────────────────────────────────┬─────────────────────┘\n                                                    │ Single ECDSA / Schnorr\n                                                    ▼ Signature\n                                        ┌───────────────────────┐\n                                        │    Soroban Oracle     │\n                                        │  State Verification   │\n                                        └───────────────────────┘\n\n```\n\n#### 1. Peer-to-Peer DKG Layer (Distributed Key Generation)\n\n* **Round-Based Protocol Engine:** Implement a deterministic two-round DKG protocol based on Pedersen commitment schemes.\n* **Round 1:** Each node generates secret polynomial coefficients, broadcasts public commitments ($A_{ik} = g^{a_{ik}}$), and publishes proof-of-knowledge of its secret key share.\n* **Round 2:** Direct encrypted point-to-point delivery of secret shares ($f_i(j)$) between peers using authenticated TLS/Noise channels.\n\n\n* **Group Public Key Derivation:** Aggregate public commitments into a single joint public key $Y = \\prod_{i=1}^n A_{i0}$ to be registered with the Soroban oracle contract.\n\n#### 2. Fault-Tolerant FROST Threshold Signing\n\n* **Pre-computed / Two-Round Signing:**\n* **Preprocessing (Round 1):** Nodes generate and publish hiding/binding nonce commitments ($D_{ij}, E_{ij}$).\n* **Signature Share (Round 2):** Any sub-group of $t$ available nodes computes partial signature shares $s_i = k_i + \\lambda_i \\cdot x_i \\cdot c$ using Lagrange interpolation coefficients $\\lambda_i$.\n\n\n* **Aggregation:** A dynamically selected coordinator (or any participating node) aggregates $t$ partial signatures into a standard ECDSA/Schnorr signature $(R, S)$.\n\n#### 3. Handling Asynchrony, Deadlocks & Malicious Nodes\n\n* **Byzantine Fault Isolation (Blame Protocol):**\n* If a node fails verification in Round 2 of DKG, complaining nodes publish zero-knowledge complaints. If the complaint proves invalid or the sender failed to provide valid shares, the offending node is flagged and broadcasted as malicious.\n\n\n* **Dynamic Session Selection:** If any node drops offline during a signing session, the coordinator drops the stalled session, samples a fresh $t$-subset from available nodes, and initiates a clean signing context using fresh nonces—preventing replay attacks and state locks.\n* **Timeout-Driven State Machine:** Implement bounded async timeouts per round with fallback retry windows to ensure temporary network partition delays do not stall global state updates.\n\n---\n\n### Deliverables & Plan\n\n1. **Core Cryptographic Module:** Rust-based implementation (or wrapping `frost-core` / `frost-ed25519` / Secp256k1 depending on Soroban host function targets) with explicit unit coverage for $t$-of-$n$ mathematical correctness.\n2. **P2P Transport & Session Engine:** Transport overlay handling node discovery, encrypted share exchange, session timeouts, and complaint handling.\n3. **Soroban Integration:** Tests verifying that the resulting aggregated signature verifies seamlessly on-chain against the registered group public key without requiring higher gas overhead than a standard single-key signature.\n4. **Integration Test Suite:** Automated fault-injection tests (simulating $n-t$ node drops, malicious share poisoning, and network latency spikes).\n\n---\n\n### Relevant Experience & Qualifications\n\n* **Cryptographic & Oracle Systems:** Strong experience building decentralized state-proof mechanisms, zero-knowledge verification pipelines, and cross-chain relayer/oracle architectures.\n* **Rust & Soroban Expertise:** Deep familiarity with Soroban smart contract constraints, state storage patterns, and cryptographic host functions.\n* **Production Delivery:** Proven track record of delivering clean, well-tested code with comprehensive edge-case coverage and clear technical documentation.\n\nReady to start immediately upon assignment.",
+      "createdAt": "2026-08-22T15:47:59Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/191#issuecomment-5381248499",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQL-TCQ",
+      "author": { "login": "grantfox-oss" },
+      "authorAssociation": "NONE",
+      "body": "🦊 **GrantFox** — @ajulaybeeb has been assigned to this issue as part of the **Third Campaign** campaign!\n\n**Next steps:**\n1. Open a Pull Request referencing this issue (e.g., `Closes #191`)\n2. Your PR will be reviewed by the **LynxXProtocol** maintainers\n\nGood luck! Track your progress on [GrantFox](https://contribute.grantfox.xyz/).",
+      "createdAt": "2026-08-22T15:51:40Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/191#issuecomment-5381264137",
+      "viewerDidAuthor": false
+    }
+  ],
+  "labels": [
+    { "id": "LA_kwDOT2Tmts8AAAACwU18Bw", "name": "High", "description": "", "color": "4ed966" }
+  ],
+  "number": 191,
+  "title": "Decentralized Multi-Party Threshold ECDSA (TSS) for Automated Oracle Execution"
+}

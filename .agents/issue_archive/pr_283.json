@@ -1,0 +1,9 @@
+{
+  "assignees": [],
+  "baseRefName": "main",
+  "body": "Closes #212\n\n### What\nAdds share buttons to the Commitment Details view when status is `FULFILLED`.\n\n- Users can share on X (Twitter) with a pre-filled tweet intent.\n- Users can share on Farcaster with a pre-filled cast intent.\n- Includes `aria-label` for accessibility and `rel=\"noopener noreferrer\"` for security.\n\n### Notes\nThe Reputation Dashboard is a Module-Federation remote widget loaded at runtime, so adding share buttons there requires a separate PR in the `frontend-dashboard-remote` package. This PR covers the host-app CommitmentItem only.",
+  "headRefName": "feat/share-buttons-1788616468",
+  "labels": [],
+  "number": 283,
+  "title": "feat(frontend): add Share to X/Farcaster buttons for fulfilled commitments (#212)"
+}

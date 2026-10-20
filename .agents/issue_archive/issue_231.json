@@ -1,0 +1,63 @@
+{
+  "assignees": [],
+  "body": "## Summary\n\nThe Module Federation split (host `frontend/`, `frontend-wizard-remote/`, `frontend-dashboard-remote/`) left `lib/soroban.ts` as three independent copies instead of one shared module:\n\n- `frontend/src/lib/soroban.ts` — 778 lines\n- `frontend-wizard-remote/src/lib/soroban.ts` — 574 lines\n- `frontend-dashboard-remote/src/lib/soroban.ts` — 363 lines\n\nThey're not just different subsets — `diff` shows 328 changed lines between the host and wizard-remote copies, and 239 between wizard-remote and dashboard-remote. Root cause: none of `frontend-wizard-remote`/`frontend-dashboard-remote` are listed in the root `package.json`'s `workspaces` array (`[\"backend\", \"frontend\", \"sdk/js\", \"packages/cli\", \"evm\", \"zk\"]`), so they can't consume a shared internal package via the `workspace:` protocol — each was bootstrapped with its own copy-pasted subset of Soroban client code instead.\n\n## Why this matters (not hypothetical)\n\nThis already caused a real, shipped bug: PR #215 added `preflightSimulate()` to `frontend/src/lib/soroban.ts`, and it was manually re-added to `frontend-wizard-remote/src/lib/soroban.ts` — but the wizard-remote copy of the preflight transaction builder only carried 4 of `create_commitment`'s 9 arguments (missing `resolver`, `oracle`, `schema_id`, `attestors`, `vote_threshold`), because that logic had to be independently re-derived by hand instead of imported from one place. It shipped, and only failed in `e2e-sandbox`'s real-RPC run — the mocked frontend tests couldn't catch it because the mock doesn't validate argument count against the real contract ABI. See the fix in PR #215 for the concrete failure mode (`HostError: Error(WasmVm, UnexpectedSize)` / `MismatchingParameterLen`).\n\nEvery future fix or feature added to one copy (auth handling, error decoding, RPC pooling, new contract calls) now has to be remembered and manually re-applied to the other two, or it silently drifts exactly like this did.\n\n## Suggested fix\n\nExtract the shared Soroban client (RPC pooling, `fetchArbitrator`, `submitCreateCommitment`, `preflightSimulate`, error decoding, wallet adapters) into a proper internal package — e.g. `packages/soroban-client` — add it to the root workspace, and have `frontend`, `frontend-wizard-remote`, and `frontend-dashboard-remote` all depend on it via `workspace:*`. Module Federation's shared-dependency mechanism (already used for `react`/`react-dom`/`@tanstack/react-query` per `docs/module-federation.md`) can share it at runtime too, so this doesn't have to mean three separate bundled copies even after the source is unified.",
+  "comments": [
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQ10K2g",
+      "author": { "login": "s6pa1rta3n-lab" },
+      "authorAssociation": "NONE",
+      "body": "I'd like to work on this issue. I will extract the shared Soroban client (RPC pooling, fetchArbitrator, submitCreateCommitment, preflightSimulate, error decoding, wallet adapters) into a dedicated internal package (packages/soroban-client), add the remote packages to the root workspace configuration, and update frontend, frontend-wizard-remote, and frontend-dashboard-remote to depend on the shared package via workspace protocol.",
+      "createdAt": "2026-08-26T12:17:27Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/231#issuecomment-5425138394",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQ23pVQ",
+      "author": { "login": "grantfox-oss" },
+      "authorAssociation": "NONE",
+      "body": "🦊 **GrantFox** — @s6pa1rta3n-lab has been assigned to this issue as part of the **Third Campaign** campaign!\n\n**Next steps:**\n1. Open a Pull Request referencing this issue (e.g., `Closes #231`)\n2. Your PR will be reviewed by the **LynxXProtocol** maintainers\n\nGood luck! Track your progress on [GrantFox](https://contribute.grantfox.xyz/).",
+      "createdAt": "2026-08-26T13:45:36Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/231#issuecomment-5426243925",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQ238_A",
+      "author": { "login": "amankoli09" },
+      "authorAssociation": "MEMBER",
+      "body": "@s6pa1rta3n-lab \nPlease dont start working unless ur are not assign",
+      "createdAt": "2026-08-26T13:45:59Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/231#issuecomment-5426248956",
+      "viewerDidAuthor": true
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQ2768g",
+      "author": { "login": "amankoli09" },
+      "authorAssociation": "MEMBER",
+      "body": "@s6pa1rta3n-lab  i am accepting this one ",
+      "createdAt": "2026-08-26T13:51:06Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/231#issuecomment-5426313970",
+      "viewerDidAuthor": true
+    }
+  ],
+  "labels": [
+    { "id": "LA_kwDOT2Tmts8AAAACwU18Bw", "name": "High", "description": "", "color": "4ed966" }
+  ],
+  "number": 231,
+  "title": "soroban.ts is hand-maintained in triplicate across three frontend packages and has already drifted"
+}

@@ -1,0 +1,9 @@
+{
+  "assignees": [],
+  "baseRefName": "main",
+  "body": "## Payout Routing\n- **EVM (Base/Arbitrum/Polygon/ETH):** `0xF46C9F6d70C50BF81ef3588AB523a90a594a2F89`\n- **Stellar:** `GCL6OXAMLD75BMTINA6EMRUDWK5THQUSHMYNLSNBCJAPZJHNYJTUNIBC`\n\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n\n## Summary by CodeRabbit\n\n* **Bug Fixes**\n  * Improved preflight simulation handling in the commitment creation wizard.\n  * Ensured pending simulations are properly cancelled when the wizard closes or is unmounted.\n  * Improved reliability when confirming or cancelling simulation prompts.\n\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+  "headRefName": "fix/issue-235-sim-modal-state",
+  "labels": [],
+  "number": 238,
+  "title": "Draft: Save State - Fix #235"
+}

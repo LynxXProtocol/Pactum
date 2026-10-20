@@ -1,0 +1,50 @@
+{
+  "assignees": [],
+  "body": "**Problem Summary**: Institutional organizations using Pactum need multiple signers to approve a commitment. The frontend currently assumes 1 user = 1 signature.\n**Description**: Build a multi-sig transaction coordinator. The UI must generate a transaction envelope, allow the first user to sign it, and then serialize the partially-signed XDR. Provide a UI to share this XDR (via link or QR code) to other signers, accumulating signatures until the threshold is met before final submission.\n**Acceptance Criteria**:\n- Manage multi-sig XDR state locally.\n- Build a visual signature progress indicator (e.g., \"2 of 3 signatures acquired\").\n- Provide functionality to decode and inspect a partially signed transaction before a user adds their signature.\n\n**Difficulty**: Hard\n**Skills**: Multi-sig Cryptography, Stellar XDR, UX Design",
+  "comments": [
+    {
+      "id": "IC_kwDOT2Tmts8AAAABPaIRxg",
+      "author": { "login": "esthereze" },
+      "authorAssociation": "NONE",
+      "body": "Hello. I would love to work on this issue for you",
+      "createdAt": "2026-08-18T13:39:29Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/156#issuecomment-5328998854",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABPaq09g",
+      "author": { "login": "Fury03" },
+      "authorAssociation": "NONE",
+      "body": "Hi Maintainer I'd love to take this up.\n\nProposed approach.\n\nFirst, a clarification that changes the design: the issue describes classic Stellar multi-sig — sign the transaction envelope, accumulate signatures against account thresholds. But if a commitment is a Soroban contract call requiring multiple parties, the multi-sig is at the `SorobanAuthorizationEntry` level: each signer signs *their own* auth entry (`signAuthEntry`), not the shared envelope by weight. Which model applies drives the whole implementation, so I'd confirm it up front. Below assumes I support the correct one (likely Soroban auth-entry for contract commitments, classic for account-level ops).\n\n- **Secure decode-before-sign — the crux.** Before a signer adds anything, the UI decodes the partially-signed XDR and shows exactly what they're authorizing (operations/contract args, amounts, source), and verifies the already-collected signatures against the tx hash. XDR arrives via link/QR from untrusted hops, so a signer must see and validate what they sign, not a raw blob — this is the anti-tamper step.\n- **Signature accumulation.** Local state holds the envelope/auth entries + collected sigs; dedupe repeat signers, validate each against the tx hash, and compute progress toward threshold (signer weights for classic, required-address count for Soroban) — \"2 of 3 acquired.\"\n- **Sharing.** Partially-signed Soroban XDR is often too large for a QR (~3KB cap), so QR for small envelopes with a copy-link (compressed) fallback when it overflows.\n- **Validity.** Surface timebounds/seq so a tx that's collecting signatures too slowly is flagged before it expires rather than failing at submit.\n\nMaps to acceptance: local multi-sig XDR state, visual progress indicator, decode-and-inspect before signing. I'd confirm the classic-vs-Soroban-auth model first. PR closes with `Closes #156`.",
+      "createdAt": "2026-08-18T14:24:48Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/156#issuecomment-5329564918",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABPavqDg",
+      "author": { "login": "grantfox-oss" },
+      "authorAssociation": "NONE",
+      "body": "🦊 **GrantFox** — @Fury03 has been assigned to this issue as part of the **Third Campaign** campaign!\n\n**Next steps:**\n1. Open a Pull Request referencing this issue (e.g., `Closes #156`)\n2. Your PR will be reviewed by the **LynxXProtocol** maintainers\n\nGood luck! Track your progress on [GrantFox](https://contribute.grantfox.xyz/).",
+      "createdAt": "2026-08-18T14:31:02Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/156#issuecomment-5329644046",
+      "viewerDidAuthor": false
+    }
+  ],
+  "labels": [
+    { "id": "LA_kwDOT2Tmts8AAAACwU18Bw", "name": "High", "description": "", "color": "4ed966" }
+  ],
+  "number": 156,
+  "title": "Multi-Signature Transaction Coordinator UI"
+}

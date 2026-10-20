@@ -1,0 +1,103 @@
+{
+  "assignees": [],
+  "body": "\n**Description:**\nTo achieve a truly trustless frontend, clients must verify their own state without blindly trusting the Soroban RPC. Implementing an SPV-like light client in the browser requires parsing the Stellar ledger headers and verifying Merkle proofs. To do this efficiently, we need a custom Rust-to-WASM implementation of probabilistic data structures (like Cuckoo Filters or optimized Bloom Filters) to manage the massive amount of state data with minimal memory footprint.\n\n**Requirements & Complexity:**\n- **WASM Memory Management:** Implement zero-copy deserialization of XDR ledger proofs directly in WASM memory.\n- **Cuckoo Filter Implementation:** Build a highly optimized, memory-bounded filter for lightning-fast inclusion verification of commitments.\n- **Challenge:** Handling Javascript/WASM bridging overhead and keeping the browser main thread perfectly unblocked while processing dense cryptographic proofs.\n",
+  "comments": [
+    {
+      "id": "IC_kwDOT2Tmts8AAAABP2IgVQ",
+      "author": { "login": "Abdul-dev-creator" },
+      "authorAssociation": "NONE",
+      "body": "can i fix this issue pls??",
+      "createdAt": "2026-08-20T15:52:51Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/193#issuecomment-5358362709",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABP32mfg",
+      "author": { "login": "Fale1278" },
+      "authorAssociation": "NONE",
+      "body": "Hi! I'd love to take on this issue. \n\nI can build out the Rust-to-WASM light client module to enable trustless, in-browser state verification without relying on the Soroban RPC. I'll implement zero-copy XDR proof deserialization and an optimized, memory-bounded Cuckoo Filter for fast inclusion checks, while ensuring all dense cryptographic processing runs off the main thread to keep the UI completely responsive. \n\nETA: less than 48 hours.",
+      "createdAt": "2026-08-20T18:38:48Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/193#issuecomment-5360166526",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABP56CQw",
+      "author": { "login": "Peculiarr7" },
+      "authorAssociation": "NONE",
+      "body": "Hi! I came across this issue and would love to work on it. I have experience with similar tasks and I'm confident I can investigate, implement a clean solution, and thoroughly test it before submitting a PR. If the issue is still open, I would appreciate it if you could assign it to me. I’ll prioritize this immediately and ensure a reliable solution is delivered as soon as possible. Thank you!",
+      "createdAt": "2026-08-20T21:52:16Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/193#issuecomment-5362319939",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQDGpow",
+      "author": { "login": "jabir-dev788" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "Hey, I’d love to work on this issue if it’s available ‎I've reviewed this issue and have a clear approach to fix it. I can deliver a clean, minimal PR within 5 hours without touching unrelated code. Happy to take this on if it's still available.",
+      "createdAt": "2026-08-21T15:34:34Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/193#issuecomment-5371963811",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQLZsfw",
+      "author": { "login": "bl4vk-0bsidi4n" },
+      "authorAssociation": "NONE",
+      "body": "Hello, \nPlease I would love to be assigned this issue to resolve.",
+      "createdAt": "2026-08-22T13:29:48Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/193#issuecomment-5380664447",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQL-Q_A",
+      "author": { "login": "mysterio123865" },
+      "authorAssociation": "CONTRIBUTOR",
+      "body": "Implementation Proposal: WASM Light Client, Zero-Copy XDR Proof Parsing & Cuckoo Filter for Trustless State VerificationOverview & Strategy:To enable browser-side trustless state verification without relying on central RPC trust, I will implement a Rust-to-WASM SPV (Simple Payment Verification) light client engine.The architecture features a custom, memory-bounded Cuckoo Filter for fast $O(1)$ state commitment inclusion queries alongside zero-copy XDR deserialization directly across the JS/WASM memory boundary. Heavy proof parsing and cryptographic verification will execute off the main thread inside a Web Worker to ensure 60 FPS UI performance.Technical Approach┌─────────────────────────────────────────────────────────────────────────┐\n│                           BROWSER CLIENT ARCHITECTURE                   │\n│                                                                         │\n│  [Main Thread UI] ──── MessageChannel / SharedArrayBuffer ────┐         │\n│                                                               │         │\n│                                                               ▼         │\n│  [Web Worker Thread] ─── zero-copy ───> [WASM Core]                     │\n│                                           │                             │\n│                                           ├── XDR Zero-Copy Parser      │\n│                                           ├── Cuckoo Filter (State)     │\n│                                           └── Merkle Proof Verifier     │\n└─────────────────────────────────────────────────────────────────────────┘\n1. Zero-Copy XDR Deserialization & Memory ManagementSharedArrayBuffer / Direct Memory Layout: Pass raw XDR ledger header buffers directly from JavaScript to WASM linear memory (WebAssembly.Memory), eliminating string/object serialization overhead.Zero-Copy AST Parsing: Implement unsafe slice-based XDR decoding in Rust (zerocopy / byte-level view casts) to parse Stellar LedgerHeader structures, transaction envelopes, and Merkle tree proofs directly in place without heap allocations.2. Optimized Rust-WASM Cuckoo FilterMemory-Bounded Space Efficiency: Build a cache-friendly, byte-packed Cuckoo Filter utilizing 4-slot buckets with $x$-$or$-based fingerprinting ($O(1)$ lookup, insertions, and deletion support).Probabilistic Verification Engine: Enable instant inclusion filtering of sub-state commitments and account keys, dropping membership lookup times below 1ms while consuming a tiny memory footprint (<500KB for thousands of active state keys).3. Asynchronous Worker Architecture (Zero Main-Thread Blocking)Web Worker Offloading: Wrap the WASM light client inside a dedicated Web Worker via comlink or raw postMessage streams.Non-Blocking Proof Verification: Offload Stellar ledger header hash chain validation and Merkle inclusion proofs to worker threads, returning clean boolean flags and validated balance states to the JS main thread without frame drops.Deliverables & PlanRust-WASM Core Module: spv-light-client crate containing zero-copy XDR parsing logic and the Cuckoo Filter implementation compiled via wasm-pack.TypeScript Web Worker Integration: A lightweight JS/TS client wrapper managing worker instantiation, memory allocation, and async RPC header stream processing.Performance Benchmarks & Test Suite:Benchmarks showing zero main-thread blocking during proof processing.WASM memory profiling assertions proving sub-millisecond Cuckoo Filter lookup times.Unit and integration tests verifying Merkle proof validation correctness against valid and corrupted Stellar ledger headers.Relevant Experience & QualificationsRust & WASM Optimization: Extensive background building performance-critical Rust libraries compiled to WASM with manual memory layout control.Cryptographic Light Clients & XDR: Deep understanding of Stellar/Soroban XDR structures, Merkle proof trees, and client-side probabilistic data structures.Browser Thread Management: Strong experience structuring Web Worker memory-sharing models for heavy cryptography.Ready to start immediately upon assignment.",
+      "createdAt": "2026-08-22T15:51:33Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/193#issuecomment-5381263612",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQL_U_g",
+      "author": { "login": "grantfox-oss" },
+      "authorAssociation": "NONE",
+      "body": "🦊 **GrantFox** — @jabir-dev788 has been assigned to this issue as part of the **Third Campaign** campaign!\n\n**Next steps:**\n1. Open a Pull Request referencing this issue (e.g., `Closes #193`)\n2. Your PR will be reviewed by the **LynxXProtocol** maintainers\n\nGood luck! Track your progress on [GrantFox](https://contribute.grantfox.xyz/).",
+      "createdAt": "2026-08-22T15:55:41Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/193#issuecomment-5381281022",
+      "viewerDidAuthor": false
+    }
+  ],
+  "labels": [
+    { "id": "LA_kwDOT2Tmts8AAAACwU1sWg", "name": "frontend", "description": "", "color": "d533bb" },
+    { "id": "LA_kwDOT2Tmts8AAAACwU18Bw", "name": "High", "description": "", "color": "4ed966" }
+  ],
+  "number": 193,
+  "title": "Probabilistic Data Structures for Client-Side SPV (Simplified Payment Verification)"
+}

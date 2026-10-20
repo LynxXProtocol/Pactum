@@ -1,0 +1,22 @@
+{
+  "assignees": [],
+  "body": "\n**Description:**\nTo prevent flash-loan-style manipulation of Attestor Reputation, we need a Time-Weighted Average Reputation (TWAR) system. Iterating over history on-chain is too gas-intensive. We must implement a highly optimized, updatable Segment Tree (or Fenwick Tree / Binary Indexed Tree) natively in the Soroban smart contract to allow $O(\\log n)$ updates and $O(\\log n)$ historical range queries for reputation metrics.\n\n**Requirements & Complexity:**\n- **Gas-Optimized Storage:** Design the tree structure to minimize Soroban ledger entry reads/writes, perhaps by packing multiple tree nodes into a single byte array.\n- **Decay Function:** Incorporate a mathematical time-decay function into the tree nodes so older reputation scores naturally lose weight over time.\n- **Challenge:** Implementing complex tree-based data structures within the strict execution and storage limits of the Soroban environment without causing out-of-gas errors during tree rebalancing.\n",
+  "comments": [
+    {
+      "id": "IC_kwDOT2Tmts8AAAABP54-lA",
+      "author": { "login": "Peculiarr7" },
+      "authorAssociation": "NONE",
+      "body": "Hi! I came across this issue and would love to work on it. I have experience with similar tasks and I'm confident I can investigate, implement a clean solution, and thoroughly test it before submitting a PR. If the issue is still open, I would appreciate it if you could assign it to me. I’ll prioritize this immediately and ensure a reliable solution is delivered as soon as possible. Thank you!",
+      "createdAt": "2026-08-20T21:51:10Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/195#issuecomment-5362302612",
+      "viewerDidAuthor": false
+    }
+  ],
+  "labels": [],
+  "number": 195,
+  "title": "Time-Weighted Average Reputation (TWAR) using On-Chain Segment Trees"
+}

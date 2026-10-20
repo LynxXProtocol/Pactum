@@ -1,0 +1,9 @@
+{
+  "assignees": [],
+  "baseRefName": "main",
+  "body": "Closes #231\r\n\r\n## Payout Routing\r\n- **EVM (Base/Arbitrum/Polygon/ETH):** `0xF46C9F6d70C50BF81ef3588AB523a90a594a2F89`\r\n- **Stellar:** `GCL6OXAMLD75BMTINA6EMRUDWK5THQUSHMYNLSNBCJAPZJHNYJTUNIBC`\r\n\r\n\r\n<!-- This is an auto-generated comment: release notes by coderabbit.ai -->\n## Summary by CodeRabbit\n\n## New Features\n- Added shared Soroban functionality for RPC failover, wallet connections, Web3Auth, transaction handling, validation, and readable error messages.\n- Added support for Freighter, Albedo, Ledger, and Web3Auth wallets.\n- Added configurable RPC health tracking, retries, and fallback handling.\n\n## Improvements\n- Centralized Soroban and wallet functionality across dashboard, wizard, and frontend experiences.\n- Improved wallet detection, connection reliability, transaction reporting, and theme-aware wallet styling.\n- Added shared error displays and stronger Stellar address validation.\n\n## Tests\n- Added coverage for RPC failover, error decoding, and Web3Auth key derivation.\n<!-- end of auto-generated comment: release notes by coderabbit.ai -->",
+  "headRefName": "fix-231-soroban-client",
+  "labels": [],
+  "number": 237,
+  "title": "refactor(frontend): extract shared @pactum/soroban-client workspace package (#231)"
+}

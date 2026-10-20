@@ -1,0 +1,50 @@
+{
+  "assignees": [],
+  "body": "## Summary\n\n`contracts/registry/src/staking.rs` implements a complete cryptoeconomic staking vault: `stake_attestor`, a 14-day `request_unstake`/`finalize_unstake` unbonding cycle, a `locked` flag while an attestor serves an active dispute panel, and slashing of dissenting voters (`slash`, called from the voting phase in `test_voting.rs`). It's well-tested and the mechanics are sound.\n\nNone of it is reachable from outside the contract:\n\n```\n$ grep -rl \"stake_attestor\\|request_unstake\\|finalize_unstake\\|get_stake_info\\|AttestorStake\" frontend frontend-wizard-remote frontend-dashboard-remote backend sdk\n(no matches)\n```\n\nAnd the wizard always creates commitments with an empty attestor panel and a zero vote threshold — the \"no voting panel, use single-resolver dispute path\" branch is the *only* branch any real commitment can take (`frontend-wizard-remote/src/lib/soroban.ts:390-393`):\n\n```ts\n// Empty attestors + a 0 threshold is the contract's explicitly-designed \"no voting panel, use\n// the single-resolver dispute path\" state (contracts/registry/src/commitments.rs::create).\nconst attestorsScVal = xdr.ScVal.scvVec([]);\nconst voteThresholdScVal = xdr.ScVal.scvU32(0);\n```\n\nThere is no UI to become an attestor, stake, configure a panel when creating a commitment, vote on a dispute, or unstake.\n\n## The question worth answering explicitly\n\nStaking-backed voting is a legitimate, well-established pattern for decentralizing dispute resolution beyond a single trusted arbitrator (the same shape as Kleros/Aragon Court) — the design isn't the problem, and the contract-side implementation is solid. The problem is that it's ~700 lines of live, deployed, security-sensitive contract code (real fund custody, real slashing) that has *never been exercised end-to-end by anything a user can actually do*. That's a cost regardless of whether the design is right:\n\n- Every future registry PR has to keep this path compiling, tested, and safe, for a feature nobody can trigger.\n- Slashing/authorization bugs in an unused path are the kind that go unnoticed until the path is finally wired up under real money.\n\n## Ask\n\nA product decision, not just a code fix: either\n1. **Prioritize the client work** — panel configuration in the wizard, an attestor staking/dashboard surface, vote UI — since the hard contract work is largely done and this is genuinely the differentiated part of the design if the goal is decentralized arbitration; or\n2. **Explicitly defer it** — document the voting/staking module as not-yet-integrated in the README/architecture docs, and hold off adding further contract complexity to it until there's a concrete plan to expose it, so the next contributor doesn't build against it assuming it's live product surface.\n\nEither is fine; what's not fine is the current default of continuing to build it out with no one deciding which.",
+  "comments": [
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQ0GyFw",
+      "author": { "login": "nwosum113-ui" },
+      "authorAssociation": "NONE",
+      "body": "hello maintainer, i would love to work on this issue",
+      "createdAt": "2026-08-26T09:31:18Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/233#issuecomment-5423346199",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQ2jxgQ",
+      "author": { "login": "Santia2004" },
+      "authorAssociation": "NONE",
+      "body": "Hi! I would like to work on this issue. I have solid experience with TypeScript/JavaScript, backend architectures, and Soroban/Stellar integrations, and I have recently contributed clean, merged implementations across campaign repositories. Please feel free to assign it to me. Thanks!",
+      "createdAt": "2026-08-26T13:20:40Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/233#issuecomment-5425918337",
+      "viewerDidAuthor": false
+    },
+    {
+      "id": "IC_kwDOT2Tmts8AAAABQ4IStQ",
+      "author": { "login": "Moh-dakai" },
+      "authorAssociation": "NONE",
+      "body": "Hi i would love to work on this",
+      "createdAt": "2026-08-26T15:36:38Z",
+      "includesCreatedEdit": false,
+      "isMinimized": false,
+      "minimizedReason": "",
+      "reactionGroups": [],
+      "url": "https://github.com/LynxXProtocol/Pactum/issues/233#issuecomment-5427565237",
+      "viewerDidAuthor": false
+    }
+  ],
+  "labels": [
+    { "id": "LA_kwDOT2Tmts8AAAACwU18Bw", "name": "High", "description": "", "color": "4ed966" }
+  ],
+  "number": 233,
+  "title": "Attestor staking + M-of-N dispute voting is fully built on-chain but unreachable from any client"
+}

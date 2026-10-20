@@ -1,0 +1,9 @@
+{
+  "assignees": [],
+  "baseRefName": "main",
+  "body": "Closes #234\n\n## Description\nAdds comprehensive regression test specifications, boundary invariants, and execution criteria.",
+  "headRefName": "docs/issue-234-contract-test-snapsh",
+  "labels": [],
+  "number": 290,
+  "title": "test(spec): add regression test specification and verification plan for #234"
+}
