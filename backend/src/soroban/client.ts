@@ -194,10 +194,7 @@ export class SorobanClient {
         networkPassphrase: this.networkPassphrase,
       })
         .addOperation(
-          this.contract.call(
-            'get_trust_score',
-            nativeToScVal(address, { type: 'address' })
-          )
+          this.contract.call('get_trust_score', nativeToScVal(address, { type: 'address' })),
         )
         .setTimeout(30)
         .build();
@@ -227,7 +224,9 @@ export class SorobanClient {
       }
       return Number(native);
     } catch (error) {
-      throw new Error(`Failed to get trust score: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to get trust score: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -262,10 +261,7 @@ export class SorobanClient {
           networkPassphrase: this.networkPassphrase,
         })
           .addOperation(
-            this.contract.call(
-              'restore_reputation',
-              nativeToScVal(address, { type: 'address' })
-            )
+            this.contract.call('restore_reputation', nativeToScVal(address, { type: 'address' })),
           )
           .setTimeout(30)
           .build();
@@ -334,7 +330,9 @@ export class SorobanClient {
       }
       throw new Error(`Transaction failed with status: ${result.status}`);
     } catch (error) {
-      throw new Error(`Failed to restore reputation: ${error instanceof Error ? error.message : String(error)}`);
+      throw new Error(
+        `Failed to restore reputation: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
   }
 
@@ -364,4 +362,3 @@ export class SorobanClient {
     return new Account(this.keypair.publicKey(), '0');
   }
 }
-

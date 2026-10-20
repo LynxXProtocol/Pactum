@@ -73,7 +73,7 @@ export class CrossChainRelayer {
     sorobanClient: ISorobanClient,
     oracleContract: ethers.Contract,
     signer: ethers.Signer,
-    config: RelayerConfig
+    config: RelayerConfig,
   ) {
     this.sorobanClient = sorobanClient;
     this.oracleContract = oracleContract;
@@ -144,7 +144,10 @@ export class CrossChainRelayer {
     } catch (waitError) {
       // Post-broadcast confirmation error: retain persisted payload in store
       // so recovery remains possible if the transaction was included in a block.
-      console.warn(`[Relayer] Confirmation error for batch ${batchNonce}, retaining persisted payload:`, waitError);
+      console.warn(
+        `[Relayer] Confirmation error for batch ${batchNonce}, retaining persisted payload:`,
+        waitError,
+      );
       throw waitError;
     }
   }
@@ -155,7 +158,7 @@ export class CrossChainRelayer {
   public async generateOverrideProof(batchNonce: bigint, stateRoot: string): Promise<string> {
     const messageHash = ethers.solidityPackedKeccak256(
       ['bytes32', 'uint64', 'bytes32'],
-      [this.registryId, batchNonce, stateRoot]
+      [this.registryId, batchNonce, stateRoot],
     );
 
     const signature = await this.signer.signMessage(ethers.getBytes(messageHash));
@@ -168,13 +171,15 @@ export class CrossChainRelayer {
   public async handleChallengedBatch(
     batchNonce: bigint,
     challenger: string,
-    fraudProof: string
+    fraudProof: string,
   ): Promise<{ resolved: boolean; txHash?: string }> {
     console.log(`[Relayer] Detected challenge on batch ${batchNonce} from ${challenger}`);
 
     const batch = await this.batchStore.getBatch(batchNonce);
     if (!batch) {
-      console.error(`[Relayer] Batch ${batchNonce} not found in store/cache. Cannot build an override payload.`);
+      console.error(
+        `[Relayer] Batch ${batchNonce} not found in store/cache. Cannot build an override payload.`,
+      );
       return { resolved: false };
     }
 
@@ -187,21 +192,27 @@ export class CrossChainRelayer {
       const stateRoot = ethers.keccak256(payload);
       const overrideProof = await this.generateOverrideProof(batchNonce, stateRoot);
 
-      console.log(`[Relayer] Submitting override proof to resolve challenge on batch ${batchNonce}...`);
+      console.log(
+        `[Relayer] Submitting override proof to resolve challenge on batch ${batchNonce}...`,
+      );
       const tx = await this.oracleContract.resolveChallengeWithOverride(
         batchNonce,
         overrideProof,
-        payload
+        payload,
       );
       const receipt = await tx.wait();
       await this.batchStore.deleteBatch(batchNonce);
       return { resolved: true, txHash: receipt ? receipt.hash : tx.hash };
     } else {
       // Reorg or dropped packet occurred -> Recover by querying fresh Soroban state and submitting corrected payload
-      console.log(`[Relayer] State mismatch detected (reorg/packet drop). Initiating automated fault recovery...`);
+      console.log(
+        `[Relayer] State mismatch detected (reorg/packet drop). Initiating automated fault recovery...`,
+      );
       const correctedEntries = await this.fetchAuthoritativeState(batch.entries);
       if (!correctedEntries || correctedEntries.length !== batch.entries.length) {
-        console.error(`[Relayer] Incomplete or unavailable authoritative state during recovery for batch ${batchNonce}.`);
+        console.error(
+          `[Relayer] Incomplete or unavailable authoritative state during recovery for batch ${batchNonce}.`,
+        );
         return { resolved: false };
       }
 
@@ -220,7 +231,7 @@ export class CrossChainRelayer {
       const tx = await this.oracleContract.resolveChallengeWithOverride(
         batchNonce,
         overrideProof,
-        correctedPayload
+        correctedPayload,
       );
       const receipt = await tx.wait();
       await this.batchStore.deleteBatch(batchNonce);
@@ -260,14 +271,18 @@ export class CrossChainRelayer {
    * Queries authoritative state directly from Soroban RPC for fault recovery.
    * Rejects and aborts recovery if any single entry snapshot is missing or throws.
    */
-  private async fetchAuthoritativeState(entries: TrustScoreEntry[]): Promise<TrustScoreEntry[] | null> {
+  private async fetchAuthoritativeState(
+    entries: TrustScoreEntry[],
+  ): Promise<TrustScoreEntry[] | null> {
     const authoritativeEntries: TrustScoreEntry[] = [];
 
     for (const entry of entries) {
       try {
         const snapshot = await this.sorobanClient.getTrustScoreSnapshot(entry.stellarAddress);
         if (!snapshot) {
-          console.error(`[Relayer] Authoritative snapshot missing for ${entry.stellarAddress}. Aborting recovery.`);
+          console.error(
+            `[Relayer] Authoritative snapshot missing for ${entry.stellarAddress}. Aborting recovery.`,
+          );
           return null;
         }
         authoritativeEntries.push({

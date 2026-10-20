@@ -23,7 +23,11 @@ export function SentryErrorBoundary({ children }: SentryErrorBoundaryProps) {
         <div className="sentry-fallback" role="alert">
           <h2>Something went wrong</h2>
           <p>An unexpected error occurred. Reload to continue.</p>
-          <button type="button" className="btn btn-primary" onClick={() => window.location.reload()}>
+          <button
+            type="button"
+            className="btn btn-primary"
+            onClick={() => window.location.reload()}
+          >
             Reload
           </button>
         </div>

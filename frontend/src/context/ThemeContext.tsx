@@ -14,8 +14,7 @@ const STORAGE_KEY = 'pactum-theme';
 const THEME_VARIABLES: Record<ResolvedTheme, string> = {
   light:
     '--bg:#f5f5f7;--bg-card:rgba(255,255,255,.6);--bg-input:rgba(255,255,255,.8);--text-primary:#1d1d1f;--text-secondary:#86868b;--separator:rgba(0,0,0,.05);',
-  dark:
-    '--bg:#101114;--bg-card:rgba(30,31,36,.78);--bg-input:rgba(38,39,45,.9);--text-primary:#f5f5f7;--text-secondary:#a1a1aa;--separator:rgba(255,255,255,.1);',
+  dark: '--bg:#101114;--bg-card:rgba(30,31,36,.78);--bg-input:rgba(38,39,45,.9);--text-primary:#f5f5f7;--text-secondary:#a1a1aa;--separator:rgba(255,255,255,.1);',
 };
 
 export function resolveTheme(preference: ThemePreference): ResolvedTheme {
@@ -81,4 +80,3 @@ export function useTheme() {
   if (!context) throw new Error('useTheme must be used inside ThemeProvider');
   return context;
 }
-

@@ -147,21 +147,32 @@ export default function EncryptionConsentModal({
                 alignItems: 'flex-start',
               }}
             >
-              <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: '1px' }} />
+              <AlertTriangle
+                size={18}
+                color="#d97706"
+                style={{ flexShrink: 0, marginTop: '1px' }}
+              />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#92400e' }}>
                   Freighter Required for Encryption
                 </div>
                 <div style={{ fontSize: '12px', color: '#78350f', marginTop: '4px' }}>
-                  Albedo does not currently support the raw message signing API needed for
-                  key derivation. Please switch to Freighter to use encrypted commitments.
+                  Albedo does not currently support the raw message signing API needed for key
+                  derivation. Please switch to Freighter to use encrypted commitments.
                 </div>
               </div>
             </div>
           ) : (
             <>
               {/* How it works */}
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '10px',
+                  marginBottom: '18px',
+                }}
+              >
                 {[
                   {
                     icon: <KeyRound size={15} color="#6366f1" />,
@@ -347,8 +358,8 @@ export default function EncryptionConsentModal({
                   state === 'done'
                     ? '#16a34a'
                     : state === 'error'
-                    ? '#dc2626'
-                    : 'linear-gradient(135deg, #4338ca, #6366f1)',
+                      ? '#dc2626'
+                      : 'linear-gradient(135deg, #4338ca, #6366f1)',
                 color: '#ffffff',
                 fontWeight: '800',
                 fontSize: '13px',

@@ -13,6 +13,7 @@ recorded_stake(A) == total_amount_deposited(A) - total_amount_withdrawn(A) - tot
 ```
 
 Where:
+
 - `recorded_stake(A)` is the value of `AttestorStake.staked` stored in persistent storage
 - `total_amount_deposited(A)` is the cumulative sum of all successful `stake_attestor` calls for `A`
 - `total_amount_withdrawn(A)` is the cumulative sum of all successful `finalize_unstake` calls for `A`
@@ -23,6 +24,7 @@ Where:
 The implementation MUST NOT increase `AttestorStake.staked` without a corresponding successful token transfer from the attestor to the contract vault.
 
 **Implementation guarantee:**
+
 - `stake_attestor` follows the CEI (Checks-Effects-Interactions) pattern
 - Storage update precedes the external token transfer
 - Reentrancy guard prevents observation of intermediate state
@@ -47,10 +49,12 @@ client.transfer(&attestor, &env.current_contract_address(), &amount);
 ### Invariant 2: Stake Decrements Only on Successful Transfer or Slashing
 
 The implementation MUST NOT decrease `AttestorStake.staked` except:
+
 1. During `finalize_unstake` after successful token transfer back to the attestor, OR
 2. During `slash` when a dispute resolves against the attestor (Phase 2)
 
 **Implementation guarantee:**
+
 - `finalize_unstake` removes the storage record before the external transfer
 - If the transfer fails, the transaction reverts and the record remains
 - Only the voting phase can invoke `slash`, and only for attestors on losing outcomes
@@ -62,6 +66,7 @@ The implementation MUST NOT decrease `AttestorStake.staked` except:
 An attestor CANNOT withdraw staked funds until `UNBONDING_PERIOD_SECONDS` (14 days) has elapsed after calling `request_unstake`.
 
 **Implementation guarantee:**
+
 - `request_unstake` sets `unbonding_until = now + UNBONDING_PERIOD_SECONDS`
 - `finalize_unstake` requires `now >= unbonding_until`
 - Ledger timestamp is monotonic and cannot be manipulated by the caller
@@ -75,10 +80,12 @@ pub const UNBONDING_PERIOD_SECONDS: u64 = 14 * 24 * 60 * 60; // 1,209,600 second
 ### Invariant 4: Locked Stake is Immutable
 
 When `AttestorStake.locked == true`, the attestor CANNOT:
+
 - Request a new unstake (`request_unstake` panics with `Error::DisputeActive`)
 - Finalize a pending unstake (`finalize_unstake` panics with `Error::DisputeActive`)
 
 **Implementation guarantee:**
+
 - The `locked` flag is set by the voting phase when the attestor joins an active dispute panel
 - Both unstaking functions explicitly check the flag before proceeding
 - The lock is only cleared by the voting phase after the dispute resolves
@@ -90,6 +97,7 @@ When `AttestorStake.locked == true`, the attestor CANNOT:
 The contract MUST reject stake deposits where `amount <= 0`.
 
 **Implementation guarantee:**
+
 - `stake_attestor` checks `amount <= 0` and panics with `Error::ZeroAmount`
 
 **Code reference:** `contracts/registry/src/staking.rs:152-155`
@@ -99,6 +107,7 @@ The contract MUST reject stake deposits where `amount <= 0`.
 All state-mutating staking functions are protected against reentrancy attacks.
 
 **Implementation guarantee:**
+
 - Each function enters the reentrancy guard before any external interaction (including `require_auth`)
 - The guard is released only after the function completes
 - Nested calls to any protected function panic with `Error::ReentrantCall`
@@ -114,6 +123,7 @@ token_balance(contract_vault) >= sum_for_all_A(recorded_stake(A))
 ```
 
 **Notes:**
+
 - The `>=` (not strict `==`) accounts for potential direct transfers or slashed funds awaiting distribution
 - Phase 2 (slashing and distribution) will maintain this invariant while distributing forfeited stakes
 
@@ -128,11 +138,13 @@ The following invariants are deferred to Phase 2 (voting and slashing):
 ### Verification
 
 These invariants are verified through:
+
 1. **Unit tests**: `contracts/registry/src/test_staking.rs` (7 tests, all passing)
 2. **Integration tests**: `contracts/registry/src/test_voting.rs` (tests stake-locked voting behavior)
 3. **Static analysis**: Rust type system prevents unsigned underflow; `checked_add` prevents overflow
 
 **Test execution:**
+
 ```bash
 cargo test --lib test_staking
 # Result: ok. 7 passed; 0 failed; 0 ignored; 0 measured
@@ -149,6 +161,7 @@ cargo test --lib test_staking
 ### Future Work (Phase 2)
 
 The next phase will extend these invariants to cover:
+
 - Cryptoeconomic incentives for honest attestor behavior
 - Slashing mechanics for malicious or incorrect votes
 - Distribution of forfeited stakes to injured parties

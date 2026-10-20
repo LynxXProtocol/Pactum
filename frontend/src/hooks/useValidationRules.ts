@@ -108,7 +108,10 @@ export function useValidationRules(
           const compiled = compileRuleSet(payload);
           setState({ compiled, status: 'remote', error: null });
         } catch (err) {
-          console.error('[useValidationRules] downloaded rule set is invalid; using fallback:', err);
+          console.error(
+            '[useValidationRules] downloaded rule set is invalid; using fallback:',
+            err,
+          );
           setState({
             compiled: fallbackCompiled,
             status: 'error',

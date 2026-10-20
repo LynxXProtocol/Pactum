@@ -10,28 +10,30 @@
 // under this project's compiler options (confirmed empirically). Use inline `import('pkg').Type`
 // instead.
 declare module 'host/WalletContext' {
-  type WalletProviderName = 'freighter' | 'albedo' | 'ledger'
+  type WalletProviderName = 'freighter' | 'albedo' | 'ledger';
   type WalletErrorCode =
-    'NOT_INSTALLED' | 'CONNECTION_REJECTED' | 'NETWORK_MISMATCH' | 'INVALID_ADDRESS' | 'UNKNOWN'
+    'NOT_INSTALLED' | 'CONNECTION_REJECTED' | 'NETWORK_MISMATCH' | 'INVALID_ADDRESS' | 'UNKNOWN';
 
   export interface WalletContextType {
-    address: string | null
-    provider: WalletProviderName | null
-    isConnected: boolean
-    isInstalled: boolean
-    isConnecting: boolean
-    error: string | null
-    errorCode: WalletErrorCode | null
-    connectWallet: (provider?: WalletProviderName) => Promise<void>
-    disconnectWallet: () => void
-    clearError: () => void
-    contextModuleId: string
+    address: string | null;
+    provider: WalletProviderName | null;
+    isConnected: boolean;
+    isInstalled: boolean;
+    isConnecting: boolean;
+    error: string | null;
+    errorCode: WalletErrorCode | null;
+    connectWallet: (provider?: WalletProviderName) => Promise<void>;
+    disconnectWallet: () => void;
+    clearError: () => void;
+    contextModuleId: string;
   }
-  export function useWallet(): WalletContextType
-  export function WalletProvider(props: { children: import('react').ReactNode }): import('react').ReactElement
+  export function useWallet(): WalletContextType;
+  export function WalletProvider(props: {
+    children: import('react').ReactNode;
+  }): import('react').ReactElement;
 }
 
 declare module 'host/queryClient' {
-  import type { QueryClient } from '@tanstack/react-query'
-  export const queryClient: QueryClient
+  import type { QueryClient } from '@tanstack/react-query';
+  export const queryClient: QueryClient;
 }

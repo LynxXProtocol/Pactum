@@ -171,7 +171,11 @@ export async function signPayloadWithFreighter(
     'byteLength' in result.signedMessage
   ) {
     // v3: Buffer-like object (treated as ArrayBuffer view)
-    const buf = result.signedMessage as { buffer: ArrayBufferLike; byteOffset: number; byteLength: number };
+    const buf = result.signedMessage as {
+      buffer: ArrayBufferLike;
+      byteOffset: number;
+      byteLength: number;
+    };
     const ab = buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength) as ArrayBuffer;
     bytes = new Uint8Array(ab);
   } else {
@@ -188,8 +192,8 @@ export async function signPayloadWithFreighter(
 // ── Convenience: Full Encrypt Pipeline ───────────────────────────────────────
 
 export interface EncryptResult {
-  ciphertext: string;     // base64url blob for backend storage
-  termsHash: string;      // hex SHA-256(ciphertext) — goes on-chain
+  ciphertext: string; // base64url blob for backend storage
+  termsHash: string; // hex SHA-256(ciphertext) — goes on-chain
 }
 
 /**

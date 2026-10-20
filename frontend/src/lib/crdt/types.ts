@@ -1,4 +1,4 @@
-import type { Commitment, Reputation } from '@/lib/api'
+import type { Commitment, Reputation } from '@/lib/api';
 
 /**
  * A commitment record persisted inside the Yjs document.
@@ -9,8 +9,8 @@ import type { Commitment, Reputation } from '@/lib/api'
  * the backend, so the canonical merge never blindly overwrites them.
  */
 export interface StoredCommitment extends Commitment {
-  updatedAt: number
-  pending?: boolean
+  updatedAt: number;
+  pending?: boolean;
 }
 
 /**
@@ -19,7 +19,7 @@ export interface StoredCommitment extends Commitment {
  * by canonical state when available.
  */
 export interface StoredReputation extends Reputation {
-  updatedAt: number
+  updatedAt: number;
 }
 
 /**
@@ -27,6 +27,6 @@ export interface StoredReputation extends Reputation {
  * local cache when the device comes back online.
  */
 export interface CanonicalState {
-  commitments?: Commitment[]
-  reputations?: Reputation[]
+  commitments?: Commitment[];
+  reputations?: Reputation[];
 }

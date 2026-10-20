@@ -61,7 +61,7 @@ trust.
   network's send API.
 - **Messaging network** — any generic cross-chain messaging provider (Chainlink CCIP, LayerZero,
   Wormhole, ...). It is responsible for transporting the payload and providing the destination
-  chain with a way to authenticate *who sent it and from where* (DON signatures, DVN attestations,
+  chain with a way to authenticate _who sent it and from where_ (DON signatures, DVN attestations,
   guardian signatures — provider-specific, and deliberately out of scope for this contract). The
   architecture is written against the generic capability every major messaging network provides —
   "deliver this payload to this destination contract, and let the destination contract find out
@@ -138,13 +138,13 @@ simply checks it rather than re-implementing DON/DVN verification itself.
 already guarantees (defense in depth — the Oracle does not assume the transport layer is
 infallible or that its own configuration is never misapplied):
 
-| Check | Rejects |
-|---|---|
-| `version` is a supported schema version | Payloads from an incompatible future/past schema |
-| `registryId` matches the single allow-listed Soroban registry contract id | A relayer (compromised or misconfigured) relaying scores that didn't originate from the real registry |
-| `batchNonce > lastNonce[registryId]` | Replay of an already-applied batch |
-| `batchTimestamp` within an owner-configured staleness window of `block.timestamp` | A very old batch delivered late (e.g. after a long relayer/network outage) from silently overwriting current data |
-| `sourceLedgerSeq > lastLedgerSeq[stellarAddress]`, checked **per address** | Two batches delivered out of order (possible with a multi-relayer setup) from letting an older score clobber a newer one already applied |
+| Check                                                                             | Rejects                                                                                                                                  |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
+| `version` is a supported schema version                                           | Payloads from an incompatible future/past schema                                                                                         |
+| `registryId` matches the single allow-listed Soroban registry contract id         | A relayer (compromised or misconfigured) relaying scores that didn't originate from the real registry                                    |
+| `batchNonce > lastNonce[registryId]`                                              | Replay of an already-applied batch                                                                                                       |
+| `batchTimestamp` within an owner-configured staleness window of `block.timestamp` | A very old batch delivered late (e.g. after a long relayer/network outage) from silently overwriting current data                        |
+| `sourceLedgerSeq > lastLedgerSeq[stellarAddress]`, checked **per address**        | Two batches delivered out of order (possible with a multi-relayer setup) from letting an older score clobber a newer one already applied |
 
 Layer 2's nonce/timestamp/ledger-seq checks exist even though the messaging network typically
 already provides its own replay protection (LayerZero enforces per-path nonces at the endpoint;
@@ -214,7 +214,7 @@ live Chainlink or LayerZero deployment:
   periods, bonded fraud proof submission, automated fault recovery, and slashing.
 - `evm/contracts/PactumTrustOracle.sol` — the direct-apply baseline Oracle implementation.
 - `evm/contracts/mocks/MockMessagingEndpoint.sol` — stands in for a verified LayerZero/CCIP
-  endpoint: only *it* is allowed to call the Oracle's receive function, mirroring the real
+  endpoint: only _it_ is allowed to call the Oracle's receive function, mirroring the real
   `onlyEndpoint` restriction, while letting tests drive delivery directly instead of standing up a
   real messaging network.
 - `evm/test/PactumZeroTrustOracle.test.js` — exercises challenge periods, bonded challenges, fraud

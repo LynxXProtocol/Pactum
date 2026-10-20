@@ -110,12 +110,7 @@
     },
     "headerProof": {
       "type": "object",
-      "required": [
-        "previousLedgerHash",
-        "txSetResultHash",
-        "bucketListHash",
-        "ledgerVersion"
-      ],
+      "required": ["previousLedgerHash", "txSetResultHash", "bucketListHash", "ledgerVersion"],
       "properties": {
         "previousLedgerHash": {
           "type": "string",

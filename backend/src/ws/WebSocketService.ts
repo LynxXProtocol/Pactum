@@ -11,7 +11,7 @@ export class WebSocketService {
   constructor(server: Server) {
     this.wss = new WebSocketServer({ server, path: '/ws' });
     this.redisSubscriber = createRedisClientFromEnv();
-    
+
     this.wss.on('connection', (ws: WebSocket) => {
       // Add 'isAlive' flag to the socket for heartbeat
       (ws as any).isAlive = true;

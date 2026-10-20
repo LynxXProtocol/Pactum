@@ -52,7 +52,9 @@
  * missing key means the entry was never written or is already archived.
  */
 
-import type { rpc as SorobanRpc, xdr as SorobanXdr } from '@stellar/stellar-sdk' with { 'resolution-mode': 'import' };
+import type { rpc as SorobanRpc, xdr as SorobanXdr } from '@stellar/stellar-sdk' with {
+  'resolution-mode': 'import',
+};
 
 /**
  * Minimal interface for the Soroban RPC methods the monitor needs, so it can
@@ -365,10 +367,7 @@ export class TtlMonitor {
 
     const buildKey = (variantName: string): string => {
       // The contracttype enum encodes as: Vec [ Symbol(variantName), ScVal(address) ]
-      const keyScVal = xdr.ScVal.scvVec([
-        xdr.ScVal.scvSymbol(variantName),
-        addressScVal,
-      ]);
+      const keyScVal = xdr.ScVal.scvVec([xdr.ScVal.scvSymbol(variantName), addressScVal]);
 
       const ledgerKey = xdr.LedgerKey.contractData(
         new xdr.LedgerKeyContractData({
@@ -381,13 +380,8 @@ export class TtlMonitor {
       return ledgerKey.toXDR('base64');
     };
 
-    return [
-      buildKey('ReputationV2'),
-      buildKey('Reputation'),
-      buildKey('TrustHistory'),
-    ];
+    return [buildKey('ReputationV2'), buildKey('Reputation'), buildKey('TrustHistory')];
   }
-
 }
 
 /**
@@ -397,7 +391,9 @@ export class TtlMonitor {
  */
 export function createTtlRpcClient(server: {
   getLatestLedger(): Promise<{ sequence: number }>;
-  getLedgerEntries(...keys: unknown[]): Promise<{ entries: Array<{ liveUntilLedgerSeq?: number; key?: unknown }> }>;
+  getLedgerEntries(
+    ...keys: unknown[]
+  ): Promise<{ entries: Array<{ liveUntilLedgerSeq?: number; key?: unknown }> }>;
 }): TtlRpcClient {
   return {
     getLatestLedger: () => server.getLatestLedger(),

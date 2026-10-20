@@ -45,8 +45,7 @@ export interface VerifyRequest {
 }
 
 export type VerificationResult =
-  | { valid: true; signals: PublicSignals }
-  | { valid: false; reason: string };
+  { valid: true; signals: PublicSignals } | { valid: false; reason: string };
 
 /** Destructures raw public signals into named values. */
 export function parsePublicSignals(publicSignals: string[]): PublicSignals {

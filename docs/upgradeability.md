@@ -69,11 +69,11 @@ repository targets.
       └──────────────────────────────────────────────┘
 ```
 
-| Crate | Path | Role |
-|---|---|---|
-| `registry` | `contracts/registry` | The Pactum registry, plus `upgrade.rs` and the V1→V2 migration |
-| `timelock` | `contracts/timelock` | Governance gate that owns the registry's upgrade path |
-| `upgrade-fixture` | `contracts/upgrade-fixture` | **Test-only.** A second binary to upgrade *to*, so tests exercise a real executable swap. Not deployed. |
+| Crate             | Path                        | Role                                                                                                    |
+| ----------------- | --------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `registry`        | `contracts/registry`        | The Pactum registry, plus `upgrade.rs` and the V1→V2 migration                                          |
+| `timelock`        | `contracts/timelock`        | Governance gate that owns the registry's upgrade path                                                   |
+| `upgrade-fixture` | `contracts/upgrade-fixture` | **Test-only.** A second binary to upgrade _to_, so tests exercise a real executable swap. Not deployed. |
 
 Operator scripts live in `contracts/scripts/`. Every one supports `--dry-run`, which
 prints the exact `stellar` invocations without submitting anything.
@@ -88,7 +88,7 @@ struct Reputation { fulfilled_count: u32, late_count: u32, breached_count: u32 }
 ```
 
 **V2** (Phase C, Attestor-enabled) keeps those three counters byte-for-byte and adds
-the distinction Attestors introduce — *how* a piece of history was established:
+the distinction Attestors introduce — _how_ a piece of history was established:
 
 ```rust
 struct ReputationV2 {
@@ -105,19 +105,19 @@ struct ReputationV2 {
 
 The V1 → V2 mapping is:
 
-| V2 field | Value when migrating a V1 row | Why |
-|---|---|---|
-| `fulfilled_count`, `late_count`, `breached_count` | copied verbatim | Trust Scores must not move across an upgrade |
-| `direct_count` | `fulfilled + late + breached` | Every Phase B outcome was recorded by a commitment party or the arbitrator — no Attestor existed |
-| `attested_count` | `0` | There was no Attestor to corroborate anything |
-| `updated_at` | migration timestamp | |
-| `version` | `2` | |
+| V2 field                                          | Value when migrating a V1 row | Why                                                                                              |
+| ------------------------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------ |
+| `fulfilled_count`, `late_count`, `breached_count` | copied verbatim               | Trust Scores must not move across an upgrade                                                     |
+| `direct_count`                                    | `fulfilled + late + breached` | Every Phase B outcome was recorded by a commitment party or the arbitrator — no Attestor existed |
+| `attested_count`                                  | `0`                           | There was no Attestor to corroborate anything                                                    |
+| `updated_at`                                      | migration timestamp           |                                                                                                  |
+| `version`                                         | `2`                           |                                                                                                  |
 
 `direct_count` is `u64` rather than `u32` so the sum of three saturated `u32` counters
 stays exact instead of clamping.
 
 **Adding `ReputationV2` cannot disturb existing entries.** `#[contracttype]` encodes an
-enum variant by its *name*, not by an ordinal — the host's own diagnostics render the
+enum variant by its _name_, not by an ordinal — the host's own diagnostics render the
 key as `[Reputation, <address>]` — so adding a variant leaves every already-written
 `Reputation(addr)` key byte-identical. The `upgrade-fixture` crate re-declares these
 types from scratch and reads registry-written entries in the tests, which checks this
@@ -134,7 +134,7 @@ exceed Soroban's per-transaction resource limits well before Pactum is interesti
 So the atomicity is placed where it is both achievable and load-bearing:
 
 **Atomic (one invocation, one transaction):** `upgrade(wasm_hash, schema_version)`
-records the new schema version *and* swaps the executable. Either both land or neither
+records the new schema version _and_ swaps the executable. Either both land or neither
 does. From the instant that transaction commits, every read is served under V2
 semantics — there is no window in which some callers see V1 rules and others see V2.
 
@@ -158,7 +158,7 @@ reachable this way that an ordinary write would not reach anyway.
 
 Migration is **one-way**: the V1 entry is removed once the V2 entry is written, so the
 row is stored once and no stale V1 value can ever be served. Recovery from a bad
-upgrade is therefore *forward* — queue a corrected executable — not a revert to a
+upgrade is therefore _forward_ — queue a corrected executable — not a revert to a
 V1-only binary, which would read migrated addresses as all-zero.
 
 ## State archival
@@ -172,9 +172,9 @@ will fail if a future SDK changes the behaviour.
 
 Two consequences:
 
-* A `None` on a storage read means "never written", and only that. The contract cannot
+- A `None` on a storage read means "never written", and only that. The contract cannot
   detect, skip, or heal an archived row.
-* A migration batch containing an archived address **fails as a unit**.
+- A migration batch containing an archived address **fails as a unit**.
   `migrate-reputation.sh` handles this by retrying the batch address-by-address to
   isolate the offenders and writing them to `<addresses-file>.failed`. Restore those
   keys with `stellar contract restore` (durability `persistent`, key = the ScVal
@@ -211,7 +211,7 @@ This builds the artifact, prints its SHA-256, uploads it, and queues a proposal 
 **pins the Wasm hash**. Nothing about the registry's behaviour changes. Announce the
 proposal id and the rationale document.
 
-Pass the *current* schema version for a code-only bug-fix release; pass `2` for the
+Pass the _current_ schema version for a code-only bug-fix release; pass `2` for the
 Phase C upgrade that moves the reputation schema.
 
 **Days 0–7 — review.** The proposal is public and fully specified. Integrators verify
@@ -257,7 +257,7 @@ stellar contract invoke --id "$TIMELOCK_ID" --source "$SOURCE" --network "$NETWO
      --description_hash <sha256>
 ```
 
-Rotating the timelock's *own* admin is immediate but requires **both** the current
+Rotating the timelock's _own_ admin is immediate but requires **both** the current
 admin and the guardian to sign, and bumps an epoch counter that invalidates every
 queued proposal. A departing administration's in-flight upgrades do not execute under
 new management; anything still wanted must be re-queued, restarting the full 7 days.
@@ -293,10 +293,10 @@ Check, in order:
 
 **Opting out.** You have the whole window. In descending order of leverage:
 
-* Ask the guardian to cancel, publicly, with your reasoning.
-* Pin your integration to the current behaviour: cache the Trust Scores you rely on, or
+- Ask the guardian to cancel, publicly, with your reasoning.
+- Pin your integration to the current behaviour: cache the Trust Scores you rely on, or
   read `schema_version()` and refuse to advance past a version you have not reviewed.
-* Stop reading Pactum until you are satisfied. Because the address never changes, there
+- Stop reading Pactum until you are satisfied. Because the address never changes, there
   is no migration for you to perform if you later resume — but equally, there is no
   "old address" still running the code you audited. That is the trade the in-place
   model makes, and it is why the review window exists.
@@ -308,37 +308,37 @@ at execution time. It carries the full proposal, including the pinned hash and t
 
 ### Defended
 
-| Threat | Defence |
-|---|---|
-| **Admin key compromise** | An attacker with the admin key cannot upgrade anything for 7 days, cannot shorten that delay (`MIN_DELAY_SECONDS` is a compile-time constant with no setter path below it), and can be cut off by the guardian cancelling the proposal. |
-| **Bait-and-switch on reviewed code** | The Wasm hash is stored in the proposal at queue time and read from nowhere else at execution. Queueing different bytes creates a *new* proposal with its own full delay; it cannot re-point one already under review. |
-| **Replay of an executed upgrade** | State moves to `Executed` *before* the cross-contract call (checks-effects-interactions), and the transition is one-way. A re-entrant target cannot execute the same proposal twice. |
-| **Stale authority** | Every proposal is pinned to an admin epoch. Rotating the admin bumps the epoch and invalidates all in-flight proposals at once, so an ejected admin's queued decisions cannot execute under new management. |
-| **Hostile takeover via admin rotation** | Rotating the admin requires the current admin *and* the guardian. A compromised admin key alone cannot hand governance to an attacker. |
-| **Zombie proposals** | A matured proposal expires 14 days after its eta and must be re-queued. |
-| **Re-initialization after upgrade** | `initialize` and `init_upgrade_admin` are both single-shot and guarded. The bootstrap path for installing the upgrade admin closes permanently once used; every later change requires the timelock. |
-| **Schema rollback** | `upgrade` rejects a schema version below the one in force, so an upgrade cannot silently reinterpret V2 rows as V1. |
-| **Unreviewed governance rotation** | Moving the registry's upgrade authority is itself a timelocked proposal, subject to the same 7 days and the same veto. |
+| Threat                                  | Defence                                                                                                                                                                                                                                 |
+| --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Admin key compromise**                | An attacker with the admin key cannot upgrade anything for 7 days, cannot shorten that delay (`MIN_DELAY_SECONDS` is a compile-time constant with no setter path below it), and can be cut off by the guardian cancelling the proposal. |
+| **Bait-and-switch on reviewed code**    | The Wasm hash is stored in the proposal at queue time and read from nowhere else at execution. Queueing different bytes creates a _new_ proposal with its own full delay; it cannot re-point one already under review.                  |
+| **Replay of an executed upgrade**       | State moves to `Executed` _before_ the cross-contract call (checks-effects-interactions), and the transition is one-way. A re-entrant target cannot execute the same proposal twice.                                                    |
+| **Stale authority**                     | Every proposal is pinned to an admin epoch. Rotating the admin bumps the epoch and invalidates all in-flight proposals at once, so an ejected admin's queued decisions cannot execute under new management.                             |
+| **Hostile takeover via admin rotation** | Rotating the admin requires the current admin _and_ the guardian. A compromised admin key alone cannot hand governance to an attacker.                                                                                                  |
+| **Zombie proposals**                    | A matured proposal expires 14 days after its eta and must be re-queued.                                                                                                                                                                 |
+| **Re-initialization after upgrade**     | `initialize` and `init_upgrade_admin` are both single-shot and guarded. The bootstrap path for installing the upgrade admin closes permanently once used; every later change requires the timelock.                                     |
+| **Schema rollback**                     | `upgrade` rejects a schema version below the one in force, so an upgrade cannot silently reinterpret V2 rows as V1.                                                                                                                     |
+| **Unreviewed governance rotation**      | Moving the registry's upgrade authority is itself a timelocked proposal, subject to the same 7 days and the same veto.                                                                                                                  |
 
 ### Out of scope
 
-* **A malicious but validly-approved upgrade.** If the admin, the guardian and seven
+- **A malicious but validly-approved upgrade.** If the admin, the guardian and seven
   days of public review all pass a hostile executable, it executes. The defence is
   social — reproducible builds, published diffs, integrators who actually check — and
   this contract exists to buy the time for it, not to replace it.
-* **A bricking upgrade.** New Wasm that omits an `upgrade` entrypoint ends the
+- **A bricking upgrade.** New Wasm that omits an `upgrade` entrypoint ends the
   registry's upgradeability permanently. This cannot be caught on-chain: Soroban
-  applies the new executable only *after* the invoking call returns, so there is no
+  applies the new executable only _after_ the invoking call returns, so there is no
   same-transaction post-upgrade self-check to write. It is a review-time obligation.
   The same applies to handing `set_upgrade_admin` an address that cannot use it.
-* **Guardian griefing.** A malicious guardian can cancel every proposal and freeze
+- **Guardian griefing.** A malicious guardian can cancel every proposal and freeze
   upgrades indefinitely. That is the accepted cost of giving it a veto; it cannot queue
   or execute anything, so it can stall Pactum but not change it.
-* **Governance vote integrity.** Whatever process elects the admin is upstream of these
+- **Governance vote integrity.** Whatever process elects the admin is upstream of these
   contracts, which only record a `description_hash` pointing at it.
-* **Key custody.** Multisig, hardware, and quorum policy for the admin and guardian
+- **Key custody.** Multisig, hardware, and quorum policy for the admin and guardian
   addresses are deployment concerns.
-* **Arbitrator compromise.** Unchanged by this work; the arbitrator resolves disputes
+- **Arbitrator compromise.** Unchanged by this work; the arbitrator resolves disputes
   and, before governance is installed, performs the one-time `init_upgrade_admin`.
 
 ## Known constraints
@@ -355,7 +355,7 @@ effect only after the invocation returns, so the upgrade transaction cannot call
 the new executable to check that it works. This is why `upgrade` takes the target
 schema version as an argument instead of delegating to a `migrate()` function shipped
 in the new Wasm: anything that must happen atomically with the swap has to exist in the
-*outgoing* executable.
+_outgoing_ executable.
 
 **Toolchain: the release artifact must be built with a Rust that emits MVP WebAssembly.**
 `soroban-env-host 22.1.3`, pinned by `soroban-sdk 22.0.11`, rejects the reference-types

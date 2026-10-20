@@ -39,7 +39,9 @@ test.describe('Module Federation: host + remotes', () => {
     await expect(page.locator('.wizard-steps')).toBeVisible();
   });
 
-  test('WalletContext is a true shared singleton across host and both remotes', async ({ page }) => {
+  test('WalletContext is a true shared singleton across host and both remotes', async ({
+    page,
+  }) => {
     await page.goto('/');
     await page.getByRole('button', { name: 'Launch App' }).first().click();
 
@@ -75,7 +77,9 @@ test.describe('Module Federation: host + remotes', () => {
     await page.click('#nav-reputation');
     await expect(page.locator('#dashboard-remote-wallet-status')).toBeVisible();
 
-    const same = await page.evaluate(() => window.__PACTUM_QUERY_CLIENT__ === window.__PACTUM_DASHBOARD_SEEN_QUERY_CLIENT__);
+    const same = await page.evaluate(
+      () => window.__PACTUM_QUERY_CLIENT__ === window.__PACTUM_DASHBOARD_SEEN_QUERY_CLIENT__,
+    );
 
     // __PACTUM_QUERY_CLIENT__ is set once, in the host's lib/queryClient.ts, at module
     // evaluation. __PACTUM_DASHBOARD_SEEN_QUERY_CLIENT__ is set inside the dashboard remote via
@@ -87,7 +91,9 @@ test.describe('Module Federation: host + remotes', () => {
     expect(same).toBe(true);
   });
 
-  test('remote failure degrades gracefully instead of white-screening the host', async ({ page }) => {
+  test('remote failure degrades gracefully instead of white-screening the host', async ({
+    page,
+  }) => {
     // Block the wizard remote's entry so the host has to handle a real load failure.
     await page.route('http://localhost:5175/remoteEntry.js', (route) => route.abort());
 

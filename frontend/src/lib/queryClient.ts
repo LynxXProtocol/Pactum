@@ -1,5 +1,5 @@
-import { QueryClient } from '@tanstack/react-query'
-import { OptimisticConflictEngine } from './optimisticEngine'
+import { QueryClient } from '@tanstack/react-query';
+import { OptimisticConflictEngine } from './optimisticEngine';
 
 // This module is exposed to remotes over Module Federation (see vite.config.ts `exposes`) so the
 // host and every remote import the same evaluated module — and therefore the same QueryClient
@@ -15,10 +15,10 @@ export const queryClient = new QueryClient({
       refetchOnWindowFocus: false,
     },
   },
-})
+});
 
 /** Reconciles optimistic mutations against incoming Soroban chain events, per query key. */
-export const conflictEngine = new OptimisticConflictEngine(queryClient)
+export const conflictEngine = new OptimisticConflictEngine(queryClient);
 
 // VITE_E2E_DIAGNOSTICS, not DEV: see the identical note in context/WalletContext.tsx. Off by
 // default in every real deployment.
@@ -26,7 +26,7 @@ if (import.meta.env.VITE_E2E_DIAGNOSTICS === 'true') {
   // Referential-identity marker for e2e verification that remotes truly share this one
   // QueryClient instance, not just a functionally-similar copy. See WalletContext.tsx for the
   // same pattern applied to the shared wallet context.
-  const w = window as unknown as Record<string, unknown>
-  w.__PACTUM_QUERY_CLIENT_PROVIDER_ID__ ??= crypto.randomUUID()
-  w.__PACTUM_QUERY_CLIENT__ = queryClient
+  const w = window as unknown as Record<string, unknown>;
+  w.__PACTUM_QUERY_CLIENT_PROVIDER_ID__ ??= crypto.randomUUID();
+  w.__PACTUM_QUERY_CLIENT__ = queryClient;
 }

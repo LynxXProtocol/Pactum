@@ -100,7 +100,9 @@ export function createAttestorRouter(cache: AttestorCache, repository: AttestorR
           active: body.active,
         });
         await cache.invalidate(body.attestor.toUpperCase());
-        res.status(200).json({ message: 'Attestor registered', attestor: body.attestor.toUpperCase() });
+        res
+          .status(200)
+          .json({ message: 'Attestor registered', attestor: body.attestor.toUpperCase() });
       } catch (error) {
         console.error('[attestor] registration failed', error);
         res.status(500).json({ error: 'Internal Server Error' });

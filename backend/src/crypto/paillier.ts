@@ -152,11 +152,7 @@ export function keyPairFromPrimes(p: bigint, q: bigint): PaillierPrivateKey {
  * explicit `r`.  Otherwise a random blinding factor is derived from the
  * system time mixed with the plaintext (sufficient for non-adversarial tests).
  */
-export function encrypt(
-  publicKey: PaillierPublicKey,
-  plaintext: bigint,
-  r?: bigint,
-): bigint {
+export function encrypt(publicKey: PaillierPublicKey, plaintext: bigint, r?: bigint): bigint {
   const { n, nSquared, g } = publicKey;
 
   if (plaintext < 0n || plaintext >= n) {
@@ -167,8 +163,8 @@ export function encrypt(
   // For the compact 64-bit key used in tests, we derive a stable r from plaintext.
   const blinding = r ?? deriveBlinding(plaintext, n);
 
-  const gm = modPow(g, plaintext, nSquared);     // g^m mod n²
-  const rn = modPow(blinding, n, nSquared);       // r^n mod n²
+  const gm = modPow(g, plaintext, nSquared); // g^m mod n²
+  const rn = modPow(blinding, n, nSquared); // r^n mod n²
   return (gm * rn) % nSquared;
 }
 
@@ -178,9 +174,13 @@ export function encrypt(
  * `m = L(c^λ mod n²) · μ  mod n`
  */
 export function decrypt(privateKey: PaillierPrivateKey, ciphertext: bigint): bigint {
-  const { publicKey: { n, nSquared }, lambda, mu } = privateKey;
+  const {
+    publicKey: { n, nSquared },
+    lambda,
+    mu,
+  } = privateKey;
   const cl = modPow(ciphertext, lambda, nSquared);
-  const lValue = (cl - 1n) / n;   // L(x) = (x - 1) / n
+  const lValue = (cl - 1n) / n; // L(x) = (x - 1) / n
   return (lValue * mu) % n;
 }
 
@@ -193,11 +193,7 @@ export function decrypt(privateKey: PaillierPrivateKey, ciphertext: bigint): big
  *
  * `encAdd(Enc(a), Enc(b)) = Enc(a + b)  (mod n²)`
  */
-export function encAdd(
-  publicKey: PaillierPublicKey,
-  ctA: bigint,
-  ctB: bigint,
-): bigint {
+export function encAdd(publicKey: PaillierPublicKey, ctA: bigint, ctB: bigint): bigint {
   return (ctA * ctB) % publicKey.nSquared;
 }
 
@@ -206,11 +202,7 @@ export function encAdd(
  *
  * `encScale(Enc(v), k) = Enc(v · k)  (mod n²)`
  */
-export function encScale(
-  publicKey: PaillierPublicKey,
-  ct: bigint,
-  k: bigint,
-): bigint {
+export function encScale(publicKey: PaillierPublicKey, ct: bigint, k: bigint): bigint {
   return modPow(ct, k, publicKey.nSquared);
 }
 
@@ -219,10 +211,7 @@ export function encScale(
  *
  * `Enc(-v) = Enc(n - v) = Enc(v)^(n-1)  mod n²`
  */
-export function encNegate(
-  publicKey: PaillierPublicKey,
-  ct: bigint,
-): bigint {
+export function encNegate(publicKey: PaillierPublicKey, ct: bigint): bigint {
   return modPow(ct, publicKey.n - 1n, publicKey.nSquared);
 }
 
@@ -282,8 +271,8 @@ export function computeEncryptedScore(
 
 /** Wire format matching the `EncryptedScore` Soroban `#[contracttype]`. */
 export interface EncryptedScore {
-  lo: bigint;   // low 64 bits
-  hi: bigint;   // high 64 bits
+  lo: bigint; // low 64 bits
+  hi: bigint; // high 64 bits
   count: number;
 }
 

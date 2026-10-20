@@ -42,8 +42,8 @@ would for local code-splitting — Module Federation's Vite plugin makes `import
 resolve to a runtime fetch of the remote's `remoteEntry.js` instead of a local chunk:
 
 ```tsx
-const ReputationDashboard = lazy(() => import('dashboard/ReputationDashboard'))
-const CreateCommitmentWizard = lazy(() => import('wizard/CreateCommitmentWizard'))
+const ReputationDashboard = lazy(() => import('dashboard/ReputationDashboard'));
+const CreateCommitmentWizard = lazy(() => import('wizard/CreateCommitmentWizard'));
 ```
 
 Each usage site is wrapped in `RemoteErrorBoundary` (`src/components/RemoteErrorBoundary.tsx`), so
@@ -64,7 +64,7 @@ runtime: don't let each bundle load its own copy of this package — negotiate a
 across the whole federation at runtime. This matters for more than bundle size: React's hooks and
 `@tanstack/react-query`'s `useQuery`/`useQueryClient` all read off a React Context created by
 their respective package. If a remote bundled its own copy instead of sharing, it would create a
-*second*, un-Provided context — `useContext` there would silently see the default value (or throw)
+_second_, un-Provided context — `useContext` there would silently see the default value (or throw)
 instead of the value the host's Provider actually supplies, even though everything otherwise looks
 correctly wired.
 
@@ -76,13 +76,13 @@ each remote declares the host as a `remotes` dependency and imports them by fede
 
 ```ts
 // frontend-dashboard-remote/src/ReputationDashboard.tsx
-import { useWallet } from 'host/WalletContext'
+import { useWallet } from 'host/WalletContext';
 ```
 
 This is a genuinely different module resolution path than a relative import — `host/WalletContext`
-resolves, at runtime, to the *one* `WalletContext.tsx` module instance the host's
+resolves, at runtime, to the _one_ `WalletContext.tsx` module instance the host's
 `<WalletProvider>` already rendered, not a separately bundled copy. Sharing the `queryClient`
-*instance* this way is necessary even with `@tanstack/react-query` itself deduplicated via
+_instance_ this way is necessary even with `@tanstack/react-query` itself deduplicated via
 `shared`: deduplicating the package doesn't stop two apps from each calling `new QueryClient()`
 independently and getting two different caches. Both mechanisms are needed together.
 
@@ -101,14 +101,14 @@ browser and proves singleton sharing by **referential identity**, not behavior:
 - `WalletContext.tsx` generates a random `contextModuleId` exactly once, when the module is first
   evaluated, and includes it in the context value. The host's `WalletProvider` records its id on
   `window` in dev; both remotes record the id they observe via `useWallet()` the same way. The
-  test asserts all three are the *same* id — if either remote had bundled its own copy of
+  test asserts all three are the _same_ id — if either remote had bundled its own copy of
   `WalletContext.tsx` instead of consuming the host's exposed one, this would fail (either
   `useWallet()` throws with no Provider in that copy's tree, or, if it somehow rendered, the id
   simply wouldn't match).
 - Similarly, the host's `queryClient.ts` records its `QueryClient` instance on `window`; the
   dashboard remote reads its client via `useQueryClient()` — React Query's own Context hook, not
   the direct `host/queryClient` import used elsewhere — and records what it saw. The test asserts
-  `===` identity, which proves both that the client instance is shared *and* that
+  `===` identity, which proves both that the client instance is shared _and_ that
   `@tanstack/react-query`'s `shared: { singleton: true }` config is actually deduplicating the
   package (a duplicated copy would read a different Context entirely).
 

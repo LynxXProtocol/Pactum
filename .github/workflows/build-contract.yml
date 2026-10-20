@@ -2,7 +2,7 @@ name: Build Contract
 
 on:
   push:
-    branches: [ main ]
+    branches: [main]
 
 jobs:
   build-wasm:

@@ -17,7 +17,10 @@ class WSClient {
   }
 
   public connect() {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+    if (
+      this.ws &&
+      (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)
+    ) {
       return;
     }
 
@@ -62,12 +65,12 @@ class WSClient {
 
     const delay = Math.min(
       this.initialReconnectDelay * 2 ** this.reconnectAttempts,
-      this.maxReconnectDelay
+      this.maxReconnectDelay,
     );
     this.reconnectAttempts++;
 
     console.log(`[WSClient] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts})`);
-    
+
     this.reconnectTimer = setTimeout(() => {
       this.connect();
     }, delay);

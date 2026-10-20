@@ -24,6 +24,9 @@ yarn-error.log*
 # Module Federation build diagnostics / TypeScript incremental build cache
 .mf/
 *.tsbuildinfo
+test-results/
+playwright-report/
+
 
 # Hardhat (evm/)
 evm/artifacts/
@@ -44,3 +47,11 @@ zk/artifacts/
 
 # PR Drafts
 PR_DESCRIPTION.md
+
+# Local Binaries and CI Debug Artifacts
+stellar
+stellar-cli-*
+jobs.json
+runs.json
+patch_worker.js
+

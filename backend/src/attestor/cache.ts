@@ -67,9 +67,7 @@ export class AttestorCache {
     await this.redis.del(AttestorCache.reliabilityKey(address));
   }
 
-  async getDiscovery(
-    query: AttestorDiscoveryQuery,
-  ): Promise<AttestorDiscoveryResult[]> {
+  async getDiscovery(query: AttestorDiscoveryQuery): Promise<AttestorDiscoveryResult[]> {
     const key = AttestorCache.discoveryKey(query);
     try {
       const cached = await this.redis.get(key);

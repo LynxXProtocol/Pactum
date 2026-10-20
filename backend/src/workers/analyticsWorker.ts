@@ -1,6 +1,4 @@
-import {
-  snapshotNetworkDailyStats,
-} from './timescaleSnapshot';
+import { snapshotNetworkDailyStats } from './timescaleSnapshot';
 import { queryTimescale } from '../db/timescale';
 import { logger } from '../logger/logger';
 
@@ -74,7 +72,10 @@ export class AnalyticsWorker {
         if (process.env.CAGG_MANUAL_REFRESH === 'true') {
           // Fallback for restricted environments (managed Postgres without background workers)
           for (const { view_name } of stale.rows) {
-            await queryTimescale(`CALL refresh_continuous_aggregate($1, NOW() - INTERVAL '3 days', NOW())`, [view_name]);
+            await queryTimescale(
+              `CALL refresh_continuous_aggregate($1, NOW() - INTERVAL '3 days', NOW())`,
+              [view_name],
+            );
             logger.info('Manual CAGG refresh triggered', { view_name });
           }
         }

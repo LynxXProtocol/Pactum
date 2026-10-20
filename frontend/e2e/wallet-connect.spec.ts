@@ -14,7 +14,10 @@ const SHORT_ADDRESS = 'GASV7Z...EGVK';
  * Note: the script must be fully self-contained (no outer-scope references),
  * because Playwright serializes init scripts via toString().
  */
-export async function installFreighterMock(page: Page, overrides: { network?: string; passphrase?: string } = {}) {
+export async function installFreighterMock(
+  page: Page,
+  overrides: { network?: string; passphrase?: string } = {},
+) {
   const network = overrides.network ?? 'TESTNET';
   const networkPassphrase = overrides.passphrase ?? TESTNET_PASSPHRASE;
 
@@ -61,11 +64,11 @@ export async function installFreighterMock(page: Page, overrides: { network?: st
             messagedId: data.messageId,
             ...response,
           },
-          window.location.origin
+          window.location.origin,
         );
       });
     },
-    { mockAddress: MOCK_ADDRESS, mockNetwork: network, mockPassphrase: networkPassphrase }
+    { mockAddress: MOCK_ADDRESS, mockNetwork: network, mockPassphrase: networkPassphrase },
   );
 }
 
@@ -86,7 +89,7 @@ async function installAlbedoMock(page: Page) {
                   signature: 'mock_signature',
                 },
               },
-              '*'
+              '*',
             );
           },
         };
@@ -96,13 +99,13 @@ async function installAlbedoMock(page: Page) {
         return fakeWindow;
       };
     },
-    { mockAddress: MOCK_ADDRESS }
+    { mockAddress: MOCK_ADDRESS },
   );
 }
 
 test.beforeEach(async ({ page }) => {
   // Mock API responses
-  await page.route('**/reputation/**', async route => {
+  await page.route('**/reputation/**', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',
@@ -116,7 +119,7 @@ test.beforeEach(async ({ page }) => {
     });
   });
 
-  await page.route('**/commitments*', async route => {
+  await page.route('**/commitments*', async (route) => {
     await route.fulfill({
       status: 200,
       contentType: 'application/json',

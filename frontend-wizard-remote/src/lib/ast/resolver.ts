@@ -22,11 +22,7 @@ interface FieldErrorLike {
 const RESERVED_SEGMENTS: ReadonlySet<string> = new Set(['__proto__', 'prototype', 'constructor']);
 
 /** Safely assign a (possibly dotted) field error into a nested errors object; first write wins. */
-function setFieldError(
-  errors: Record<string, unknown>,
-  path: string,
-  error: FieldErrorLike,
-): void {
+function setFieldError(errors: Record<string, unknown>, path: string, error: FieldErrorLike): void {
   const segments = path.split('.');
   let cursor = errors;
   for (let i = 0; i < segments.length - 1; i += 1) {
@@ -90,8 +86,7 @@ export function createAstResolver<TFieldValues extends FieldValues = FieldValues
       }
     }
 
-    const result =
-      claimed.size > 0 ? { values: {}, errors } : { values, errors: {} };
+    const result = claimed.size > 0 ? { values: {}, errors } : { values, errors: {} };
     return result as ResolverResult<TFieldValues>;
   };
 }
@@ -120,8 +115,7 @@ export function composeResolvers<TFieldValues extends FieldValues = FieldValues>
       }
     }
 
-    const result =
-      claimed.size > 0 ? { values: {}, errors: mergedErrors } : { values, errors: {} };
+    const result = claimed.size > 0 ? { values: {}, errors: mergedErrors } : { values, errors: {} };
     return result as ResolverResult<TFieldValues>;
   };
 }

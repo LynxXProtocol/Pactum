@@ -15,16 +15,11 @@ describe('CrossChainRelayer', () => {
     const mockOracleContract = {} as any;
     const mockSigner = {} as any;
 
-    const relayer = new CrossChainRelayer(
-      mockSorobanClient,
-      mockOracleContract,
-      mockSigner,
-      {
-        registryId: dummyRegistryId,
-        oracleContractAddress: '0x0000000000000000000000000000000000000001',
-        sourceChainId: 1001,
-      }
-    );
+    const relayer = new CrossChainRelayer(mockSorobanClient, mockOracleContract, mockSigner, {
+      registryId: dummyRegistryId,
+      oracleContractAddress: '0x0000000000000000000000000000000000000001',
+      sourceChainId: 1001,
+    });
 
     // Reorg: canonical ledger sequence went backwards from 1050 to 1040
     assert.equal(relayer.detectSourceReorg(1050n, 1040n), true);
@@ -38,16 +33,11 @@ describe('CrossChainRelayer', () => {
     const mockOracleContract = {} as any;
     const mockSigner = {} as any;
 
-    const relayer = new CrossChainRelayer(
-      mockSorobanClient,
-      mockOracleContract,
-      mockSigner,
-      {
-        registryId: dummyRegistryId,
-        oracleContractAddress: '0x0000000000000000000000000000000000000001',
-        sourceChainId: 1001,
-      }
-    );
+    const relayer = new CrossChainRelayer(mockSorobanClient, mockOracleContract, mockSigner, {
+      registryId: dummyRegistryId,
+      oracleContractAddress: '0x0000000000000000000000000000000000000001',
+      sourceChainId: 1001,
+    });
 
     const entry: TrustScoreEntry = {
       stellarAddress: '0x0000000000000000000000000000000000000000000000000000000000000001',

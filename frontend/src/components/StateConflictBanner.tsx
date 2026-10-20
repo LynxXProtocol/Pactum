@@ -1,16 +1,16 @@
-import type { QueryKey } from '@tanstack/react-query'
-import { AlertTriangle, X } from 'lucide-react'
-import { useStateConflict } from '../hooks/useStateConflict'
+import type { QueryKey } from '@tanstack/react-query';
+import { AlertTriangle, X } from 'lucide-react';
+import { useStateConflict } from '../hooks/useStateConflict';
 
 export interface StateConflictBannerProps {
-  queryKey: QueryKey
-  className?: string
+  queryKey: QueryKey;
+  className?: string;
 }
 
 /** Warns that a concurrent on-chain change overrode this view's optimistic assumption. */
 export function StateConflictBanner({ queryKey, className }: StateConflictBannerProps) {
-  const { conflict, clearConflict } = useStateConflict(queryKey)
-  if (!conflict) return null
+  const { conflict, clearConflict } = useStateConflict(queryKey);
+  if (!conflict) return null;
 
   return (
     <div
@@ -31,5 +31,5 @@ export function StateConflictBanner({ queryKey, className }: StateConflictBanner
         <X className="h-4 w-4" />
       </button>
     </div>
-  )
+  );
 }

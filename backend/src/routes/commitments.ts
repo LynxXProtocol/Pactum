@@ -137,32 +137,41 @@ const validateCommitment = (req: Request, res: Response, next: NextFunction): vo
 };
 
 // POST /commitments - Create a new commitment
-router.post('/', strictLimiter, validateCommitment, async (req: Request, res: Response): Promise<void> => {
-  const { issuer, counterparty, due_at } = req.body;
+router.post(
+  '/',
+  strictLimiter,
+  validateCommitment,
+  async (req: Request, res: Response): Promise<void> => {
+    const { issuer, counterparty, due_at } = req.body;
 
-  // Use a timestamp-based ID to avoid collisions with the on-chain Soroban counter (1, 2, 3...)
-  // and so it parses as a Number in GET /commitments.
-  const optimisticId = Date.now();
+    // Use a timestamp-based ID to avoid collisions with the on-chain Soroban counter (1, 2, 3...)
+    // and so it parses as a Number in GET /commitments.
+    const optimisticId = Date.now();
 
-  try {
-    await pool.query(
-      `INSERT INTO commitment_outcomes
+    try {
+      await pool.query(
+        `INSERT INTO commitment_outcomes
        (commitment_id, party_a, party_b, amount, status, outcome, due_date, time)
        VALUES ($1, $2, $3, 0, 'pending', 'pending', to_timestamp($4), NOW())`,
-      [optimisticId.toString(), issuer, counterparty, due_at]
-    );
+        [optimisticId.toString(), issuer, counterparty, due_at],
+      );
 
-    logger.info('Created optimistic commitment', { issuer, counterparty, commitmentId: optimisticId });
+      logger.info('Created optimistic commitment', {
+        issuer,
+        counterparty,
+        commitmentId: optimisticId,
+      });
 
-    res.status(201).json({
-      id: optimisticId,
-      status: 'Pending',
-    });
-  } catch (error) {
-    logger.error('Failed to insert optimistic commitment', error);
-    res.status(500).json({ error: 'Internal Server Error' });
-  }
-});
+      res.status(201).json({
+        id: optimisticId,
+        status: 'Pending',
+      });
+    } catch (error) {
+      logger.error('Failed to insert optimistic commitment', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  },
+);
 
 // GET /commitments/:id - Fetch a single commitment by its on-chain id.
 // Mounted after /export above so that path segment is never captured here.

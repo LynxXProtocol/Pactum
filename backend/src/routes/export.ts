@@ -12,7 +12,9 @@ import { Router, Request, Response } from 'express';
 // json2csv ships its own types via its package.json "types" field in the alpha
 // release; the @types/* package doesn't exist yet, so we use a local shim.
 // eslint-disable-next-line @typescript-eslint/no-require-imports
-const { Parser: CsvParser } = require('json2csv') as { Parser: new (opts: object) => { parse: (data: unknown) => string } };
+const { Parser: CsvParser } = require('json2csv') as {
+  Parser: new (opts: object) => { parse: (data: unknown) => string };
+};
 import PDFDocument from 'pdfkit';
 import pool from '../db/timescale';
 import { logger } from '../logger/logger';
@@ -59,7 +61,7 @@ async function fetchAllCommitments(address: string) {
 // ── GET /commitments/export/:address ──────────────────────────────────────────
 router.get('/:address', async (req: Request, res: Response): Promise<void> => {
   const address = String(req.params['address'] ?? '');
-  const format = (String(req.query['format'] ?? '')).toLowerCase() || 'csv';
+  const format = String(req.query['format'] ?? '').toLowerCase() || 'csv';
 
   // Validate address
   if (!STELLAR_ADDRESS_RE.test(address)) {
@@ -105,17 +107,29 @@ router.get('/:address', async (req: Request, res: Response): Promise<void> => {
       { label: 'Counterparty', value: 'counterparty' },
       { label: 'Terms Hash', value: 'terms_hash' },
       { label: 'Due Date (Unix)', value: 'due_at' },
-      { label: 'Due Date (UTC)', value: (row: ReturnType<typeof toApiCommitment>) =>
-          new Date(row.due_at * 1000).toISOString() },
+      {
+        label: 'Due Date (UTC)',
+        value: (row: ReturnType<typeof toApiCommitment>) =>
+          new Date(row.due_at * 1000).toISOString(),
+      },
       { label: 'Status', value: 'status' },
       { label: 'Outcome', value: (row: ReturnType<typeof toApiCommitment>) => row.outcome ?? '' },
       { label: 'Created At (Unix)', value: 'created_at' },
-      { label: 'Created At (UTC)', value: (row: ReturnType<typeof toApiCommitment>) =>
-          new Date(row.created_at * 1000).toISOString() },
-      { label: 'Attested At (Unix)', value: (row: ReturnType<typeof toApiCommitment>) =>
-          row.attested_at != null ? String(row.attested_at) : '' },
-      { label: 'Attested At (UTC)', value: (row: ReturnType<typeof toApiCommitment>) =>
-          row.attested_at != null ? new Date(row.attested_at * 1000).toISOString() : '' },
+      {
+        label: 'Created At (UTC)',
+        value: (row: ReturnType<typeof toApiCommitment>) =>
+          new Date(row.created_at * 1000).toISOString(),
+      },
+      {
+        label: 'Attested At (Unix)',
+        value: (row: ReturnType<typeof toApiCommitment>) =>
+          row.attested_at != null ? String(row.attested_at) : '',
+      },
+      {
+        label: 'Attested At (UTC)',
+        value: (row: ReturnType<typeof toApiCommitment>) =>
+          row.attested_at != null ? new Date(row.attested_at * 1000).toISOString() : '',
+      },
     ];
 
     try {
@@ -123,10 +137,7 @@ router.get('/:address', async (req: Request, res: Response): Promise<void> => {
       const csv = parser.parse(commitments);
 
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
-      res.setHeader(
-        'Content-Disposition',
-        `attachment; filename="${safeFilename}.csv"`,
-      );
+      res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}.csv"`);
       res.send(csv);
     } catch (err) {
       logger.error('Export: CSV generation failed', err, { address: safeAddr });
@@ -137,21 +148,14 @@ router.get('/:address', async (req: Request, res: Response): Promise<void> => {
 
   // ─────────────────────── PDF ────────────────────────────────────────────────
   res.setHeader('Content-Type', 'application/pdf');
-  res.setHeader(
-    'Content-Disposition',
-    `attachment; filename="${safeFilename}.pdf"`,
-  );
+  res.setHeader('Content-Disposition', `attachment; filename="${safeFilename}.pdf"`);
 
   try {
     const doc = new PDFDocument({ margin: 48, size: 'A4' });
     doc.pipe(res);
 
     // ── Branding header ──
-    doc
-      .fontSize(22)
-      .fillColor('#0f172a')
-      .font('Helvetica-Bold')
-      .text('Pactum', 48, 48);
+    doc.fontSize(22).fillColor('#0f172a').font('Helvetica-Bold').text('Pactum', 48, 48);
 
     doc
       .fontSize(11)
@@ -274,7 +278,10 @@ router.get('/:address', async (req: Request, res: Response): Promise<void> => {
 
       doc.fontSize(8).fillColor('#475569').font('Helvetica-Bold');
       colHeaders.forEach((h, i) => {
-        doc.text(h, colX[i], headerY + 4, { width: (colX[i + 1] ?? doc.page.width - 48) - colX[i] - 4, lineBreak: false });
+        doc.text(h, colX[i], headerY + 4, {
+          width: (colX[i + 1] ?? doc.page.width - 48) - colX[i] - 4,
+          lineBreak: false,
+        });
       });
 
       doc.moveDown(0.1);
@@ -289,7 +296,10 @@ router.get('/:address', async (req: Request, res: Response): Promise<void> => {
 
         // Alternating row shade
         if (idx % 2 === 0) {
-          doc.rect(48, rowY, doc.page.width - 96, 16).fillColor('#fafafa').fill();
+          doc
+            .rect(48, rowY, doc.page.width - 96, 16)
+            .fillColor('#fafafa')
+            .fill();
         }
 
         const statusColor =
@@ -316,12 +326,26 @@ router.get('/:address', async (req: Request, res: Response): Promise<void> => {
         });
 
         doc.fontSize(7.5).font('Helvetica').fillColor('#0f172a');
-        doc.text(String(c.id),               colX[0], rowY + 3, { width: colX[1] - colX[0] - 4, lineBreak: false });
-        doc.text(shortAddr(c.issuer),         colX[1], rowY + 3, { width: colX[2] - colX[1] - 4, lineBreak: false });
-        doc.text(shortAddr(c.counterparty),   colX[2], rowY + 3, { width: colX[3] - colX[2] - 4, lineBreak: false });
-        doc.text(dueStr,                      colX[3], rowY + 3, { width: colX[4] - colX[3] - 4, lineBreak: false });
-        doc.fillColor(statusColor).text(c.status, colX[4], rowY + 3, { width: colX[5] - colX[4] - 4, lineBreak: false });
-        doc.fillColor('#0f172a').text(attestedStr, colX[5], rowY + 3, { width: doc.page.width - 48 - colX[5] - 4, lineBreak: false });
+        doc.text(String(c.id), colX[0], rowY + 3, {
+          width: colX[1] - colX[0] - 4,
+          lineBreak: false,
+        });
+        doc.text(shortAddr(c.issuer), colX[1], rowY + 3, {
+          width: colX[2] - colX[1] - 4,
+          lineBreak: false,
+        });
+        doc.text(shortAddr(c.counterparty), colX[2], rowY + 3, {
+          width: colX[3] - colX[2] - 4,
+          lineBreak: false,
+        });
+        doc.text(dueStr, colX[3], rowY + 3, { width: colX[4] - colX[3] - 4, lineBreak: false });
+        doc
+          .fillColor(statusColor)
+          .text(c.status, colX[4], rowY + 3, { width: colX[5] - colX[4] - 4, lineBreak: false });
+        doc.fillColor('#0f172a').text(attestedStr, colX[5], rowY + 3, {
+          width: doc.page.width - 48 - colX[5] - 4,
+          lineBreak: false,
+        });
 
         rowY += 17;
       });

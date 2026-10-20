@@ -21,10 +21,9 @@ export class CryptoWorkerClient {
     if (!this.isWorkerSupported) return;
 
     try {
-      this.worker = new Worker(
-        new URL('../workers/crypto.worker.ts', import.meta.url),
-        { type: 'module' }
-      );
+      this.worker = new Worker(new URL('../workers/crypto.worker.ts', import.meta.url), {
+        type: 'module',
+      });
 
       this.worker.onmessage = (event: MessageEvent<CryptoWorkerResponse>) => {
         const { id, success, result, error } = event.data;
@@ -41,7 +40,10 @@ export class CryptoWorkerClient {
       };
 
       this.worker.onerror = (err) => {
-        console.warn('Crypto Web Worker error, stopping worker and settling in-flight requests via fallback', err);
+        console.warn(
+          'Crypto Web Worker error, stopping worker and settling in-flight requests via fallback',
+          err,
+        );
         if (this.worker) {
           this.worker.terminate();
           this.worker = null;
@@ -127,7 +129,9 @@ export class CryptoWorkerClient {
 
     return new Promise<string[]>((resolve, reject) => {
       const fallback = () => {
-        Promise.all(inputs.map((i) => this.fallbackSha256(i))).then(resolve).catch(reject);
+        Promise.all(inputs.map((i) => this.fallbackSha256(i)))
+          .then(resolve)
+          .catch(reject);
       };
 
       const timer = setTimeout(() => {

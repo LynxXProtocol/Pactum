@@ -15,9 +15,7 @@ describe('scrubEvent', () => {
       message: `failed for ${M_MUXED} / ${G_ADDRESS} / ${C_CONTRACT} / ${HEX_HASH}`,
     };
     const scrubbed = scrubEvent(event, undefined);
-    expect(scrubbed.message).toBe(
-      `failed for [REDACTED] / [REDACTED] / [REDACTED] / [REDACTED]`,
-    );
+    expect(scrubbed.message).toBe(`failed for [REDACTED] / [REDACTED] / [REDACTED] / [REDACTED]`);
   });
 
   it('redacts muxed M-addresses in exception.values', () => {

@@ -74,7 +74,10 @@ test('blocks the request past the limit with 429 and a Retry-After header', () =
   assert.equal(blocked.headers['x-ratelimit-remaining'], '0');
 
   const retryAfter = Number(blocked.headers['retry-after']);
-  assert.ok(Number.isInteger(retryAfter) && retryAfter > 0, 'Retry-After must be a positive integer');
+  assert.ok(
+    Number.isInteger(retryAfter) && retryAfter > 0,
+    'Retry-After must be a positive integer',
+  );
   // The window is one hour; blocked immediately, a slot frees nearly an hour out.
   assert.ok(retryAfter <= 3600 && retryAfter > 3500, `unexpected Retry-After: ${retryAfter}`);
   assert.deepEqual(blocked.body, {

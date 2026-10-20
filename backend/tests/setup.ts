@@ -4,7 +4,7 @@ import { Pool } from 'pg';
 import { PostgreSqlContainer, StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 
 export interface IntegrationDatabase {
-  container: StartedPostgreSqlContainer;
+  container?: StartedPostgreSqlContainer;
   pool: Pool;
 }
 
@@ -15,19 +15,24 @@ export interface IntegrationDatabase {
 const INDEXER_MIGRATIONS = ['003_deterministic_indexer.sql', '005_commitment_index.sql'];
 
 /**
- * Boots an ephemeral, throwaway Postgres via Testcontainers and applies the
- * indexer's schema to it. Call from a suite's `before`; pair with
- * `stopIntegrationDatabase` in `after` so the container is torn down even if
- * a test in between fails.
+ * Boots an ephemeral, throwaway Postgres via Testcontainers (or connects to
+ * process.env.DATABASE_URL if configured) and applies the indexer's schema to it.
+ * Call from a suite's `before`; pair with `stopIntegrationDatabase` in `after`.
  */
 export async function startIntegrationDatabase(): Promise<IntegrationDatabase> {
-    const container = await new PostgreSqlContainer('timescale/timescaledb:latest-pg16')
-    .withDatabase('pactum_integration')
-    .withUsername('pactum')
-    .withPassword('pactum')
-    .start();
+  let pool: Pool;
+  let container: StartedPostgreSqlContainer | undefined;
 
-  const pool = new Pool({ connectionString: container.getConnectionUri() });
+  if (process.env.DATABASE_URL) {
+    pool = new Pool({ connectionString: process.env.DATABASE_URL });
+  } else {
+    container = await new PostgreSqlContainer('timescale/timescaledb:latest-pg16')
+      .withDatabase('pactum_integration')
+      .withUsername('pactum')
+      .withPassword('pactum')
+      .start();
+    pool = new Pool({ connectionString: container.getConnectionUri() });
+  }
 
   // Resolved from the repo-relative cwd (mirrors src/indexer/commitments.test.ts
   // and src/indexer/listener.test.ts) rather than __dirname, since __dirname
@@ -37,7 +42,7 @@ export async function startIntegrationDatabase(): Promise<IntegrationDatabase> {
   try {
     const { readdir } = await import('node:fs/promises');
     const files = await readdir(migrationsDir);
-    const sqlFiles = files.filter(f => f.endsWith('.sql')).sort();
+    const sqlFiles = files.filter((f) => f.endsWith('.sql')).sort();
     for (const file of sqlFiles) {
       const sql = await readFile(path.join(migrationsDir, file), 'utf8');
       await pool.query(sql);
@@ -45,7 +50,7 @@ export async function startIntegrationDatabase(): Promise<IntegrationDatabase> {
   } catch (error) {
     // allSettled, not sequential awaits: a rejection from one cleanup must not
     // skip the other, and neither should replace the original setup error.
-    await Promise.allSettled([pool.end(), container.stop()]);
+    await Promise.allSettled([pool.end(), container?.stop()]);
     throw error;
   }
 
@@ -53,10 +58,10 @@ export async function startIntegrationDatabase(): Promise<IntegrationDatabase> {
 }
 
 /** Closes the pool and stops the container started by `startIntegrationDatabase`. */
-export async function stopIntegrationDatabase({
-  container,
-  pool,
-}: IntegrationDatabase): Promise<void> {
-  await pool.end();
-  await container.stop();
+export async function stopIntegrationDatabase(db?: IntegrationDatabase): Promise<void> {
+  if (!db) return;
+  await db.pool?.end();
+  if (db.container) {
+    await db.container.stop();
+  }
 }

@@ -1,9 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect } from 'react';
 
-import type { Commitment, Reputation } from '@/lib/api'
-import { syncStore } from '@/lib/crdt/store'
-import { queryClient } from '@/lib/queryClient'
-import { commitmentKeys, reputationKeys } from '@/lib/queryKeys'
+import type { Commitment, Reputation } from '@/lib/api';
+import { syncStore } from '@/lib/crdt/store';
+import { queryClient } from '@/lib/queryClient';
+import { commitmentKeys, reputationKeys } from '@/lib/queryKeys';
 
 /**
  * True when the query key targets the unfiltered commitment list, which is
@@ -11,7 +11,9 @@ import { commitmentKeys, reputationKeys } from '@/lib/queryKeys'
  * Filtered list queries are derived views and must never overwrite the cache.
  */
 function isFullCommitmentListKey(queryKey: readonly unknown[]): boolean {
-  return queryKey.length === 2 && queryKey[0] === 'commitments' && JSON.stringify(queryKey[1]) === '{}'
+  return (
+    queryKey.length === 2 && queryKey[0] === 'commitments' && JSON.stringify(queryKey[1]) === '{}'
+  );
 }
 
 /**
@@ -32,92 +34,95 @@ function isFullCommitmentListKey(queryKey: readonly unknown[]): boolean {
  */
 export function useSyncCache(address?: string | null): void {
   useEffect(() => {
-    if (!address) return
-    syncStore.connectPeerSync(address)
-    return () => syncStore.disconnectPeerSync()
-  }, [address])
+    if (!address) return;
+    syncStore.connectPeerSync(address);
+    return () => syncStore.disconnectPeerSync();
+  }, [address]);
 
   useEffect(() => {
-    let disposed = false
-    let suppressQueryEcho = false
+    let disposed = false;
+    let suppressQueryEcho = false;
 
     const hydrateFromStore = (): void => {
-      suppressQueryEcho = true
+      suppressQueryEcho = true;
       try {
-        const commitments = syncStore.readCommitments()
+        const commitments = syncStore.readCommitments();
         if (commitments.length > 0) {
-          queryClient.setQueriesData({ queryKey: commitmentKeys.all }, commitments)
+          queryClient.setQueriesData({ queryKey: commitmentKeys.all }, commitments);
         }
       } finally {
-        suppressQueryEcho = false
+        suppressQueryEcho = false;
       }
-    }
+    };
 
     const writeQueryToStore = (data: unknown, queryKey: readonly unknown[]): void => {
       if (isFullCommitmentListKey(queryKey) && Array.isArray(data)) {
-        syncStore.mergeCanonical({ commitments: data as Commitment[] })
+        syncStore.mergeCanonical({ commitments: data as Commitment[] });
       } else if (
         queryKey[0] === 'reputation' &&
         typeof queryKey[1] === 'string' &&
         data !== null &&
         typeof data === 'object'
       ) {
-        syncStore.mergeCanonical({ reputations: [data as Reputation] })
+        syncStore.mergeCanonical({ reputations: [data as Reputation] });
       }
-    }
+    };
 
     const unsubCommitments = syncStore.observeCommitments((commitments) => {
-      suppressQueryEcho = true
+      suppressQueryEcho = true;
       try {
-        queryClient.setQueriesData({ queryKey: commitmentKeys.all }, commitments)
+        queryClient.setQueriesData({ queryKey: commitmentKeys.all }, commitments);
       } finally {
-        suppressQueryEcho = false
+        suppressQueryEcho = false;
       }
-    })
+    });
 
     const unsubReputation = syncStore.observeReputation((reputations) => {
-      suppressQueryEcho = true
+      suppressQueryEcho = true;
       try {
         for (const reputation of reputations) {
-          queryClient.setQueriesData({ queryKey: reputationKeys.detail(reputation.address) }, reputation)
+          queryClient.setQueriesData(
+            { queryKey: reputationKeys.detail(reputation.address) },
+            reputation,
+          );
         }
       } finally {
-        suppressQueryEcho = false
+        suppressQueryEcho = false;
       }
-    })
+    });
 
     const unsubQueryCache = queryClient.getQueryCache().subscribe((event) => {
-      if (event.type !== 'updated' || suppressQueryEcho) return
-      const query = event.query
+      if (event.type !== 'updated' || suppressQueryEcho) return;
+      const query = event.query;
       if (query.state.status === 'success' && query.state.data !== undefined) {
-        writeQueryToStore(query.state.data, query.queryKey)
+        writeQueryToStore(query.state.data, query.queryKey);
       }
-    })
+    });
 
     const handleOnline = (): void => {
-      syncStore.setOnline()
-      void queryClient.refetchQueries({ queryKey: commitmentKeys.all })
-      void queryClient.refetchQueries({ queryKey: reputationKeys.all })
-    }
+      syncStore.setOnline();
+      void queryClient.refetchQueries({ queryKey: commitmentKeys.all });
+      void queryClient.refetchQueries({ queryKey: reputationKeys.all });
+    };
 
     const handleOffline = (): void => {
-      syncStore.setOffline()
-    }
+      syncStore.setOffline();
+    };
 
-    window.addEventListener('online', handleOnline)
-    window.addEventListener('offline', handleOffline)
+    window.addEventListener('online', handleOnline);
+    window.addEventListener('offline', handleOffline);
 
     void syncStore.ready.then(() => {
-      if (!disposed) hydrateFromStore()
-    })
+      if (!disposed) hydrateFromStore();
+    });
 
     return () => {
-      disposed = true
-      unsubCommitments()
-      unsubReputation()
-      unsubQueryCache()
-      window.removeEventListener('online', handleOnline)
-      window.removeEventListener('offline', handleOffline)
-    }
-  }, [])
+      disposed = true;
+      unsubCommitments();
+      unsubReputation();
+      unsubQueryCache();
+      window.removeEventListener('online', handleOnline);
+      window.removeEventListener('offline', handleOffline);
+    };
+  }, []);
 }

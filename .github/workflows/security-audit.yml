@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   npm-audit:
-    name: "NPM Audit (${{ matrix.directory }})"
+    name: 'NPM Audit (${{ matrix.directory }})'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -48,7 +48,7 @@ jobs:
         if: steps.check.outputs.has_deps == 'true'
         uses: actions/setup-node@v4
         with:
-          node-version: "20.x"
+          node-version: '20.x'
 
       - name: Cache npm dependencies
         if: steps.check.outputs.has_deps == 'true'

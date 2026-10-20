@@ -119,10 +119,7 @@ export function isSentryEnabled(): boolean {
  * Sentry with lightweight, non-sensitive context. No-op when Sentry is not
  * enabled, and fully defensive — telemetry never breaks the calling code.
  */
-export function captureSorobanRpcError(
-  error: unknown,
-  context?: Record<string, unknown>,
-): void {
+export function captureSorobanRpcError(error: unknown, context?: Record<string, unknown>): void {
   if (!enabled) {
     return;
   }

@@ -2,16 +2,13 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { resolveTheme, applyTheme, type ResolvedTheme } from './ThemeContext';
 
 function mockMatchMedia(dark: boolean) {
-  vi.stubGlobal(
-    'window',
-    {
-      matchMedia: vi.fn((_query: string) => ({
-        matches: dark,
-        addEventListener: vi.fn(),
-        removeEventListener: vi.fn(),
-      })),
-    },
-  );
+  vi.stubGlobal('window', {
+    matchMedia: vi.fn((_query: string) => ({
+      matches: dark,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    })),
+  });
 }
 
 function mockLocalStorage() {

@@ -317,7 +317,12 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
       <div
         id="dashboard-remote-wallet-status"
         data-connected={wallet.isConnected}
-        style={{ fontSize: '12px', color: '#64748b', marginBottom: '10px', fontFamily: 'monospace' }}
+        style={{
+          fontSize: '12px',
+          color: '#64748b',
+          marginBottom: '10px',
+          fontFamily: 'monospace',
+        }}
       >
         {wallet.isConnected ? `Wallet: ${wallet.address}` : 'Wallet: not connected'}
       </div>
@@ -333,7 +338,10 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
           boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)',
         }}
       >
-        <form onSubmit={handleSearchSubmit} style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+        <form
+          onSubmit={handleSearchSubmit}
+          style={{ display: 'flex', gap: '12px', alignItems: 'center' }}
+        >
           <div
             style={{
               flex: 1,
@@ -346,7 +354,15 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
               transition: 'border-color 0.2s ease',
             }}
           >
-            <svg width="18" height="18" fill="none" stroke="#64748b" strokeWidth="2" strokeLinecap="round" style={{ marginRight: '12px', flexShrink: 0 }}>
+            <svg
+              width="18"
+              height="18"
+              fill="none"
+              stroke="#64748b"
+              strokeWidth="2"
+              strokeLinecap="round"
+              style={{ marginRight: '12px', flexShrink: 0 }}
+            >
               <circle cx="8" cy="8" r="6" />
               <path d="M16 16l-3.5-3.5" />
             </svg>
@@ -457,12 +473,42 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
           <div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11px', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.08em', color: '#6366f1' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}
+            >
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em',
+                  color: '#6366f1',
+                }}
+              >
                 Stellar Account Record
               </span>
-              <span style={{ fontSize: '11px', background: '#dcfce7', color: '#15803d', fontWeight: '700', padding: '3px 10px', borderRadius: '100px', border: '1px solid #bbf7d0', display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
-                <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#22c55e' }}></span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  background: '#dcfce7',
+                  color: '#15803d',
+                  fontWeight: '700',
+                  padding: '3px 10px',
+                  borderRadius: '100px',
+                  border: '1px solid #bbf7d0',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                }}
+              >
+                <span
+                  style={{
+                    width: '6px',
+                    height: '6px',
+                    borderRadius: '50%',
+                    background: '#22c55e',
+                  }}
+                ></span>
                 Stellar Testnet Live
               </span>
             </div>
@@ -471,21 +517,60 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
         </div>
 
         {/* Circular Reliability Gauge */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '18px', background: '#ffffff', padding: '14px 22px', borderRadius: '16px', border: '1px solid #e2e8f0', boxShadow: '0 2px 10px rgba(0,0,0,0.03)' }}>
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '18px',
+            background: '#ffffff',
+            padding: '14px 22px',
+            borderRadius: '16px',
+            border: '1px solid #e2e8f0',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.03)',
+          }}
+        >
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: '11px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Reliability Score</div>
-            <div style={{ fontSize: '26px', fontWeight: '900', color: fulfillmentRate >= 70 ? '#16a34a' : fulfillmentRate >= 40 ? '#d97706' : '#dc2626' }}>
+            <div
+              style={{
+                fontSize: '11px',
+                fontWeight: '800',
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+              }}
+            >
+              Reliability Score
+            </div>
+            <div
+              style={{
+                fontSize: '26px',
+                fontWeight: '900',
+                color:
+                  fulfillmentRate >= 70 ? '#16a34a' : fulfillmentRate >= 40 ? '#d97706' : '#dc2626',
+              }}
+            >
               {totalCount > 0 ? `${fulfillmentRate}%` : 'N/A'}
             </div>
           </div>
-          <div style={{ position: 'relative', width: '52px', height: '52px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <div
+            style={{
+              position: 'relative',
+              width: '52px',
+              height: '52px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
             <svg width="52" height="52" viewBox="0 0 80 80">
               <circle cx="40" cy="40" r="36" stroke="#f1f5f9" strokeWidth="8" fill="none" />
               <circle
                 cx="40"
                 cy="40"
                 r="36"
-                stroke={fulfillmentRate >= 70 ? '#22c55e' : fulfillmentRate >= 40 ? '#f59e0b' : '#ef4444'}
+                stroke={
+                  fulfillmentRate >= 70 ? '#22c55e' : fulfillmentRate >= 40 ? '#f59e0b' : '#ef4444'
+                }
                 strokeWidth="8"
                 fill="none"
                 strokeDasharray="226"
@@ -495,7 +580,14 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
                 style={{ transition: 'stroke-dashoffset 0.5s ease-out' }}
               />
             </svg>
-            <span style={{ position: 'absolute', fontSize: '12px', fontWeight: '900', color: '#0f172a' }}>
+            <span
+              style={{
+                position: 'absolute',
+                fontSize: '12px',
+                fontWeight: '900',
+                color: '#0f172a',
+              }}
+            >
               {totalCount > 0 ? `${fulfillmentRate}` : '0'}
             </span>
           </div>
@@ -504,16 +596,50 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
 
       {/* ── Soft Pastel Scorecards Grid ── */}
       {isLoading ? (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px', marginBottom: '24px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '18px',
+            marginBottom: '24px',
+          }}
+        >
           {[1, 2, 3, 4].map((i) => (
-            <div key={i} style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '18px', padding: '24px', height: '110px', animation: 'pulse 1.5s infinite' }}>
-              <div style={{ width: '45%', height: '12px', background: '#f1f5f9', borderRadius: '4px', marginBottom: '14px' }}></div>
-              <div style={{ width: '30%', height: '28px', background: '#e2e8f0', borderRadius: '6px' }}></div>
+            <div
+              key={i}
+              style={{
+                background: '#ffffff',
+                border: '1px solid #e2e8f0',
+                borderRadius: '18px',
+                padding: '24px',
+                height: '110px',
+                animation: 'pulse 1.5s infinite',
+              }}
+            >
+              <div
+                style={{
+                  width: '45%',
+                  height: '12px',
+                  background: '#f1f5f9',
+                  borderRadius: '4px',
+                  marginBottom: '14px',
+                }}
+              ></div>
+              <div
+                style={{ width: '30%', height: '28px', background: '#e2e8f0', borderRadius: '6px' }}
+              ></div>
             </div>
           ))}
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '18px', marginBottom: '24px' }}>
+        <div
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
+            gap: '18px',
+            marginBottom: '24px',
+          }}
+        >
           <div
             onMouseEnter={() => setHoveredCard('total')}
             onMouseLeave={() => setHoveredCard(null)}
@@ -522,16 +648,34 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
               border: '1.5px solid #e2e8f0',
               borderRadius: '20px',
               padding: '24px',
-              boxShadow: hoveredCard === 'total' ? '0 12px 28px -6px rgba(0,0,0,0.08)' : '0 2px 8px rgba(0,0,0,0.03)',
+              boxShadow:
+                hoveredCard === 'total'
+                  ? '0 12px 28px -6px rgba(0,0,0,0.08)'
+                  : '0 2px 8px rgba(0,0,0,0.03)',
               transform: hoveredCard === 'total' ? 'translateY(-3px)' : 'translateY(0)',
               transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <div style={{ fontSize: '11.5px', fontWeight: '800', color: '#64748b', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: '8px' }}>
+            <div
+              style={{
+                fontSize: '11.5px',
+                fontWeight: '800',
+                color: '#64748b',
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                marginBottom: '8px',
+              }}
+            >
               Total Commitments
             </div>
-            <div style={{ fontSize: '38px', fontWeight: '900', color: '#0f172a', lineHeight: '1' }}>{totalCount}</div>
-            <div style={{ fontSize: '12px', color: '#64748b', marginTop: '10px', fontWeight: '500' }}>On-chain record ({calculatedPending} pending)</div>
+            <div style={{ fontSize: '38px', fontWeight: '900', color: '#0f172a', lineHeight: '1' }}>
+              {totalCount}
+            </div>
+            <div
+              style={{ fontSize: '12px', color: '#64748b', marginTop: '10px', fontWeight: '500' }}
+            >
+              On-chain record ({calculatedPending} pending)
+            </div>
           </div>
 
           <div
@@ -542,19 +686,56 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
               border: '1.5px solid #bbf7d0',
               borderRadius: '20px',
               padding: '24px',
-              boxShadow: hoveredCard === 'fulfilled' ? '0 12px 28px -6px rgba(34,197,94,0.18)' : '0 2px 8px rgba(34,197,94,0.04)',
+              boxShadow:
+                hoveredCard === 'fulfilled'
+                  ? '0 12px 28px -6px rgba(34,197,94,0.18)'
+                  : '0 2px 8px rgba(34,197,94,0.04)',
               transform: hoveredCard === 'fulfilled' ? 'translateY(-3px)' : 'translateY(0)',
               transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#166534', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Fulfilled</span>
-              <span style={{ fontSize: '11px', fontWeight: '800', padding: '3px 10px', borderRadius: '100px', background: '#ffffff', color: '#15803d', border: '1px solid #bbf7d0', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '8px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11.5px',
+                  fontWeight: '800',
+                  color: '#166534',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                Fulfilled
+              </span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  padding: '3px 10px',
+                  borderRadius: '100px',
+                  background: '#ffffff',
+                  color: '#15803d',
+                  border: '1px solid #bbf7d0',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                }}
+              >
                 ✓ On Time
               </span>
             </div>
-            <div style={{ fontSize: '38px', fontWeight: '900', color: '#15803d', lineHeight: '1' }}>{fulfilledCount}</div>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: '#166534', marginTop: '10px' }}>Met on time</div>
+            <div style={{ fontSize: '38px', fontWeight: '900', color: '#15803d', lineHeight: '1' }}>
+              {fulfilledCount}
+            </div>
+            <div
+              style={{ fontSize: '12px', fontWeight: '600', color: '#166534', marginTop: '10px' }}
+            >
+              Met on time
+            </div>
           </div>
 
           <div
@@ -565,19 +746,56 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
               border: '1.5px solid #fde68a',
               borderRadius: '20px',
               padding: '24px',
-              boxShadow: hoveredCard === 'late' ? '0 12px 28px -6px rgba(245,158,11,0.18)' : '0 2px 8px rgba(245,158,11,0.04)',
+              boxShadow:
+                hoveredCard === 'late'
+                  ? '0 12px 28px -6px rgba(245,158,11,0.18)'
+                  : '0 2px 8px rgba(245,158,11,0.04)',
               transform: hoveredCard === 'late' ? 'translateY(-3px)' : 'translateY(0)',
               transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#92400e', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Late</span>
-              <span style={{ fontSize: '11px', fontWeight: '800', padding: '3px 10px', borderRadius: '100px', background: '#ffffff', color: '#b45309', border: '1px solid #fde68a', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '8px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11.5px',
+                  fontWeight: '800',
+                  color: '#92400e',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                Late
+              </span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  padding: '3px 10px',
+                  borderRadius: '100px',
+                  background: '#ffffff',
+                  color: '#b45309',
+                  border: '1px solid #fde68a',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                }}
+              >
                 ⏰ Delayed
               </span>
             </div>
-            <div style={{ fontSize: '38px', fontWeight: '900', color: '#b45309', lineHeight: '1' }}>{lateCount}</div>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: '#92400e', marginTop: '10px' }}>Attested after due date</div>
+            <div style={{ fontSize: '38px', fontWeight: '900', color: '#b45309', lineHeight: '1' }}>
+              {lateCount}
+            </div>
+            <div
+              style={{ fontSize: '12px', fontWeight: '600', color: '#92400e', marginTop: '10px' }}
+            >
+              Attested after due date
+            </div>
           </div>
 
           <div
@@ -588,30 +806,100 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
               border: '1.5px solid #fecdd3',
               borderRadius: '20px',
               padding: '24px',
-              boxShadow: hoveredCard === 'breached' ? '0 12px 28px -6px rgba(239,68,68,0.18)' : '0 2px 8px rgba(239,68,68,0.04)',
+              boxShadow:
+                hoveredCard === 'breached'
+                  ? '0 12px 28px -6px rgba(239,68,68,0.18)'
+                  : '0 2px 8px rgba(239,68,68,0.04)',
               transform: hoveredCard === 'breached' ? 'translateY(-3px)' : 'translateY(0)',
               transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#9f1239', textTransform: 'uppercase', letterSpacing: '0.06em' }}>Breached</span>
-              <span style={{ fontSize: '11px', fontWeight: '800', padding: '3px 10px', borderRadius: '100px', background: '#ffffff', color: '#be123c', border: '1px solid #fecdd3', boxShadow: '0 1px 3px rgba(0,0,0,0.05)' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '8px',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '11.5px',
+                  fontWeight: '800',
+                  color: '#9f1239',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.06em',
+                }}
+              >
+                Breached
+              </span>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  padding: '3px 10px',
+                  borderRadius: '100px',
+                  background: '#ffffff',
+                  color: '#be123c',
+                  border: '1px solid #fecdd3',
+                  boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
+                }}
+              >
                 ✕ Breached
               </span>
             </div>
-            <div style={{ fontSize: '38px', fontWeight: '900', color: '#be123c', lineHeight: '1' }}>{breachedCount}</div>
-            <div style={{ fontSize: '12px', fontWeight: '600', color: '#9f1239', marginTop: '10px' }}>Failed or unfulfilled</div>
+            <div style={{ fontSize: '38px', fontWeight: '900', color: '#be123c', lineHeight: '1' }}>
+              {breachedCount}
+            </div>
+            <div
+              style={{ fontSize: '12px', fontWeight: '600', color: '#9f1239', marginTop: '10px' }}
+            >
+              Failed or unfulfilled
+            </div>
           </div>
         </div>
       )}
 
       {/* ── Deterministic DOM Virtualized Commitment Histories ── */}
-      <div style={{ background: '#ffffff', border: '1.5px solid #e2e8f0', borderRadius: '24px', overflow: 'hidden', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)', marginBottom: '32px' }}>
-        <div style={{ padding: '22px 28px', borderBottom: '1px solid #f1f5f9', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '14px' }}>
+      <div
+        style={{
+          background: '#ffffff',
+          border: '1.5px solid #e2e8f0',
+          borderRadius: '24px',
+          overflow: 'hidden',
+          boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)',
+          marginBottom: '32px',
+        }}
+      >
+        <div
+          style={{
+            padding: '22px 28px',
+            borderBottom: '1px solid #f1f5f9',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '14px',
+          }}
+        >
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>Associated Commitments</h3>
-              <span style={{ fontSize: '11px', fontWeight: '800', padding: '2px 8px', borderRadius: '6px', background: '#e0e7ff', color: '#4338ca', display: 'inline-flex', alignItems: 'center', gap: '4px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: 0 }}>
+                Associated Commitments
+              </h3>
+              <span
+                style={{
+                  fontSize: '11px',
+                  fontWeight: '800',
+                  padding: '2px 8px',
+                  borderRadius: '6px',
+                  background: '#e0e7ff',
+                  color: '#4338ca',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
                 <Layers size={12} />
                 Virtualized
               </span>
@@ -623,7 +911,16 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
             {/* ── Status filter tabs ── */}
-            <div style={{ display: 'flex', gap: '4px', background: '#f1f5f9', padding: '4px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+            <div
+              style={{
+                display: 'flex',
+                gap: '4px',
+                background: '#f1f5f9',
+                padding: '4px',
+                borderRadius: '10px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
               {['All', 'Fulfilled', 'Late', 'Breached', 'Pending'].map((tab) => (
                 <button
                   key={tab}
@@ -722,7 +1019,20 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
         </div>
 
         {/* Live Virtualization Metrics Bar */}
-        <div style={{ padding: '10px 28px', background: '#f8fafc', borderBottom: '1px solid #e2e8f0', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', fontSize: '12px', color: '#64748b' }}>
+        <div
+          style={{
+            padding: '10px 28px',
+            background: '#f8fafc',
+            borderBottom: '1px solid #e2e8f0',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            fontSize: '12px',
+            color: '#64748b',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
             <span>
               Loaded: <strong style={{ color: '#0f172a' }}>{commitments.length}</strong>
@@ -730,13 +1040,25 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
             </span>
             <span style={{ color: '#cbd5e1' }}>•</span>
             <span id="virtual-dom-count">
-              Active in DOM (Viewport + Overscan): <strong style={{ color: '#16a34a' }}>{virtualItems.length} nodes</strong>
+              Active in DOM (Viewport + Overscan):{' '}
+              <strong style={{ color: '#16a34a' }}>{virtualItems.length} nodes</strong>
             </span>
           </div>
         </div>
 
         {fetchError && (
-          <div style={{ margin: '16px 28px 0 28px', background: '#fff1f2', color: '#be123c', border: '1px solid #fecdd3', borderRadius: '10px', padding: '10px 14px', fontSize: '12.5px', fontWeight: '600' }}>
+          <div
+            style={{
+              margin: '16px 28px 0 28px',
+              background: '#fff1f2',
+              color: '#be123c',
+              border: '1px solid #fecdd3',
+              borderRadius: '10px',
+              padding: '10px 14px',
+              fontSize: '12.5px',
+              fontWeight: '600',
+            }}
+          >
             {fetchError}
           </div>
         )}
@@ -744,19 +1066,53 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
         {/* Empty State Requirement: "No commitments found for this address" */}
         {commitments.length === 0 && !isLoading ? (
           <div style={{ padding: '72px 24px', textAlign: 'center' }}>
-            <div style={{ width: '64px', height: '64px', background: '#f8fafc', color: '#94a3b8', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 18px auto', fontSize: '28px', border: '1px solid #e2e8f0' }}>
+            <div
+              style={{
+                width: '64px',
+                height: '64px',
+                background: '#f8fafc',
+                color: '#94a3b8',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 18px auto',
+                fontSize: '28px',
+                border: '1px solid #e2e8f0',
+              }}
+            >
               📭
             </div>
-            <h4 style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}>
+            <h4
+              style={{ fontSize: '18px', fontWeight: '800', color: '#0f172a', margin: '0 0 6px 0' }}
+            >
               No commitments found for this address
             </h4>
-            <p style={{ fontSize: '13.5px', color: '#64748b', maxWidth: '400px', margin: '0 auto 22px auto' }}>
-              This account currently has no registered commitment activity on Pactum Stellar Testnet.
+            <p
+              style={{
+                fontSize: '13.5px',
+                color: '#64748b',
+                maxWidth: '400px',
+                margin: '0 auto 22px auto',
+              }}
+            >
+              This account currently has no registered commitment activity on Pactum Stellar
+              Testnet.
             </p>
             {onLaunchCreate && (
               <button
                 onClick={onLaunchCreate}
-                style={{ padding: '10px 22px', background: '#0f172a', color: '#ffffff', fontSize: '13px', fontWeight: '700', borderRadius: '10px', border: 'none', cursor: 'pointer', boxShadow: '0 4px 12px rgba(15,23,42,0.15)' }}
+                style={{
+                  padding: '10px 22px',
+                  background: '#0f172a',
+                  color: '#ffffff',
+                  fontSize: '13px',
+                  fontWeight: '700',
+                  borderRadius: '10px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 12px rgba(15,23,42,0.15)',
+                }}
               >
                 + Create Commitment for this Address
               </button>
@@ -767,9 +1123,21 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
           <div
             ref={parentRef}
             id="virtualized-commitments-viewport"
-            style={{ height: '560px', overflowY: 'auto', position: 'relative', contain: 'strict', padding: '0 12px' }}
+            style={{
+              height: '560px',
+              overflowY: 'auto',
+              position: 'relative',
+              contain: 'strict',
+              padding: '0 12px',
+            }}
           >
-            <div style={{ height: `${rowVirtualizer.getTotalSize()}px`, width: '100%', position: 'relative' }}>
+            <div
+              style={{
+                height: `${rowVirtualizer.getTotalSize()}px`,
+                width: '100%',
+                position: 'relative',
+              }}
+            >
               {virtualItems.map((virtualRow) => {
                 const c = commitments[virtualRow.index];
                 if (!c) return null;
@@ -782,48 +1150,152 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
                     key={virtualRow.key}
                     data-index={virtualRow.index}
                     ref={rowVirtualizer.measureElement}
-                    style={{ position: 'absolute', top: 0, left: 0, width: '100%', transform: `translateY(${virtualRow.start}px)`, padding: '8px 0' }}
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      width: '100%',
+                      transform: `translateY(${virtualRow.start}px)`,
+                      padding: '8px 0',
+                    }}
                   >
                     <div
                       className="commitment-card-item"
-                      style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '16px', padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}
+                      style={{
+                        background: '#ffffff',
+                        border: '1px solid #e2e8f0',
+                        borderRadius: '16px',
+                        padding: '16px 20px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.02)',
+                      }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-                        <span style={{ fontSize: '15px', fontWeight: '900', color: '#0f172a', fontFamily: 'monospace' }}>#{c.id}</span>
-                        <span style={{ padding: '4px 10px', borderRadius: '6px', fontSize: '11px', fontWeight: '800', background: isIssuer ? '#e0e7ff' : '#f1f5f9', color: isIssuer ? '#3730a3' : '#475569', border: isIssuer ? '1px solid #c7d2fe' : '1px solid #e2e8f0' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '12px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '15px',
+                            fontWeight: '900',
+                            color: '#0f172a',
+                            fontFamily: 'monospace',
+                          }}
+                        >
+                          #{c.id}
+                        </span>
+                        <span
+                          style={{
+                            padding: '4px 10px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: '800',
+                            background: isIssuer ? '#e0e7ff' : '#f1f5f9',
+                            color: isIssuer ? '#3730a3' : '#475569',
+                            border: isIssuer ? '1px solid #c7d2fe' : '1px solid #e2e8f0',
+                          }}
+                        >
                           {isIssuer ? 'Issuer' : 'Counterparty'}
                         </span>
                         <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                          <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600' }}>vs</span>
-                          <UserProfile address={counterpartyAddr} avatarSize={24} showDomain={false} />
+                          <span style={{ fontSize: '12px', color: '#94a3b8', fontWeight: '600' }}>
+                            vs
+                          </span>
+                          <UserProfile
+                            address={counterpartyAddr}
+                            avatarSize={24}
+                            showDomain={false}
+                          />
                         </div>
                         <span style={{ fontSize: '12px', color: '#64748b' }} title={c.terms_hash}>
                           {c.terms_hash.substring(0, 14)}...
                         </span>
-                        <span style={{ fontSize: '12.5px', color: '#0f172a', fontWeight: '600' }}>{formatDate(c.due_at)}</span>
+                        <span style={{ fontSize: '12.5px', color: '#0f172a', fontWeight: '600' }}>
+                          {formatDate(c.due_at)}
+                        </span>
                       </div>
 
                       <div>
                         {c.status === 'Fulfilled' && (
-                          <span style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '800', background: '#dcfce7', color: '#15803d', border: '1px solid #bbf7d0', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '100px',
+                              fontSize: '12px',
+                              fontWeight: '800',
+                              background: '#dcfce7',
+                              color: '#15803d',
+                              border: '1px solid #bbf7d0',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
                             <ShieldCheck size={14} color="#16a34a" />
                             Fulfilled
                           </span>
                         )}
                         {c.status === 'Late' && (
-                          <span style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '800', background: '#fef3c7', color: '#b45309', border: '1px solid #fde68a', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '100px',
+                              fontSize: '12px',
+                              fontWeight: '800',
+                              background: '#fef3c7',
+                              color: '#b45309',
+                              border: '1px solid #fde68a',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
                             <Clock size={14} color="#f59e0b" />
                             Late
                           </span>
                         )}
                         {c.status === 'Breached' && (
-                          <span style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '800', background: '#ffe4e6', color: '#be123c', border: '1px solid #fecdd3', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '100px',
+                              fontSize: '12px',
+                              fontWeight: '800',
+                              background: '#ffe4e6',
+                              color: '#be123c',
+                              border: '1px solid #fecdd3',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
                             <AlertTriangle size={14} color="#ef4444" />
                             Breached
                           </span>
                         )}
                         {c.status === 'Pending' && (
-                          <span style={{ padding: '4px 12px', borderRadius: '100px', fontSize: '12px', fontWeight: '800', background: '#f1f5f9', color: '#475569', border: '1px solid #e2e8f0', display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                          <span
+                            style={{
+                              padding: '4px 12px',
+                              borderRadius: '100px',
+                              fontSize: '12px',
+                              fontWeight: '800',
+                              background: '#f1f5f9',
+                              color: '#475569',
+                              border: '1px solid #e2e8f0',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                            }}
+                          >
                             Pending
                           </span>
                         )}
@@ -836,7 +1308,15 @@ export const ReputationDashboard: React.FC<ReputationDashboardProps> = ({
 
             <div ref={bottomRef} style={{ height: '20px' }}>
               {isFetchingMore && (
-                <div style={{ textAlign: 'center', padding: '16px', fontSize: '13px', color: '#64748b', fontWeight: '500' }}>
+                <div
+                  style={{
+                    textAlign: 'center',
+                    padding: '16px',
+                    fontSize: '13px',
+                    color: '#64748b',
+                    fontWeight: '500',
+                  }}
+                >
                   Loading more commitments...
                 </div>
               )}

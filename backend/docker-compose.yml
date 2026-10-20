@@ -4,8 +4,8 @@ services:
   backend:
     build: .
     ports:
-      - "3000:3000"  # Public API port
-      - "9090:9090"  # Internal metrics port (for Prometheus scraping)
+      - '3000:3000' # Public API port
+      - '9090:9090' # Internal metrics port (for Prometheus scraping)
     environment:
       - PORT=3000
       - METRICS_PORT=9090
@@ -15,7 +15,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9091:9090"
+      - '9091:9090'
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
     networks:

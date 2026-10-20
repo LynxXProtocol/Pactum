@@ -62,10 +62,7 @@ const connectedStyles: React.CSSProperties = {
   boxShadow: '0 2px 6px rgba(34, 197, 94, 0.08)',
 };
 
-export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({
-  variant,
-  className,
-}) => {
+export const WalletConnectButton: React.FC<WalletConnectButtonProps> = ({ variant, className }) => {
   const { address, isConnected, isConnecting } = useWallet();
   const { resolvedTheme } = useTheme();
   const [isOpen, setIsOpen] = useState(false);

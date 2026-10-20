@@ -217,14 +217,14 @@ test('computeEncryptedScore: 0 fulfilled, 0 late, 1 breached', () => {
 // ---------------------------------------------------------------------------
 
 test('toEncryptedScore / fromEncryptedScore round-trip for small value', () => {
-  const v = 0xABCDEF01234567n;
+  const v = 0xabcdef01234567n;
   const es = toEncryptedScore(v, 3);
   assert.equal(fromEncryptedScore(es), v);
   assert.equal(es.count, 3);
 });
 
 test('toEncryptedScore / fromEncryptedScore round-trip for 128-bit value', () => {
-  const v = (1n << 127n) | 0xDEADBEEFn;
+  const v = (1n << 127n) | 0xdeadbeefn;
   const es = toEncryptedScore(v, 7);
   assert.equal(fromEncryptedScore(es), v);
 });

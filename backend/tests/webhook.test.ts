@@ -28,7 +28,7 @@ describe('Webhook Worker and Dead Letter Queue (DLQ)', () => {
       const worker = new WebhookWorker({
         baseDelayMs: 10,
         maxAttempts: 5,
-        dispatcher: failingDispatcher
+        dispatcher: failingDispatcher,
       });
 
       worker.enqueue('https://example.com/webhook', { commitmentId: 'c123', status: 'ATTESTED' });
@@ -73,7 +73,10 @@ describe('Webhook Worker and Dead Letter Queue (DLQ)', () => {
 
   describe('Indexer Listener Integration', () => {
     it('dispatches events asynchronously without blocking the main indexer loop', async () => {
-      const listener = new IndexerListener(['https://example.com/hook1', 'https://example.com/hook2']);
+      const listener = new IndexerListener([
+        'https://example.com/hook1',
+        'https://example.com/hook2',
+      ]);
 
       const startTime = Date.now();
       listener.handleCommitmentUpdate({
@@ -81,7 +84,7 @@ describe('Webhook Worker and Dead Letter Queue (DLQ)', () => {
         commitmentId: 'commit_99',
         eventType: 'ATTESTED',
         issuer: 'GABC123',
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
       });
       const duration = Date.now() - startTime;
 

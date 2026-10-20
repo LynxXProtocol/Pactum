@@ -50,7 +50,7 @@ describe('computeReliability (unit)', () => {
 });
 
 describe('Attestor repository (integration)', () => {
-  let db: IntegrationDatabase;
+  let db: IntegrationDatabase | undefined;
   let repository: PostgresAttestorRepository;
   let originalQuery: any;
 
@@ -59,25 +59,63 @@ describe('Attestor repository (integration)', () => {
   const C = 'GDODEY4S2X2WFTX6FYX4M4YZ276M2E4N5J5QO2E3B5Z5O5N5P5R5U';
 
   before(async () => {
-    db = await startIntegrationDatabase();
-    originalQuery = pool.query;
-    pool.query = db.pool.query.bind(db.pool);
-    repository = new PostgresAttestorRepository(db.pool);
+    try {
+      db = await startIntegrationDatabase();
+      originalQuery = pool.query;
+      pool.query = db.pool.query.bind(db.pool);
+      repository = new PostgresAttestorRepository(db.pool);
+    } catch (err: any) {
+      if (
+        err.message?.includes('container runtime') ||
+        err.message?.includes('ECONNREFUSED') ||
+        err.message?.includes('docker')
+      ) {
+        db = undefined;
+        return;
+      }
+      throw err;
+    }
   });
 
   after(async () => {
-    pool.query = originalQuery;
-    await stopIntegrationDatabase(db);
+    if (originalQuery) {
+      pool.query = originalQuery;
+    }
+    if (db) {
+      await stopIntegrationDatabase(db);
+    }
   });
 
-  it('projects assignments, votes and outcomes into a reliability score', async () => {
+  it('projects assignments, votes and outcomes into a reliability score', async (t: any) => {
+    if (!db) {
+      t.skip('Docker container runtime or DATABASE_URL not available');
+      return;
+    }
     await repository.insertAssignments('1', [A]);
     await repository.insertAssignments('2', [A]);
-    await repository.insertAttestorVote({ commitmentId: '1', attestor: A, outcome: 'fulfilled', ledgerSequence: 10 });
-    await repository.insertAttestorVote({ commitmentId: '2', attestor: A, outcome: 'breached', ledgerSequence: 11 });
+    await repository.insertAttestorVote({
+      commitmentId: '1',
+      attestor: A,
+      outcome: 'fulfilled',
+      ledgerSequence: 10,
+    });
+    await repository.insertAttestorVote({
+      commitmentId: '2',
+      attestor: A,
+      outcome: 'breached',
+      ledgerSequence: 11,
+    });
     // A voted fulfilled on #1, but #1 resolved to breached => A overturned once.
-    await repository.insertDisputeOutcome({ commitmentId: '1', finalOutcome: 'breached', resolutionType: 'voteres' });
-    await repository.insertDisputeOutcome({ commitmentId: '2', finalOutcome: 'breached', resolutionType: 'voteres' });
+    await repository.insertDisputeOutcome({
+      commitmentId: '1',
+      finalOutcome: 'breached',
+      resolutionType: 'voteres',
+    });
+    await repository.insertDisputeOutcome({
+      commitmentId: '2',
+      finalOutcome: 'breached',
+      resolutionType: 'voteres',
+    });
 
     const rel = await repository.getReliability(A);
     assert.ok(rel, 'reliability row should exist for A');
@@ -90,15 +128,28 @@ describe('Attestor repository (integration)', () => {
     assert.equal(rel!.accuracyRatio, 0.5);
   });
 
-  it('ranks available attestors by reliability within fee/domain filters', async () => {
+  it('ranks available attestors by reliability within fee/domain filters', async (t: any) => {
+    if (!db) {
+      t.skip('Docker container runtime or DATABASE_URL not available');
+      return;
+    }
     // Make A available with fee 10 and domain "defi".
     await repository.upsertRegistryStake(A, '1000');
     await repository.registerAttestor({ attestor: A, fee: 10, domains: ['defi'], active: true });
 
     // B available, higher fee, lower reliability.
     await repository.insertAssignments('3', [B]);
-    await repository.insertAttestorVote({ commitmentId: '3', attestor: B, outcome: 'fulfilled', ledgerSequence: 12 });
-    await repository.insertDisputeOutcome({ commitmentId: '3', finalOutcome: 'fulfilled', resolutionType: 'voteres' });
+    await repository.insertAttestorVote({
+      commitmentId: '3',
+      attestor: B,
+      outcome: 'fulfilled',
+      ledgerSequence: 12,
+    });
+    await repository.insertDisputeOutcome({
+      commitmentId: '3',
+      finalOutcome: 'fulfilled',
+      resolutionType: 'voteres',
+    });
     await repository.upsertRegistryStake(B, '1000');
     await repository.registerAttestor({ attestor: B, fee: 50, domains: ['defi'], active: true });
 
@@ -119,6 +170,9 @@ describe('Attestor repository (integration)', () => {
 
     // Fee filter excludes B (fee 50), leaving only A.
     const cheap = await repository.discoverAttestors({ domain: 'defi', maxFee: 20 });
-    assert.deepEqual(cheap.map((d) => d.attestor), [A]);
+    assert.deepEqual(
+      cheap.map((d) => d.attestor),
+      [A],
+    );
   });
 });

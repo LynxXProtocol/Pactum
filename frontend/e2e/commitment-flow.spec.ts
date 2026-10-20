@@ -548,8 +548,6 @@ test('loading spinners display during network requests', async ({ page }) => {
 test('WASM validation failure blocks transaction simulation and wallet submission', async ({
   page,
 }) => {
-
-
   // Track if signTransaction was called
   await page.evaluate(() => {
     (window as any).__signCalled = false;

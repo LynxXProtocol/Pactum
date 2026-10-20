@@ -5,6 +5,7 @@ This document describes the time-series data pipeline for tracking macro-level s
 ## Overview
 
 The analytics system uses TimescaleDB (a PostgreSQL extension) to store and analyze time-series data for:
+
 - Trust score snapshots
 - Commitment outcomes
 - Network-wide statistics
@@ -15,11 +16,13 @@ The analytics system uses TimescaleDB (a PostgreSQL extension) to store and anal
 ### Database Schema
 
 #### Hypertables
+
 - `trust_score_snapshots` - Historical trust score data per address
 - `commitment_outcomes` - Historical commitment completion data
 - `network_daily_stats` - Daily aggregated network statistics
 
 #### Materialized Views
+
 - `mv_daily_fulfillment_rates` - Daily network fulfillment statistics
 - `mv_weekly_fulfillment_rates` - Weekly network fulfillment statistics
 - `mv_monthly_fulfillment_rates` - Monthly network fulfillment statistics
@@ -31,6 +34,7 @@ The analytics system uses TimescaleDB (a PostgreSQL extension) to store and anal
 ### 1. Install TimescaleDB
 
 #### Docker (Recommended)
+
 ```bash
 docker run -d \
   --name pactum-timescaledb \
@@ -41,6 +45,7 @@ docker run -d \
 ```
 
 #### Native Installation
+
 ```bash
 # Ubuntu/Debian
 wget https://repos.timescale.com/_latest.key
@@ -62,6 +67,7 @@ node -e "require('./dist/db/timescale').runMigrations()"
 ```
 
 Or manually run the SQL files:
+
 ```bash
 psql -h localhost -U postgres -d pactum_timeseries -f src/db/migrations/001_timescale_setup.sql
 psql -h localhost -U postgres -d pactum_timeseries -f src/db/migrations/002_materialized_views.sql
@@ -70,6 +76,7 @@ psql -h localhost -U postgres -d pactum_timeseries -f src/db/migrations/002_mate
 ### 3. Configure Environment
 
 Add to your `.env` file:
+
 ```env
 TIMESCALEDB_HOST=localhost
 TIMESCALEDB_PORT=5432
@@ -89,6 +96,7 @@ node dist/workers/analyticsWorker.js
 ```
 
 The worker will:
+
 - Take snapshots of network statistics every hour (configurable)
 - Refresh materialized views every 5 minutes (configurable)
 
@@ -117,14 +125,18 @@ All endpoints are prefixed with `/api/analytics`
 ## Performance Optimization
 
 ### Query Performance
+
 All materialized views are optimized to return results within 100ms regardless of historical data size:
+
 - Pre-computed aggregations
 - Indexed time dimensions
 - Efficient time-bucket queries
 - Concurrent refresh support
 
 ### Data Retention
+
 Consider implementing data retention policies:
+
 ```sql
 -- Retain 2 years of raw data
 SELECT add_retention_policy('trust_score_snapshots', INTERVAL '2 years');
@@ -137,6 +149,7 @@ SELECT add_retention_policy('network_daily_stats', INTERVAL '5 years');
 ## Data Ingestion
 
 ### Manual Snapshot
+
 ```typescript
 import { insertTrustScoreSnapshot, insertCommitmentOutcome } from './workers/timescaleSnapshot';
 
@@ -147,7 +160,7 @@ await insertTrustScoreSnapshot({
   totalCommitments: 10,
   fulfilledCommitments: 8,
   lateCommitments: 2,
-  breachedCommitments: 0
+  breachedCommitments: 0,
 });
 
 // Insert commitment outcome
@@ -160,11 +173,12 @@ await insertCommitmentOutcome({
   status: 'completed',
   outcome: 'fulfilled',
   dueDate: new Date('2024-01-01'),
-  completedAt: new Date('2024-01-01')
+  completedAt: new Date('2024-01-01'),
 });
 ```
 
 ### Batch Operations
+
 ```typescript
 import { batchInsertTrustScores, batchInsertCommitmentOutcomes } from './workers/timescaleSnapshot';
 
@@ -184,19 +198,22 @@ await batchInsertCommitmentOutcomes([
 ## Monitoring
 
 ### Materialized View Refresh Status
+
 ```sql
 SELECT * FROM timescaledb_information.materialized_views;
 ```
 
 ### Hypertable Statistics
+
 ```sql
-SELECT hypertable_name, 
-       number_chunks, 
-       total_size 
+SELECT hypertable_name,
+       number_chunks,
+       total_size
 FROM timescaledb_information.hypertables;
 ```
 
 ### Query Performance
+
 ```sql
 -- Enable query statistics
 LOAD 'auto_explain';
@@ -206,16 +223,19 @@ SET auto_explain.log_min_duration = 100; -- Log queries > 100ms
 ## Troubleshooting
 
 ### Connection Issues
+
 - Verify TimescaleDB is running: `docker ps` or `systemctl status timescaledb`
 - Check connection parameters in `.env`
 - Test connection: `psql -h localhost -U postgres -d pactum_timeseries`
 
 ### Migration Failures
+
 - Ensure TimescaleDB extension is installed: `CREATE EXTENSION IF NOT EXISTS timescaledb;`
 - Check PostgreSQL version compatibility (requires PostgreSQL 12+)
 - Review migration logs for specific errors
 
 ### Slow Queries
+
 - Check materialized view refresh status
 - Verify indexes are created
 - Consider increasing refresh interval
@@ -224,10 +244,12 @@ SET auto_explain.log_min_duration = 100; -- Log queries > 100ms
 ## Integration with Main Application
 
 The analytics system is designed to run alongside the main PostgreSQL database:
+
 - Main database: Transactional data (current state)
 - TimescaleDB: Historical analytics (time-series data)
 
 The indexer should:
+
 1. Write commitment outcomes to both databases
 2. Periodically snapshot trust scores to TimescaleDB
 3. Trigger analytics worker for materialized view refreshes

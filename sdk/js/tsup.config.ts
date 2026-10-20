@@ -33,9 +33,7 @@ async function assertBrowserBundleHasNoNodeBuiltins(): Promise<void> {
         new RegExp(`from ['"](?:node:)?${builtin}['"]`, 'u'),
       ];
       if (patterns.some((pattern) => pattern.test(bundle))) {
-        throw new Error(
-          `Browser bundle ${file} contains forbidden Node.js builtin: ${builtin}`,
-        );
+        throw new Error(`Browser bundle ${file} contains forbidden Node.js builtin: ${builtin}`);
       }
     }
   }

@@ -34,7 +34,8 @@ export const MeshNetworkMonitor: React.FC = () => {
               BFT Service Worker Mesh Monitor
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Peer ID: <span className="font-mono text-indigo-600 dark:text-indigo-300">{stats.peerId}</span>
+              Peer ID:{' '}
+              <span className="font-mono text-indigo-600 dark:text-indigo-300">{stats.peerId}</span>
             </p>
           </div>
         </div>
@@ -53,8 +54,12 @@ export const MeshNetworkMonitor: React.FC = () => {
             <span className="text-xs">Eager (Active) Tree</span>
             <Share2 className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
           </div>
-          <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{stats.activeNeighbors.length}</p>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400">Low-latency spanning tree</span>
+          <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            {stats.activeNeighbors.length}
+          </p>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+            Low-latency spanning tree
+          </span>
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-slate-100 p-3 dark:border-slate-700/50 dark:bg-slate-800/50">
@@ -62,8 +67,12 @@ export const MeshNetworkMonitor: React.FC = () => {
             <span className="text-xs">Lazy Overlay</span>
             <Activity className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400" />
           </div>
-          <p className="text-xl font-bold text-slate-900 dark:text-slate-100">{stats.passiveNeighbors.length}</p>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400">IHAVE announcement graph</span>
+          <p className="text-xl font-bold text-slate-900 dark:text-slate-100">
+            {stats.passiveNeighbors.length}
+          </p>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+            IHAVE announcement graph
+          </span>
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-slate-100 p-3 dark:border-slate-700/50 dark:bg-slate-800/50">
@@ -71,8 +80,12 @@ export const MeshNetworkMonitor: React.FC = () => {
             <span className="text-xs">Byzantine Dropped</span>
             <AlertTriangle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
           </div>
-          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">{stats.byzantineDropped}</p>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400">Invalid XDR/spam neutralized</span>
+          <p className="text-xl font-bold text-amber-700 dark:text-amber-300">
+            {stats.byzantineDropped}
+          </p>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+            Invalid XDR/spam neutralized
+          </span>
         </div>
 
         <div className="rounded-lg border border-slate-200 bg-slate-100 p-3 dark:border-slate-700/50 dark:bg-slate-800/50">
@@ -80,8 +93,12 @@ export const MeshNetworkMonitor: React.FC = () => {
             <span className="text-xs">RPC Offload Ratio</span>
             <ServerOff className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
           </div>
-          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">{stats.rpcOffloadRatio}%</p>
-          <span className="text-[10px] text-slate-500 dark:text-slate-400">P2P mesh bandwidth savings</span>
+          <p className="text-xl font-bold text-emerald-700 dark:text-emerald-300">
+            {stats.rpcOffloadRatio}%
+          </p>
+          <span className="text-[10px] text-slate-500 dark:text-slate-400">
+            P2P mesh bandwidth savings
+          </span>
         </div>
       </div>
 
@@ -120,8 +137,12 @@ export const MeshNetworkMonitor: React.FC = () => {
                 className="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-100 p-2.5 text-xs dark:border-slate-700/40 dark:bg-slate-800/60"
               >
                 <div>
-                  <span className="mr-2 font-medium font-mono text-indigo-600 dark:text-indigo-300">{evt.topic}</span>
-                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">Seq #{evt.ledgerSeq}</span>
+                  <span className="mr-2 font-medium font-mono text-indigo-600 dark:text-indigo-300">
+                    {evt.topic}
+                  </span>
+                  <span className="font-mono text-[10px] text-slate-500 dark:text-slate-400">
+                    Seq #{evt.ledgerSeq}
+                  </span>
                 </div>
                 <div className="text-right">
                   <span className="block font-mono text-[10px] text-slate-500 dark:text-slate-400">

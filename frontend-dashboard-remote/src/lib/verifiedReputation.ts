@@ -16,7 +16,10 @@ export interface VerifiedReputationResult {
   warning?: string;
 }
 
-function reputationFromProof(address: string, proof: Awaited<ReturnType<typeof fetchReputationProof>>) {
+function reputationFromProof(
+  address: string,
+  proof: Awaited<ReturnType<typeof fetchReputationProof>>,
+) {
   const { fulfilledCount, lateCount, breachedCount } = proof.scoreData;
   return {
     address,

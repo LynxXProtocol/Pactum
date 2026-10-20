@@ -126,10 +126,7 @@ describe('GET /commitments/export/:address', () => {
     });
 
     it('body contains CSV header row', async () => {
-      const { body } = await makeRequest(
-        server,
-        `/commitments/export/${VALID_ADDRESS}?format=csv`,
-      );
+      const { body } = await makeRequest(server, `/commitments/export/${VALID_ADDRESS}?format=csv`);
       const text = body.toString();
       assert.ok(text.includes('ID'), 'CSV should contain ID column header');
       assert.ok(text.includes('Issuer'), 'CSV should contain Issuer column header');
@@ -137,10 +134,7 @@ describe('GET /commitments/export/:address', () => {
     });
 
     it('defaults to CSV when format param is omitted', async () => {
-      const { status, headers } = await makeRequest(
-        server,
-        `/commitments/export/${VALID_ADDRESS}`,
-      );
+      const { status, headers } = await makeRequest(server, `/commitments/export/${VALID_ADDRESS}`);
       assert.equal(status, 200);
       assert.ok(headers['content-type']?.includes('text/csv'));
     });
@@ -170,10 +164,7 @@ describe('GET /commitments/export/:address', () => {
     });
 
     it('body starts with PDF magic bytes (%PDF)', async () => {
-      const { body } = await makeRequest(
-        server,
-        `/commitments/export/${VALID_ADDRESS}?format=pdf`,
-      );
+      const { body } = await makeRequest(server, `/commitments/export/${VALID_ADDRESS}?format=pdf`);
       assert.ok(
         body.slice(0, 4).toString() === '%PDF',
         `body should start with %PDF, got: ${body.slice(0, 4).toString()}`,

@@ -105,10 +105,7 @@ describe(
     });
 
     it('emits public signals in the documented order, and nothing else', async () => {
-      const { publicSignals } = await generateTrustThresholdProof(
-        requestFor(950, 800),
-        artifacts,
-      );
+      const { publicSignals } = await generateTrustThresholdProof(requestFor(950, 800), artifacts);
 
       assert.equal(publicSignals.length, PUBLIC_SIGNAL_ORDER.length);
 
@@ -119,10 +116,7 @@ describe(
       assert.equal(signals.contextId, CONTEXT_ID);
 
       // The score and the address must not be recoverable from anything published.
-      assert.ok(
-        !publicSignals.includes('950'),
-        'the exact score leaked into the public signals',
-      );
+      assert.ok(!publicSignals.includes('950'), 'the exact score leaked into the public signals');
     });
 
     it('cannot produce a witness for a score below the threshold', async () => {

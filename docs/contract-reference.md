@@ -7,16 +7,17 @@ of the off-chain JSON document hashed into `terms_hash`.
 
 ### TemplateType Enum
 
-| Variant | Description |
-|---|---|
-| `Freeform` | No schema constraint. Backward-compatible default. |
-| `RefundDeposit` | Rental or payment deposit with a defined refund condition. |
-| `SLAGuarantee` | Service-level agreement with a measurable threshold. |
-| `MilestoneCheckIn` | Project milestone with a completion description. |
+| Variant            | Description                                                |
+| ------------------ | ---------------------------------------------------------- |
+| `Freeform`         | No schema constraint. Backward-compatible default.         |
+| `RefundDeposit`    | Rental or payment deposit with a defined refund condition. |
+| `SLAGuarantee`     | Service-level agreement with a measurable threshold.       |
+| `MilestoneCheckIn` | Project milestone with a completion description.           |
 
 ### Off-Chain JSON Schemas
 
 **RefundDeposit**
+
 ```json
 {
   "template": "RefundDeposit",
@@ -27,6 +28,7 @@ of the off-chain JSON document hashed into `terms_hash`.
 ```
 
 **SLAGuarantee**
+
 ```json
 {
   "template": "SLAGuarantee",
@@ -37,6 +39,7 @@ of the off-chain JSON document hashed into `terms_hash`.
 ```
 
 **MilestoneCheckIn**
+
 ```json
 {
   "template": "MilestoneCheckIn",

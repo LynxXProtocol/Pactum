@@ -114,20 +114,13 @@ export class PostgresAttestorRepository implements AttestorRepository {
          domains = COALESCE(EXCLUDED.domains, attestor_registry.domains),
          active = COALESCE(EXCLUDED.active, attestor_registry.active),
          updated_at = NOW()`,
-      [
-        reg.attestor,
-        reg.fee ?? 0,
-        reg.domains ?? [],
-        reg.active ?? true,
-      ],
+      [reg.attestor, reg.fee ?? 0, reg.domains ?? [], reg.active ?? true],
     );
   }
 
   async insertAssignments(commitmentId: string, attestors: string[]): Promise<void> {
     if (attestors.length === 0) return;
-    const values = attestors
-      .map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`)
-      .join(', ');
+    const values = attestors.map((_, i) => `($${i * 2 + 1}, $${i * 2 + 2})`).join(', ');
     const params = attestors.flatMap((attestor) => [commitmentId, attestor]);
     await queryTimescale(
       `INSERT INTO attestor_assignments (commitment_id, attestor)

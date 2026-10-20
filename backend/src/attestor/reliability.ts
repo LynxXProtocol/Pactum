@@ -24,7 +24,10 @@ const clamp01 = (n: number): number => (n < 0 ? 0 : n > 1 ? 1 : n);
  *   - reliability = (votesCast - overturned) / totalAssigned * Accuracy_Weight
  *                 = Successful_Resolutions / Total_Assigned * Accuracy_Weight.
  */
-export function computeReliability(stats: AttestorStats, accuracyWeight = ACCURACY_WEIGHT): AttestorReliability {
+export function computeReliability(
+  stats: AttestorStats,
+  accuracyWeight = ACCURACY_WEIGHT,
+): AttestorReliability {
   const totalAssigned = Math.max(0, Number(stats.totalAssigned) || 0);
   const votesCast = Math.max(0, Number(stats.votesCast) || 0);
   const overturned = Math.max(0, Math.min(votesCast, Number(stats.overturned) || 0));

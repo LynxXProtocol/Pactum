@@ -1,76 +1,72 @@
-import { useState, type FC, type ErrorInfo } from "react"
-import { AlertTriangle, RotateCcw, Home, ChevronDown, ChevronUp, Copy, Check } from "lucide-react"
+import { useState, type FC, type ErrorInfo } from 'react';
+import { AlertTriangle, RotateCcw, Home, ChevronDown, ChevronUp, Copy, Check } from 'lucide-react';
 
 export interface ErrorFallbackProps {
-  error: Error | null
-  errorInfo?: ErrorInfo | null
-  resetErrorBoundary?: () => void
+  error: Error | null;
+  errorInfo?: ErrorInfo | null;
+  resetErrorBoundary?: () => void;
 }
 
-export const ErrorFallback: FC<ErrorFallbackProps> = ({
-  error,
-  errorInfo,
-  resetErrorBoundary,
-}) => {
-  const [showDetails, setShowDetails] = useState(false)
-  const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "failed">("idle")
+export const ErrorFallback: FC<ErrorFallbackProps> = ({ error, errorInfo, resetErrorBoundary }) => {
+  const [showDetails, setShowDetails] = useState(false);
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'failed'>('idle');
 
   const handleReload = () => {
-    window.location.reload()
-  }
+    window.location.reload();
+  };
 
   const handleGoHome = () => {
-    window.location.href = "/"
-  }
+    window.location.href = '/';
+  };
 
   const handleCopyError = async () => {
     const errorText = [
-      `Error: ${error?.message || "Unknown error"}`,
-      `Name: ${error?.name || "Error"}`,
-      `Stack:\n${error?.stack || "No stack trace available"}`,
-      errorInfo?.componentStack ? `Component Stack:\n${errorInfo.componentStack}` : "",
+      `Error: ${error?.message || 'Unknown error'}`,
+      `Name: ${error?.name || 'Error'}`,
+      `Stack:\n${error?.stack || 'No stack trace available'}`,
+      errorInfo?.componentStack ? `Component Stack:\n${errorInfo.componentStack}` : '',
       `Time: ${new Date().toISOString()}`,
-      `URL: ${typeof window !== "undefined" ? window.location.href : ""}`,
+      `URL: ${typeof window !== 'undefined' ? window.location.href : ''}`,
     ]
       .filter(Boolean)
-      .join("\n\n")
+      .join('\n\n');
 
-    let success = false
-    if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+    let success = false;
+    if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
       try {
-        await navigator.clipboard.writeText(errorText)
-        success = true
+        await navigator.clipboard.writeText(errorText);
+        success = true;
       } catch {
-        success = false
+        success = false;
       }
     }
 
     // Fallback using temporary textarea if navigator.clipboard failed or is unavailable
-    if (!success && typeof document !== "undefined") {
+    if (!success && typeof document !== 'undefined') {
       try {
-        const textArea = document.createElement("textarea")
-        textArea.value = errorText
-        textArea.style.position = "fixed"
-        textArea.style.opacity = "0"
-        textArea.style.left = "-9999px"
-        document.body.appendChild(textArea)
-        textArea.focus()
-        textArea.select()
-        success = document.execCommand("copy")
-        document.body.removeChild(textArea)
+        const textArea = document.createElement('textarea');
+        textArea.value = errorText;
+        textArea.style.position = 'fixed';
+        textArea.style.opacity = '0';
+        textArea.style.left = '-9999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        success = document.execCommand('copy');
+        document.body.removeChild(textArea);
       } catch {
-        success = false
+        success = false;
       }
     }
 
     if (success) {
-      setCopyStatus("copied")
-      setTimeout(() => setCopyStatus("idle"), 2000)
+      setCopyStatus('copied');
+      setTimeout(() => setCopyStatus('idle'), 2000);
     } else {
-      setCopyStatus("failed")
-      setTimeout(() => setCopyStatus("idle"), 2000)
+      setCopyStatus('failed');
+      setTimeout(() => setCopyStatus('idle'), 2000);
     }
-  }
+  };
 
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 sm:p-6 bg-background text-foreground">
@@ -89,8 +85,8 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
 
         {error && (
           <div className="p-3.5 rounded-lg bg-muted/60 border border-border/60 text-xs font-mono text-muted-foreground break-words">
-            <span className="font-semibold text-destructive">{error.name || "Error"}: </span>
-            {error.message || "An unexpected error occurred"}
+            <span className="font-semibold text-destructive">{error.name || 'Error'}: </span>
+            {error.message || 'An unexpected error occurred'}
           </div>
         )}
 
@@ -131,7 +127,7 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
               onClick={() => setShowDetails(!showDetails)}
               className="w-full flex items-center justify-between text-xs text-muted-foreground hover:text-foreground font-medium transition-colors"
             >
-              <span>{showDetails ? "Hide technical details" : "Show technical details"}</span>
+              <span>{showDetails ? 'Hide technical details' : 'Show technical details'}</span>
               {showDetails ? (
                 <ChevronUp className="w-4 h-4 ml-1" />
               ) : (
@@ -148,12 +144,12 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
                     onClick={handleCopyError}
                     className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
                   >
-                    {copyStatus === "copied" ? (
+                    {copyStatus === 'copied' ? (
                       <>
                         <Check className="w-3.5 h-3.5 text-emerald-500" />
                         <span className="text-emerald-500">Copied</span>
                       </>
-                    ) : copyStatus === "failed" ? (
+                    ) : copyStatus === 'failed' ? (
                       <>
                         <AlertTriangle className="w-3.5 h-3.5 text-destructive" />
                         <span className="text-destructive">Copy failed</span>
@@ -168,7 +164,9 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
                 </div>
                 <pre className="max-h-48 overflow-auto p-3 rounded-lg bg-black/80 text-emerald-400 text-xs font-mono whitespace-pre-wrap select-all">
                   {error.stack || error.message}
-                  {errorInfo?.componentStack ? `\n\nComponent Stack:${errorInfo.componentStack}` : ""}
+                  {errorInfo?.componentStack
+                    ? `\n\nComponent Stack:${errorInfo.componentStack}`
+                    : ''}
                 </pre>
               </div>
             )}
@@ -176,5 +174,5 @@ export const ErrorFallback: FC<ErrorFallbackProps> = ({
         )}
       </div>
     </div>
-  )
-}
+  );
+};

@@ -1,14 +1,18 @@
 /* tslint:disable */
 /* eslint-disable */
 
-export function validate_commitment_params(due_at: bigint, current_time: bigint, milestone_count: number): void;
+export function validate_commitment_params(
+  due_at: bigint,
+  current_time: bigint,
+  milestone_count: number,
+): void;
 
 export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembly.Module;
 
 export interface InitOutput {
-    readonly memory: WebAssembly.Memory;
-    readonly validate_commitment_params: (a: number, b: bigint, c: bigint, d: number) => void;
-    readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
+  readonly memory: WebAssembly.Memory;
+  readonly validate_commitment_params: (a: number, b: bigint, c: bigint, d: number) => void;
+  readonly __wbindgen_add_to_stack_pointer: (a: number) => number;
 }
 
 export type SyncInitInput = BufferSource | WebAssembly.Module;
@@ -31,4 +35,7 @@ export function initSync(module: { module: SyncInitInput } | SyncInitInput): Ini
  *
  * @returns {Promise<InitOutput>}
  */
-export default function __wbg_init (module_or_path?: { module_or_path: InitInput | Promise<InitInput> } | InitInput | Promise<InitInput>): Promise<InitOutput>;
+export default function __wbg_init(
+  module_or_path?:
+    { module_or_path: InitInput | Promise<InitInput> } | InitInput | Promise<InitInput>,
+): Promise<InitOutput>;

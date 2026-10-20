@@ -4,12 +4,7 @@ import { invalidateLedger } from './cache';
 import { CommitmentCreatedEvent, parseLedgerEvents } from './events';
 import { createSorobanRpcLedgerClient, SorobanLedgerSource } from './rpc-source';
 import { PostgresIndexerStore } from './store';
-import {
-  IndexerStore,
-  LedgerCheckpoint,
-  LedgerSnapshot,
-  LedgerSource,
-} from './types';
+import { IndexerStore, LedgerCheckpoint, LedgerSnapshot, LedgerSource } from './types';
 import client from 'prom-client';
 
 // Prometheus metrics for indexer

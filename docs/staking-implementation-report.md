@@ -11,6 +11,7 @@
 Upon inspection of the Pactum Soroban smart contract repository, I discovered that **the staking foundation (Phase 1 of Issue 86) has already been fully implemented** and is production-ready.
 
 The repository contains:
+
 - Complete `stake_attestor` implementation
 - Comprehensive test coverage (7 tests, all passing)
 - Full unstaking mechanism with 14-day unbonding period
@@ -25,6 +26,7 @@ The repository contains:
 **Location:** `contracts/registry/src/staking.rs:144-174`
 
 **Functionality:**
+
 ```rust
 pub fn stake_attestor(env: &Env, attestor: Address, amount: i128)
 ```
@@ -57,6 +59,7 @@ The function is exposed as a contract entrypoint and is callable by external use
 ### 3. Storage Architecture
 
 **Data Structure:**
+
 ```rust
 #[contracttype]
 #[derive(Clone, Debug, Eq, PartialEq)]
@@ -68,6 +71,7 @@ pub struct AttestorStake {
 ```
 
 **Storage Key:**
+
 ```rust
 DataKey::Stake(attestor: Address)
 ```
@@ -79,21 +83,25 @@ Stored in persistent storage with automatic TTL extension on access.
 Beyond the 10% scope, the repository also includes:
 
 #### `set_staking_token(caller, token)`
+
 - Configures the asset used for staking (one-time setup)
 - Requires arbitrator authorization
 
 #### `request_unstake(attestor)`
+
 - Starts 14-day unbonding period
 - Blocked if stake is locked (active dispute) or already unbonding
 - Sets `unbonding_until = now + UNBONDING_PERIOD_SECONDS`
 
 #### `finalize_unstake(attestor)`
+
 - Withdraws full stake after unbonding period elapses
 - Transfers asset from contract vault back to attestor
 - Removes stake record from storage
 - Blocked if stake is still locked
 
 #### `get_stake_info(attestor) -> AttestorStake`
+
 - Query function to retrieve staking record
 - Returns zeroed struct if attestor has never staked
 
@@ -137,6 +145,7 @@ Beyond the 10% scope, the repository also includes:
    - Verifies call succeeds after guard is released
 
 **Test Results:**
+
 ```
 running 7 tests
 test test_staking::test_stake_locks_funds_into_vault ... ok
@@ -151,6 +160,7 @@ test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 158 filtered out
 ```
 
 **Full Registry Test Suite:**
+
 ```
 test result: ok. 165 passed; 0 failed; 0 ignored; 0 measured
 ```
@@ -186,6 +196,7 @@ All errors are typed contract errors (not strings) for efficient on-chain valida
 ### 8. Security Features
 
 #### Reentrancy Protection
+
 ```rust
 reentrancy::enter(&env);
 // ... all operations ...
@@ -195,6 +206,7 @@ reentrancy::exit(&env);
 Prevents nested calls to mutating functions, blocking potential exploit vectors.
 
 #### Overflow/Underflow Protection
+
 ```rust
 stake.staked = stake
     .staked
@@ -205,6 +217,7 @@ stake.staked = stake
 All arithmetic uses checked operations to prevent silent wrapping.
 
 #### Authorization
+
 ```rust
 attestor.require_auth();
 ```
@@ -212,6 +225,7 @@ attestor.require_auth();
 Every state-mutating operation requires explicit authorization from the affected address.
 
 #### CEI Pattern (Checks-Effects-Interactions)
+
 ```rust
 // 1. Checks
 if amount <= 0 { panic!() }
@@ -262,6 +276,7 @@ This document formalizes the seven core invariants that the staking vault mainta
 7. **Reentrancy Protection**: All mutating functions are guarded
 
 Each invariant includes:
+
 - Mathematical formalization
 - Implementation guarantees
 - Code references
@@ -270,6 +285,7 @@ Each invariant includes:
 ## Verification Checklist
 
 ### Scope Verification
+
 - [x] Only staking functionality implemented (no slashing distribution, appeal resolution, rewards, or DAO)
 - [x] No unstaking implementation beyond the existing complete one
 - [x] No appeal/governance implementation
@@ -278,6 +294,7 @@ Each invariant includes:
 - [x] No unrelated files modified
 
 ### Testing
+
 - [x] Focused staking tests pass (7/7)
 - [x] Full test suite passes (165/165)
 - [x] Successful stake test exists
@@ -285,12 +302,14 @@ Each invariant includes:
 - [x] Additional stake test exists
 
 ### Code Quality
+
 - [x] Formatting passes: `cargo fmt --all -- --check` ✅
 - [x] Lint passes: `cargo clippy --lib -- -D warnings` ✅
 - [x] No unrelated changes
 - [x] Follows existing conventions
 
 ### Security
+
 - [x] Authorization checks present
 - [x] Integer overflow/underflow protection
 - [x] Zero-value handling
@@ -299,6 +318,7 @@ Each invariant includes:
 - [x] Reentrancy protection
 
 ### Documentation
+
 - [x] Basic staking invariant documented
 - [x] Function-level documentation present
 - [x] Error conditions documented
@@ -328,9 +348,11 @@ cargo clippy --lib -- -D warnings
 ## Files Changed
 
 ### Added
+
 - `contracts/registry/docs/staking-invariants.md` - Formal invariant specification (new file)
 
 ### Modified
+
 - None (all staking functionality already implemented)
 
 ## What stake_attestor Does
@@ -363,15 +385,15 @@ The `stake_attestor` function:
 
 ## Test Results Summary
 
-| Test | Purpose | Result |
-|------|---------|--------|
-| `test_set_staking_token_requires_arbitrator` | Arbitrator-only token setup | ✅ PASS |
-| `test_stake_rejects_zero_amount` | Invalid amount rejection | ✅ PASS |
-| `test_stake_locks_funds_into_vault` | Successful stake flow | ✅ PASS |
-| `test_unstake_requires_stake_first` | Unstake precondition | ✅ PASS |
-| `test_two_week_unbonding_period` | Unbonding mechanics | ✅ PASS |
-| `test_locked_stake_blocks_unstake_and_withdrawal` | Dispute lock enforcement | ✅ PASS |
-| `test_reentrant_stake_call_is_rejected` | Reentrancy protection | ✅ PASS |
+| Test                                              | Purpose                     | Result  |
+| ------------------------------------------------- | --------------------------- | ------- |
+| `test_set_staking_token_requires_arbitrator`      | Arbitrator-only token setup | ✅ PASS |
+| `test_stake_rejects_zero_amount`                  | Invalid amount rejection    | ✅ PASS |
+| `test_stake_locks_funds_into_vault`               | Successful stake flow       | ✅ PASS |
+| `test_unstake_requires_stake_first`               | Unstake precondition        | ✅ PASS |
+| `test_two_week_unbonding_period`                  | Unbonding mechanics         | ✅ PASS |
+| `test_locked_stake_blocks_unstake_and_withdrawal` | Dispute lock enforcement    | ✅ PASS |
+| `test_reentrant_stake_call_is_rejected`           | Reentrancy protection       | ✅ PASS |
 
 ## No Pre-existing Failures
 
@@ -382,22 +404,26 @@ All 165 tests in the registry contract pass without errors or warnings. No pre-e
 The staking foundation (Phase 1) is complete. Remaining work for the full issue:
 
 ### Phase 2: Voting and Slashing (Already Implemented)
+
 - ✅ M-of-N attestor voting on disputes
 - ✅ Slash function (reduces stake by percentage)
 - ⚠️ **Incomplete**: Slashed funds are forfeited but not distributed
 
 ### Phase 3: Distribution and Incentives (NOT IMPLEMENTED)
+
 - ❌ Distribution of slashed funds to injured party
 - ❌ Distribution to honest validators who overturned ruling
 - ❌ Reward mechanisms for attestor participation
 - ❌ Treasury management for forfeited stakes
 
 ### Phase 4: DAO Governance (NOT IMPLEMENTED)
+
 - ❌ Supreme court DAO voting mechanism
 - ❌ Multi-signature appeals process
 - ❌ Stake parameter governance (minimum stake, slashing %, unbonding period)
 
 ### Phase 5: Advanced Cryptoeconomics (NOT IMPLEMENTED)
+
 - ❌ Mathematical invariants for staking pool drain prevention
 - ❌ Griefing attack resistance
 - ❌ Economic simulations and game theory analysis
@@ -408,6 +434,7 @@ The staking foundation (Phase 1) is complete. Remaining work for the full issue:
 Since Phase 1 is complete, the next logical 10% contribution would be:
 
 **Phase 2b: Slashing Distribution Foundation**
+
 - Implement `distribute_slashed_funds(commitment_id)` function
 - Calculate injured party share and validator shares
 - Transfer forfeited stakes to recipients

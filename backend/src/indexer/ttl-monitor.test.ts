@@ -21,10 +21,7 @@ import {
  * Minimal TtlRpcClient test double.
  * `ttlMap` maps base64 XDR key → expiration ledger (omit to simulate absent).
  */
-function makeRpc(options: {
-  latestSequence: number;
-  ttlMap?: Map<string, number>;
-}): TtlRpcClient {
+function makeRpc(options: { latestSequence: number; ttlMap?: Map<string, number> }): TtlRpcClient {
   return {
     async getLatestLedger() {
       return { sequence: options.latestSequence };
@@ -71,8 +68,7 @@ function makeMonitor(options: {
     rpc,
     bumper,
     getHighValueAddresses: async () => options.addresses,
-    ttlRefreshThresholdLedgers:
-      options.thresholdLedgers ?? DEFAULT_TTL_REFRESH_THRESHOLD_LEDGERS,
+    ttlRefreshThresholdLedgers: options.thresholdLedgers ?? DEFAULT_TTL_REFRESH_THRESHOLD_LEDGERS,
     bumpConcurrency: options.bumpConcurrency ?? 5,
     contractId: TEST_CONTRACT_ID,
   });
@@ -102,9 +98,7 @@ test('does not bump addresses whose TTL is well above the threshold', async () =
   // strings like 'GADDR1' are not valid G… keys), so buildLedgerKeys falls
   // back to using the raw address string as the lookup key.  We key the ttlMap
   // by the address string directly so the test double's lookup succeeds.
-  const ttlMap = new Map<string, number>([
-    ['GADDR1', CURRENT + THRESHOLD * 2],
-  ]);
+  const ttlMap = new Map<string, number>([['GADDR1', CURRENT + THRESHOLD * 2]]);
 
   const { monitor, bumper } = makeMonitor({
     addresses: ['GADDR1'],
@@ -150,9 +144,7 @@ test('bumps an address whose TTL is below the threshold', async () => {
   const THRESHOLD = DEFAULT_TTL_REFRESH_THRESHOLD_LEDGERS;
 
   // Expiry ledger below threshold → must bump.
-  const ttlMap = new Map<string, number>([
-    ['any-key', CURRENT + THRESHOLD - 1],
-  ]);
+  const ttlMap = new Map<string, number>([['any-key', CURRENT + THRESHOLD - 1]]);
 
   const { monitor, bumper } = makeMonitor({
     addresses: ['GADDR_NEAR_EXPIRY'],
@@ -198,7 +190,9 @@ test('handles a mix of healthy and near-expiry addresses', async () => {
   ]);
 
   const rpc: TtlRpcClient = {
-    async getLatestLedger() { return { sequence: CURRENT }; },
+    async getLatestLedger() {
+      return { sequence: CURRENT };
+    },
     async getLedgerEntryTtls(_keys: string[]) {
       return ttlMap;
     },
@@ -260,10 +254,7 @@ test('respects bumpConcurrency: all bumps complete even with concurrency = 1', a
   assert.equal(result.bumped, 5);
   assert.equal(result.failed, 0);
   // All five addresses were bumped (order may vary with concurrency).
-  assert.deepEqual(
-    [...(bumper as any).bumped].sort(),
-    [...addresses].sort(),
-  );
+  assert.deepEqual([...(bumper as any).bumped].sort(), [...addresses].sort());
 });
 
 test('constructor rejects non-positive ttlRefreshThresholdLedgers', () => {

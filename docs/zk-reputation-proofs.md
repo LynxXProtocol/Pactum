@@ -19,15 +19,15 @@ Pactum backend, and the backend is never told which address a given proof is abo
 > greater than `threshold`, and I know the private data behind it — proven for context
 > `contextId`."
 
-| Signal | Visibility | Meaning |
-|---|---|---|
-| `root` | **public** | Merkle root of the reputation snapshot the claim is made against |
-| `threshold` | **public** | The bar cleared (e.g. `800`) |
-| `contextId` | **public** | Verifier/session binding, so a proof for one DAO is not valid at another |
-| `aboveThreshold` | **public (output)** | Always `1` — the circuit is unsatisfiable otherwise |
-| `score` | *private* | The exact Trust Score |
-| `addrHi`, `addrLo` | *private* | The 32-byte ed25519 public key behind the `G...` address, as two 128-bit limbs |
-| `pathElements`, `pathIndices` | *private* | The Merkle authentication path, which would otherwise identify the leaf |
+| Signal                        | Visibility          | Meaning                                                                        |
+| ----------------------------- | ------------------- | ------------------------------------------------------------------------------ |
+| `root`                        | **public**          | Merkle root of the reputation snapshot the claim is made against               |
+| `threshold`                   | **public**          | The bar cleared (e.g. `800`)                                                   |
+| `contextId`                   | **public**          | Verifier/session binding, so a proof for one DAO is not valid at another       |
+| `aboveThreshold`              | **public (output)** | Always `1` — the circuit is unsatisfiable otherwise                            |
+| `score`                       | _private_           | The exact Trust Score                                                          |
+| `addrHi`, `addrLo`            | _private_           | The 32-byte ed25519 public key behind the `G...` address, as two 128-bit limbs |
+| `pathElements`, `pathIndices` | _private_           | The Merkle authentication path, which would otherwise identify the leaf        |
 
 Leaking any of the private signals defeats the feature, so the split is asserted in
 tests rather than left to review: `circuit.test.ts` checks that exactly four public
@@ -119,7 +119,10 @@ node scripts/publish-snapshot.mjs counts.json snapshot.json
 
 ```ts
 import {
-  buildPoseidonHash, buildSnapshot, findLeafIndex, merklePath,
+  buildPoseidonHash,
+  buildSnapshot,
+  findLeafIndex,
+  merklePath,
   generateTrustThresholdProof,
 } from '@pactum/zk-reputation';
 
@@ -169,10 +172,12 @@ different DAO. `verifyTrustThresholdProof` checks both halves:
 
 ```ts
 const result = await verifyTrustThresholdProof({
-  proof, publicSignals, verificationKey,
-  expectedRoot: currentSnapshotRoot,   // must be a snapshot you trust and consider fresh
-  minThreshold: 800n,                  // proven threshold must be at least this
-  expectedContextId: myDaoContextId,   // must be bound to you
+  proof,
+  publicSignals,
+  verificationKey,
+  expectedRoot: currentSnapshotRoot, // must be a snapshot you trust and consider fresh
+  minThreshold: 800n, // proven threshold must be at least this
+  expectedContextId: myDaoContextId, // must be bound to you
 });
 if (!result.valid) reject(result.reason);
 ```
@@ -212,7 +217,7 @@ replay attempt at a second DAO that is correctly refused.
 - **Address secrecy, within the snapshot.** The proof does not reveal which leaf was
   used. The anonymity set is every address in the snapshot.
 - **Soundness of the comparison.** Both operands are range-checked to 32 bits with
-  `Num2Bits` *before* `GreaterThan` is applied. This is load-bearing: `GreaterThan(n)`
+  `Num2Bits` _before_ `GreaterThan` is applied. This is load-bearing: `GreaterThan(n)`
   works by inspecting the sign bit of `in[1] - in[0] + 2^n`, and an operand at or above
   `2^n` wraps the field modulus and can make a low score compare as high. A comparator
   applied directly to unchecked field elements is the classic soundness bug in circuits
@@ -230,18 +235,18 @@ replay attempt at a second DAO that is correctly refused.
 - **Context binding.** `contextId` is a public input forced into the constraint system,
   so a proof accepted by one verifier is not valid at another.
 
-### What this does *not* achieve
+### What this does _not_ achieve
 
 - **It does not prove control of the address.** The circuit proves knowledge of a leaf
-  preimage — an address and a score. Every leaf preimage is *public* (the snapshot is
+  preimage — an address and a score. Every leaf preimage is _public_ (the snapshot is
   published), so **anyone can generate a proof for anyone else's high-scoring address.**
   This is the single most important limitation. The proof establishes "some address in
-  this snapshot scores above the bar", not "*I* am that address". Closing this requires
+  this snapshot scores above the bar", not "_I_ am that address". Closing this requires
   proving an ed25519 signature over `contextId` inside the circuit — expensive in
   Circom — or a registration step in which the user commits `Poseidon(secret)` on-chain
   and proves knowledge of `secret`. Both are out of scope here.
 - **No nullifier / no double-claim protection.** Deliberately omitted. The obvious
-  construction, `nullifier = Poseidon(address, contextId)`, is *brute-forceable*: the
+  construction, `nullifier = Poseidon(address, contextId)`, is _brute-forceable_: the
   set of addresses is public, so a verifier can hash every candidate against the
   published nullifier and recover exactly the address the proof was meant to hide.
   Publishing such a nullifier would defeat the whole feature. A sound nullifier needs
@@ -279,13 +284,13 @@ Soroban is incapable:
 
 - **Soroban exposes BLS12-381 only.** `soroban-sdk` 22.0.11 — the version this repo
   pins — provides `env.crypto().bls12_381()` with `g1_add`, `g1_msm`, `g2_add`,
-  `g2_msm`, `pairing_check` and `Fr` arithmetic. That is *exactly* the primitive set a
+  `g2_msm`, `pairing_check` and `Fr` arithmetic. That is _exactly_ the primitive set a
   Groth16 verifier needs, and it is genuinely usable.
 - **Circom's ecosystem is BN254.** Soroban has no BN254 host functions, so an on-chain
   verifier would require moving the circuit to BLS12-381 (`circom -p bls12381`).
 - **The blocker is Poseidon, not the pairing.** `circomlib`'s Poseidon round constants
   and MDS matrix were generated for the BN254 scalar field. Reusing those numbers over
-  BLS12-381's field yields *a* permutation, but not one whose security analysis carries
+  BLS12-381's field yields _a_ permutation, but not one whose security analysis carries
   over — the MDS property and the round count would have to be re-derived and
   re-justified. Shipping that quietly is precisely the "plausible-looking but silently
   insecure" outcome to avoid, so this change stays on BN254 with the standard,
@@ -310,14 +315,14 @@ The migration path, if on-chain verification is wanted later:
 
 Measured on a 4-core container, depth 16, ~10k constraints:
 
-| Step | Cost |
-|---|---|
-| Circuit compile + Groth16 setup | ~2 min (one-off, needs `circom`) |
-| Proof generation | **~1.0 s** |
-| Off-chain verification | ~10 ms |
-| Proving key (`.zkey`) | 6.5 MB — downloaded once by the browser, cacheable |
-| Witness generator (`.wasm`) | 2.2 MB |
-| Proof | ~800 bytes |
+| Step                            | Cost                                               |
+| ------------------------------- | -------------------------------------------------- |
+| Circuit compile + Groth16 setup | ~2 min (one-off, needs `circom`)                   |
+| Proof generation                | **~1.0 s**                                         |
+| Off-chain verification          | ~10 ms                                             |
+| Proving key (`.zkey`)           | 6.5 MB — downloaded once by the browser, cacheable |
+| Witness generator (`.wasm`)     | 2.2 MB                                             |
+| Proof                           | ~800 bytes                                         |
 
 Proving is fast enough to run inline in a browser tab without a worker, though a
 verifier-facing UI should still use one to avoid blocking the main thread.

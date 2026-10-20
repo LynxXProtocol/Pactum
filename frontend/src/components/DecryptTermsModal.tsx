@@ -177,7 +177,6 @@ export default function DecryptTermsModal({
 
         {/* Body */}
         <div style={{ padding: '20px 24px 24px 24px' }}>
-
           {/* Not-a-party warning */}
           {!isParty && (
             <div
@@ -192,7 +191,11 @@ export default function DecryptTermsModal({
                 marginBottom: '16px',
               }}
             >
-              <AlertTriangle size={18} color="#dc2626" style={{ flexShrink: 0, marginTop: '1px' }} />
+              <AlertTriangle
+                size={18}
+                color="#dc2626"
+                style={{ flexShrink: 0, marginTop: '1px' }}
+              />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#991b1b' }}>
                   Access Denied
@@ -219,7 +222,11 @@ export default function DecryptTermsModal({
                 marginBottom: '16px',
               }}
             >
-              <AlertTriangle size={18} color="#d97706" style={{ flexShrink: 0, marginTop: '1px' }} />
+              <AlertTriangle
+                size={18}
+                color="#d97706"
+                style={{ flexShrink: 0, marginTop: '1px' }}
+              />
               <div>
                 <div style={{ fontSize: '13px', fontWeight: '700', color: '#92400e' }}>
                   Freighter Required
@@ -294,8 +301,8 @@ export default function DecryptTermsModal({
             >
               <ShieldCheck size={15} style={{ flexShrink: 0, marginTop: '1px' }} />
               <span>
-                Freighter will sign a non-transaction message to re-derive the shared encryption key.
-                No XLM is spent. Decryption happens entirely in your browser.
+                Freighter will sign a non-transaction message to re-derive the shared encryption
+                key. No XLM is spent. Decryption happens entirely in your browser.
               </span>
             </div>
           )}
@@ -439,9 +446,7 @@ export default function DecryptTermsModal({
                       borderRadius: '10px',
                       border: 'none',
                       background:
-                        state === 'error'
-                          ? '#dc2626'
-                          : 'linear-gradient(135deg, #1e1b4b, #4338ca)',
+                        state === 'error' ? '#dc2626' : 'linear-gradient(135deg, #1e1b4b, #4338ca)',
                       color: '#ffffff',
                       fontWeight: '800',
                       fontSize: '13px',

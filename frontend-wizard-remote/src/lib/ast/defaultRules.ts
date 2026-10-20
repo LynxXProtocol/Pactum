@@ -31,7 +31,10 @@ export const DEFAULT_COMMITMENT_RULES: RuleSet = {
       id: 'due-at-min-lead-time',
       field: 'dueAt',
       message: 'Due date must be at least 24 hours from now.',
-      when: { kind: 'not', operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'dueAt' }] } },
+      when: {
+        kind: 'not',
+        operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'dueAt' }] },
+      },
       assert: {
         kind: 'compare',
         op: '>=',
@@ -48,23 +51,37 @@ export const DEFAULT_COMMITMENT_RULES: RuleSet = {
       id: 'due-at-max-horizon',
       field: 'dueAt',
       message: 'Due date must be before the year 2035.',
-      when: { kind: 'not', operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'dueAt' }] } },
+      when: {
+        kind: 'not',
+        operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'dueAt' }] },
+      },
       assert: {
         kind: 'compare',
         op: '<',
         left: { kind: 'call', fn: 'toDate', args: [{ kind: 'field', name: 'dueAt' }] },
-        right: { kind: 'call', fn: 'toDate', args: [{ kind: 'lit', value: '2035-01-01T00:00:00' }] },
+        right: {
+          kind: 'call',
+          fn: 'toDate',
+          args: [{ kind: 'lit', value: '2035-01-01T00:00:00' }],
+        },
       },
     },
     {
       id: 'terms-min-length',
       field: 'terms',
       message: 'Terms must be at least 10 characters of substance.',
-      when: { kind: 'not', operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'terms' }] } },
+      when: {
+        kind: 'not',
+        operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'terms' }] },
+      },
       assert: {
         kind: 'compare',
         op: '>=',
-        left: { kind: 'call', fn: 'len', args: [{ kind: 'call', fn: 'trim', args: [{ kind: 'field', name: 'terms' }] }] },
+        left: {
+          kind: 'call',
+          fn: 'len',
+          args: [{ kind: 'call', fn: 'trim', args: [{ kind: 'field', name: 'terms' }] }],
+        },
         right: { kind: 'lit', value: 10 },
       },
     },
@@ -72,7 +89,10 @@ export const DEFAULT_COMMITMENT_RULES: RuleSet = {
       id: 'terms-no-placeholders',
       field: 'terms',
       message: 'Terms must not contain placeholder text like TODO, TBD, or XXX.',
-      when: { kind: 'not', operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'terms' }] } },
+      when: {
+        kind: 'not',
+        operand: { kind: 'call', fn: 'isBlank', args: [{ kind: 'field', name: 'terms' }] },
+      },
       assert: {
         kind: 'not',
         operand: {
@@ -114,7 +134,11 @@ export const EXAMPLE_AMOUNT_DATE_RULES: RuleSet = {
         kind: 'compare',
         op: '<',
         left: { kind: 'call', fn: 'toDate', args: [{ kind: 'field', name: 'date' }] },
-        right: { kind: 'call', fn: 'toDate', args: [{ kind: 'lit', value: '2027-01-01T00:00:00' }] },
+        right: {
+          kind: 'call',
+          fn: 'toDate',
+          args: [{ kind: 'lit', value: '2027-01-01T00:00:00' }],
+        },
       },
     },
   ],

@@ -1,18 +1,18 @@
-import { defineConfig, loadEnv } from 'vite'
-import react from '@vitejs/plugin-react'
-import { federation } from '@module-federation/vite'
+import { defineConfig, loadEnv } from 'vite';
+import react from '@vitejs/plugin-react';
+import { federation } from '@module-federation/vite';
 
 // Independently compiled and deployed remote exposing ReputationDashboard. See
 // docs/module-federation.md for the overall host/remote architecture and why `react`,
 // `react-dom`, and `@tanstack/react-query` are marked `shared: { singleton: true }` here while
 // WalletContext/queryClient are consumed via `remotes` instead.
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), '')
-  const hostRemoteUrl = env.VITE_HOST_REMOTE_URL || 'http://localhost:5173/remoteEntry.js'
+  const env = loadEnv(mode, process.cwd(), '');
+  const hostRemoteUrl = env.VITE_HOST_REMOTE_URL || 'http://localhost:5173/remoteEntry.js';
   // This remote's own public origin — see frontend-wizard-remote/vite.config.ts for why an
   // independently-deployed remote should emit absolute asset URLs rather than Vite's default
   // root-relative ones.
-  const selfOrigin = env.VITE_DASHBOARD_ORIGIN || 'http://localhost:5174/'
+  const selfOrigin = env.VITE_DASHBOARD_ORIGIN || 'http://localhost:5174/';
 
   return {
     base: selfOrigin,
@@ -58,5 +58,5 @@ export default defineConfig(({ mode }) => {
     build: {
       target: 'esnext',
     },
-  }
-})
+  };
+});

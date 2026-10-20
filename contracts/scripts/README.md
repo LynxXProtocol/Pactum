@@ -7,12 +7,12 @@ integrating protocol should check during the review window — is in
 Every script supports **`--dry-run`**, which prints the exact `stellar` invocations
 without submitting anything. Use it before every real run.
 
-| Script | Who runs it | What it does |
-|---|---|---|
-| `propose-upgrade.sh` | DAO admin | Builds the artifact, prints its SHA-256, uploads it, and queues a proposal that pins the Wasm hash. **Starts the 7-day clock.** |
-| `verify-proposal.sh` | Anyone (read-only) | Reads a queued proposal and compares the pinned hash against a locally reproduced build. This is the integrator's tool. |
-| `execute-upgrade.sh` | DAO admin | Applies a matured proposal. One transaction: the schema version moves and the executable is replaced. |
-| `migrate-reputation.sh` | Anyone | Drains the V1→V2 migration backlog in bounded batches. Permissionless and idempotent. |
+| Script                  | Who runs it        | What it does                                                                                                                    |
+| ----------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| `propose-upgrade.sh`    | DAO admin          | Builds the artifact, prints its SHA-256, uploads it, and queues a proposal that pins the Wasm hash. **Starts the 7-day clock.** |
+| `verify-proposal.sh`    | Anyone (read-only) | Reads a queued proposal and compares the pinned hash against a locally reproduced build. This is the integrator's tool.         |
+| `execute-upgrade.sh`    | DAO admin          | Applies a matured proposal. One transaction: the schema version moves and the executable is replaced.                           |
+| `migrate-reputation.sh` | Anyone             | Drains the V1→V2 migration backlog in bounded batches. Permissionless and idempotent.                                           |
 
 ## Configuration
 

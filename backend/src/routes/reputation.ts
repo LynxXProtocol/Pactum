@@ -37,7 +37,10 @@ const validateExportRequest = (req: Request, res: Response, next: NextFunction):
   }
 };
 
-export function createReputationRouter(cache: ReputationCache, sorobanClient?: SorobanClient): Router {
+export function createReputationRouter(
+  cache: ReputationCache,
+  sorobanClient?: SorobanClient,
+): Router {
   const router = Router();
 
   // POST /export/certificate - Exports a Reputation Certificate (VC)

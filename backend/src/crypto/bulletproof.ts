@@ -121,11 +121,7 @@ export function fiatShamirChallenge(commitment: bigint, pkN: bigint): bigint {
  *
  * @throws {RangeError} If `rating` is outside `[RATING_MIN, RATING_MAX]`.
  */
-export function generateRangeProof(
-  rating: bigint,
-  blinding: bigint,
-  pkN: bigint,
-): RangeProof {
+export function generateRangeProof(rating: bigint, blinding: bigint, pkN: bigint): RangeProof {
   if (rating < RATING_MIN || rating > RATING_MAX) {
     throw new RangeError(
       `rating ${rating} is outside the valid range [${RATING_MIN}, ${RATING_MAX}]`,
@@ -193,8 +189,9 @@ export function verifyRangeProof(proof: RangeProof, pkN: bigint): boolean {
 export function randomBlinding(): bigint {
   const bytes = new Uint8Array(8);
   // `globalThis.crypto` is available in Node ≥ 20 without importing the module.
-  (globalThis as unknown as { crypto: { getRandomValues(b: Uint8Array): void } })
-    .crypto.getRandomValues(bytes);
+  (
+    globalThis as unknown as { crypto: { getRandomValues(b: Uint8Array): void } }
+  ).crypto.getRandomValues(bytes);
   let value = 0n;
   for (const byte of bytes) {
     value = (value << 8n) | BigInt(byte);
