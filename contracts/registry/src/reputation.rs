@@ -60,8 +60,16 @@
 use crate::commitments::CommitmentStatus;
 use crate::errors::Error;
 use crate::events;
+use crate::trust_score::{
+    BASE_SCORE, BREACH_WEIGHT, BUCKET_SIZE_LEDGERS, FULFILLED_WEIGHT, LATE_WEIGHT, MAX_DECAY_STEPS,
+    SCALE,
+};
 use crate::upgrade::{schema_version, MAX_MIGRATION_BATCH, SCHEMA_VERSION_V2};
 use soroban_sdk::{contracttype, panic_with_error, Address, Env, Vec};
+
+#[path = "storage.rs"]
+pub mod storage;
+pub use storage::*;
 
 /// Represents the aggregate reputation of an address as an issuer (V1 / Phase B).
 ///
@@ -474,4 +482,361 @@ fn apply_outcome(
         slot.saturating_sub(1)
     };
     true
+}
+
+pub const TWAR_OUTCOME_SCALE: i64 = 1_000_000;
+
+const LIN_DECAY_Q32: u64 = 2_884_383_281;
+
+const QUAD_DECAY_Q32: u64 = LIN_DECAY_Q32 - (SCALE >> 1);
+
+/// Computes Q32 fixed-point exponential half-life decay weight for a ledger sequence delta.
+#[inline]
+pub fn decay_weight_q32(delta_ledgers: u32, half_life_ledgers: u32) -> u64 {
+    if delta_ledgers == 0 {
+        return SCALE;
+    }
+    let half_life = if half_life_ledgers == 0 {
+        TWAR_DEFAULT_HALF_LIFE_LEDGERS
+    } else {
+        half_life_ledgers
+    };
+
+    let steps = delta_ledgers / half_life;
+    if steps >= MAX_DECAY_STEPS {
+        return 0;
+    }
+
+    let rem = (delta_ledgers % half_life) as u64;
+    if rem == 0 {
+        return SCALE >> steps;
+    }
+
+    let u = (rem << 32) / (half_life as u64);
+    let linear = ((LIN_DECAY_Q32 as u128 * u as u128) >> 32) as u64;
+    let u_sq = ((u as u128 * u as u128) >> 32) as u64;
+    let quad = ((QUAD_DECAY_Q32 as u128 * u_sq as u128) >> 32) as u64;
+    let frac_weight = SCALE.saturating_sub(linear).saturating_add(quad);
+
+    frac_weight >> steps
+}
+
+/// Applies half-life decay to a signed 64-bit reputation score value.
+#[inline]
+pub fn half_life_decay(value: i64, delta_ledgers: u32, half_life_ledgers: u32) -> i64 {
+    if value == 0 || delta_ledgers == 0 {
+        return value;
+    }
+    let weight = decay_weight_q32(delta_ledgers, half_life_ledgers);
+    if weight == 0 {
+        return 0;
+    }
+    let abs_val = value.unsigned_abs();
+    let decayed_abs = ((abs_val as u128 * weight as u128) >> 32) as i64;
+    if value < 0 {
+        -decayed_abs
+    } else {
+        decayed_abs
+    }
+}
+
+/// Merges two child segment tree nodes into a parent node at max(left.anchor, right.anchor).
+#[inline]
+pub fn merge_twar_nodes(left: TwarNode, right: TwarNode, half_life: u32) -> TwarNode {
+    if left.is_empty() {
+        return right;
+    }
+    if right.is_empty() {
+        return left;
+    }
+
+    let common_ledger = left.anchor_ledger.max(right.anchor_ledger);
+    let left_decayed = half_life_decay(
+        left.weighted_score,
+        common_ledger.saturating_sub(left.anchor_ledger),
+        half_life,
+    );
+    let right_decayed = half_life_decay(
+        right.weighted_score,
+        common_ledger.saturating_sub(right.anchor_ledger),
+        half_life,
+    );
+
+    TwarNode {
+        weighted_score: left_decayed.saturating_add(right_decayed),
+        anchor_ledger: common_ledger,
+        event_count: left.event_count.saturating_add(right.event_count),
+    }
+}
+
+/// Fixed-capacity Time-Weighted Average Reputation (TWAR) Segment Tree.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct TWARSegmentTree {
+    buf: [u8; TWAR_PACKED_BYTES_LEN],
+}
+
+impl Default for TWARSegmentTree {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+impl TWARSegmentTree {
+    /// Constructs a fresh TWARSegmentTree with default half-life.
+    pub fn new() -> Self {
+        Self::with_half_life(TWAR_DEFAULT_HALF_LIFE_LEDGERS)
+    }
+
+    /// Constructs a fresh TWARSegmentTree configured with custom half_life_ledgers.
+    pub fn with_half_life(half_life_ledgers: u32) -> Self {
+        Self {
+            buf: init_packed_buffer(half_life_ledgers),
+        }
+    }
+
+    /// Loads the tree for address from Soroban instance storage.
+    pub fn load(env: &Env, address: &Address) -> Self {
+        match load_packed_twar_bytes(env, address) {
+            Some(bytes) => Self {
+                buf: unpack_tree_bytes(&bytes),
+            },
+            None => Self::new(),
+        }
+    }
+
+    /// Writes the packed tree buffer into Soroban instance storage.
+    pub fn save(&self, env: &Env, address: &Address) {
+        let bytes = pack_tree_bytes(env, &self.buf);
+        save_packed_twar_bytes(env, address, &bytes);
+    }
+
+    /// Returns the raw contiguous 1,024-byte slice.
+    #[inline]
+    pub fn as_packed_slice(&self) -> &[u8] {
+        &self.buf
+    }
+
+    /// Returns the tree metadata header from slot 0.
+    #[inline]
+    pub fn header(&self) -> TwarHeader {
+        decode_header(&self.buf)
+    }
+
+    /// Returns the configured half-life in ledgers.
+    #[inline]
+    pub fn half_life_ledgers(&self) -> u32 {
+        self.header().half_life_ledgers
+    }
+
+    /// Returns the highest ledger sequence observed in any update.
+    #[inline]
+    pub fn last_ledger(&self) -> u32 {
+        self.header().last_ledger
+    }
+
+    /// Returns the total number of updates recorded.
+    #[inline]
+    pub fn total_updates(&self) -> u32 {
+        self.header().total_updates
+    }
+
+    /// Decodes node at 1-indexed position node_idx.
+    #[inline]
+    pub fn node(&self, node_idx: usize) -> TwarNode {
+        decode_node(&self.buf, node_idx)
+    }
+
+    /// Decodes leaf node corresponding to leaf bucket_idx.
+    #[inline]
+    pub fn leaf_node(&self, bucket_idx: u32) -> TwarNode {
+        let offset = (bucket_idx as usize) & (TWAR_LEAF_CAPACITY - 1);
+        self.node(TWAR_LEAF_CAPACITY + offset)
+    }
+
+    /// Applies a point update delta_score to bucket_idx at ledger_seq.
+    pub fn update_point(&mut self, bucket_idx: u32, delta_score: i64, ledger_seq: u32) {
+        self.apply_point_delta(bucket_idx, delta_score, ledger_seq, true);
+    }
+
+    /// Retracts delta_score from bucket_idx at ledger_seq.
+    pub fn retract_point(&mut self, bucket_idx: u32, delta_score: i64, ledger_seq: u32) {
+        self.apply_point_delta(bucket_idx, delta_score.saturating_neg(), ledger_seq, false);
+    }
+
+    fn apply_point_delta(
+        &mut self,
+        bucket_idx: u32,
+        delta_score: i64,
+        ledger_seq: u32,
+        increment_count: bool,
+    ) {
+        let mut hdr = decode_header(&self.buf);
+        let half_life = hdr.half_life_ledgers;
+
+        let leaf_offset = (bucket_idx as usize) & (TWAR_LEAF_CAPACITY - 1);
+        let leaf_idx = TWAR_LEAF_CAPACITY + leaf_offset;
+
+        let prev_leaf = decode_node(&self.buf, leaf_idx);
+        let target_ledger = if prev_leaf.is_empty() {
+            ledger_seq
+        } else {
+            prev_leaf.anchor_ledger.max(ledger_seq)
+        };
+        let delta_ledgers = target_ledger.saturating_sub(prev_leaf.anchor_ledger);
+        let decayed_prev = half_life_decay(prev_leaf.weighted_score, delta_ledgers, half_life);
+
+        let updated_score = decayed_prev.saturating_add(delta_score);
+        let updated_count = if increment_count {
+            prev_leaf.event_count.saturating_add(1)
+        } else {
+            prev_leaf.event_count.saturating_sub(1)
+        };
+
+        let new_leaf = TwarNode {
+            weighted_score: updated_score,
+            anchor_ledger: target_ledger,
+            event_count: updated_count,
+        };
+        encode_node(&mut self.buf, leaf_idx, new_leaf);
+
+        let mut parent = leaf_idx >> 1;
+        while parent >= 1 {
+            let left = decode_node(&self.buf, parent << 1);
+            let right = decode_node(&self.buf, (parent << 1) | 1);
+            let merged = merge_twar_nodes(left, right, half_life);
+            encode_node(&mut self.buf, parent, merged);
+            parent >>= 1;
+        }
+
+        hdr.last_ledger = hdr.last_ledger.max(target_ledger);
+        hdr.total_updates = if increment_count {
+            hdr.total_updates.saturating_add(1)
+        } else {
+            hdr.total_updates.saturating_sub(1)
+        };
+        encode_header(&mut self.buf, hdr);
+    }
+
+    /// Queries a single leaf bucket bucket_idx decayed to query_ledger.
+    #[inline]
+    pub fn query_point(&self, bucket_idx: u32, query_ledger: u32) -> i64 {
+        let leaf = self.leaf_node(bucket_idx);
+        if leaf.weighted_score == 0 {
+            return 0;
+        }
+        let delta = query_ledger.saturating_sub(leaf.anchor_ledger);
+        half_life_decay(leaf.weighted_score, delta, self.half_life_ledgers())
+    }
+
+    /// Executes an inclusive range aggregation query over leaf buckets [start_bucket, end_bucket].
+    pub fn query_range(&self, start_bucket: u32, end_bucket: u32, query_ledger: u32) -> i64 {
+        if start_bucket > end_bucket || start_bucket >= TWAR_LEAF_CAPACITY as u32 {
+            return 0;
+        }
+        let half_life = self.half_life_ledgers();
+        let start = start_bucket as usize;
+        let end = (end_bucket as usize).min(TWAR_LEAF_CAPACITY - 1);
+
+        let mut l = TWAR_LEAF_CAPACITY + start;
+        let mut r = TWAR_LEAF_CAPACITY + end;
+        let mut acc: i64 = 0;
+
+        while l <= r {
+            if (l & 1) == 1 {
+                let node = decode_node(&self.buf, l);
+                if node.weighted_score != 0 {
+                    let delta = query_ledger.saturating_sub(node.anchor_ledger);
+                    let decayed = half_life_decay(node.weighted_score, delta, half_life);
+                    acc = acc.saturating_add(decayed);
+                }
+                l += 1;
+            }
+            if (r & 1) == 0 {
+                let node = decode_node(&self.buf, r);
+                if node.weighted_score != 0 {
+                    let delta = query_ledger.saturating_sub(node.anchor_ledger);
+                    let decayed = half_life_decay(node.weighted_score, delta, half_life);
+                    acc = acc.saturating_add(decayed);
+                }
+                r -= 1;
+            }
+            l >>= 1;
+            r >>= 1;
+        }
+
+        acc
+    }
+
+    /// Queries the total decayed weighted score across all buckets at query_ledger.
+    #[inline]
+    pub fn query_total(&self, query_ledger: u32) -> i64 {
+        let root = decode_node(&self.buf, 1);
+        if root.weighted_score == 0 {
+            return 0;
+        }
+        let delta = query_ledger.saturating_sub(root.anchor_ledger);
+        half_life_decay(root.weighted_score, delta, self.half_life_ledgers())
+    }
+
+    /// Records a CommitmentStatus settlement outcome at ledger_seq.
+    pub fn record_outcome(&mut self, outcome: CommitmentStatus, increment: bool, ledger_seq: u32) {
+        let base_delta: i64 = match outcome {
+            CommitmentStatus::Fulfilled => (FULFILLED_WEIGHT as i64) * TWAR_OUTCOME_SCALE,
+            CommitmentStatus::Late => -(LATE_WEIGHT as i64) * TWAR_OUTCOME_SCALE,
+            CommitmentStatus::Breached => -(BREACH_WEIGHT as i64) * TWAR_OUTCOME_SCALE,
+            _ => return,
+        };
+        let bucket_idx = (ledger_seq / BUCKET_SIZE_LEDGERS) % (TWAR_LEAF_CAPACITY as u32);
+        if increment {
+            self.update_point(bucket_idx, base_delta, ledger_seq);
+        } else {
+            self.retract_point(bucket_idx, base_delta, ledger_seq);
+        }
+    }
+
+    /// Computes the normalized 0..=100 TWAR score at query_ledger.
+    #[inline]
+    pub fn twar_score(&self, query_ledger: u32) -> u32 {
+        let total_scaled = self.query_total(query_ledger);
+        let net_points = total_scaled / TWAR_OUTCOME_SCALE;
+        let raw = (BASE_SCORE as i64).saturating_add(net_points);
+        if raw <= 0 {
+            0
+        } else if raw >= 100 {
+            100
+        } else {
+            raw as u32
+        }
+    }
+}
+
+/// Performs a storage-backed point update on target address's packed TWARSegmentTree in instance storage.
+pub fn update_twar_point(
+    env: &Env,
+    address: &Address,
+    bucket_idx: u32,
+    delta_score: i64,
+    ledger_seq: u32,
+) {
+    let mut tree = TWARSegmentTree::load(env, address);
+    tree.update_point(bucket_idx, delta_score, ledger_seq);
+    tree.save(env, address);
+}
+
+/// Performs a storage-backed range query on target address's packed TWARSegmentTree decayed to query_ledger.
+pub fn query_twar_range(
+    env: &Env,
+    address: &Address,
+    start_bucket: u32,
+    end_bucket: u32,
+    query_ledger: u32,
+) -> i64 {
+    let tree = TWARSegmentTree::load(env, address);
+    tree.query_range(start_bucket, end_bucket, query_ledger)
+}
+
+/// Computes target address's 0..=100 TWAR score at current ledger sequence.
+pub fn get_twar_score(env: &Env, address: &Address) -> u32 {
+    let tree = TWARSegmentTree::load(env, address);
+    tree.twar_score(env.ledger().sequence())
 }
