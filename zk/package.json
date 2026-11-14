@@ -5,7 +5,7 @@
   "type": "module",
   "main": "src/index.ts",
   "scripts": {
-    "build:circuit": "node scripts/build-circuit.mjs",
+    "build:circuit": "node init && node scripts/build-circuit.mjs",
     "demo": "node scripts/demo.mjs",
     "publish:snapshot": "node scripts/publish-snapshot.mjs",
     "verify:proof": "node scripts/verify-proof.mjs",

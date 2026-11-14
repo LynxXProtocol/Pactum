@@ -7,8 +7,8 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "dev": "vite --port 5175",
-    "build": "tsc -b && vite build",
+    "dev": "node init && vite --port 5175",
+    "build": "node init && tsc -b && vite build",
     "preview": "vite preview --port 5175"
   },
   "dependencies": {

@@ -7,9 +7,9 @@
     "node": ">=22.18.0"
   },
   "scripts": {
-    "dev": "vite",
-    "build:wasm": "node -e \"const fs=require('fs'); const p='../contracts/validation/Cargo.toml'; fs.writeFileSync(p, fs.readFileSync(p,'utf8').replace('crate-type = [\\\"rlib\\\"]', 'crate-type = [\\\"cdylib\\\", \\\"rlib\\\"]'));\" && npx wasm-pack build ../contracts/validation --target web --out-dir ../../frontend/src/wasm/pactum-validation -- --features wasm && node -e \"const fs=require('fs'); const p='../contracts/validation/Cargo.toml'; fs.writeFileSync(p, fs.readFileSync(p,'utf8').replace('crate-type = [\\\"cdylib\\\", \\\"rlib\\\"]', 'crate-type = [\\\"rlib\\\"]'));\"",
-    "build": "tsc -b && vite build",
+    "dev": "node init && vite",
+    "build:wasm": "node init && node -e \"const fs=require('fs'); const p='../contracts/validation/Cargo.toml'; fs.writeFileSync(p, fs.readFileSync(p,'utf8').replace('crate-type = [\\\"rlib\\\"]', 'crate-type = [\\\"cdylib\\\", \\\"rlib\\\"]'));\" && npx wasm-pack build ../contracts/validation --target web --out-dir ../../frontend/src/wasm/pactum-validation -- --features wasm && node -e \"const fs=require('fs'); const p='../contracts/validation/Cargo.toml'; fs.writeFileSync(p, fs.readFileSync(p,'utf8').replace('crate-type = [\\\"cdylib\\\", \\\"rlib\\\"]', 'crate-type = [\\\"rlib\\\"]'));\"",
+    "build": "node init && tsc -b && vite build",
     "lint": "oxlint",
     "test": "vitest run",
     "preview": "vite preview",

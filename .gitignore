@@ -13,9 +13,7 @@ dist-relayer-test/
 dist-crypto-test/
 dist-attestor-test/
 dist-*/
-.env
 .env.e2e
-.env.local
 .env.*.local
 npm-debug.log*
 yarn-debug.log*
@@ -55,3 +53,4 @@ jobs.json
 runs.json
 patch_worker.js
 
+config.bat
